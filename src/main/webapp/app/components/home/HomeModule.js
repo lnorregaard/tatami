@@ -6,115 +6,31 @@ var HomeModule = angular.module('HomeModule', [
     'infinite-scroll'
 ]);
 
+var minutes = 30;
+HomeModule.run(['localStorageService','$rootScope','$location','$interval','$state','$document',function(localStorageService, $rootScope, $location, $interval, $state, $document) {
+    var time = Date.now();
+    $interval(function() {
+        //if the user is logged in, not at the login page, and inactive...
+        if (Date.now()-time > (minutes*60000) && !$state.is('tatami.login.main') && localStorageService.get('token') === "true")  {
+            localStorageService.clearAll();
+            $state.go('tatami.login.main');
+            alert('User logged out due to inactivity.');
+        }
+    }, 1000);
+    //tracking basically all user input.
+    $document.on('keydown DOMMouseScroll mousewheel mousedown touchstart',
+    function resetIdle () {
+        time=Date.now();
+    });
+
+}]);
+
 HomeModule.config(['$stateProvider', function($stateProvider) {
-    // Needed if using StatusesWithContext controller and view
-    /*
-    var getContext = ['statuses', 'StatusService', '$q', function(statuses, StatusService, $q) {
-        var temp = new Set();
-        var context = [];
-
-        for(var i = 0; i < statuses.length; i++) {
-            if(statuses[i].replyTo && !temp.has(statuses[i].replyTo)) {
-                temp.add(statuses[i].replyTo);
-                context.push(StatusService.get({ statusId: statuses[i].replyTo })
-                    .$promise.then(
-                        function(response) {
-                            if(angular.equals({}, response.toJSON())) {
-                                return $q.when(null);
-                            }
-                        return response;
-                }));
-            }
-        }
-        return $q.all(context);
-    }];
-
-    var organizeContext = ['statuses', 'context', function(statuses, context) {
-        var statusesWithContext = [];
-
-        // Fill array with context statuses
-        for(var i = 0; i < context.length; i++) {
-            if(context[i] != null) {
-                statusesWithContext.push({ status: context[i], replies: [] });
-            }
-        }
-
-        var individualStatuses = [];
-
-        // Attach replies to corresponding context status
-        for(var i = 0; i < statuses.length; i++) {
-            if(statuses[i].replyTo) {
-                for(var j = 0; j < statusesWithContext.length; j++) {
-                    if(statuses[i].replyTo == statusesWithContext[j].status.statusId) {
-                        statusesWithContext[j].replies.unshift(statuses[i]);
-                        break;
-                    }
-
-                    // If the context reply doesn't exist, then make the reply an individual status
-                    if(j == statusesWithContext.length - 1) {
-                        individualStatuses.push(statuses[i]);
-                        break;
-                    }
-                }
-            } else {
-                var addIt = true;
-                for(var j = 0; j < statusesWithContext.length; j++) {
-                    // If the status isn't already in the timeline as a
-                    // context status, then add it to individualStatuses
-                    if(statuses[i].statusId == statusesWithContext[j].status.statusId) {
-                        addIt = false;
-                        break;
-                    }
-                }
-                if(addIt) {
-                    individualStatuses.push(statuses[i]);
-                }
-            }
-        }
-
-        // Put remaining individual statuses (ones that aren't replies) into the timeline
-        for(var i = 0; i < individualStatuses.length; i++) {
-            // If the timeline is empty, put in a status
-            if(statusesWithContext.length == 0) {
-                statusesWithContext.push({ status: individualStatuses[i], replies: null });
-                continue;
-            }
-
-            for(var j = 0; j <= statusesWithContext.length; j++) {
-                try {
-                    // If the status block has replies, we need to check the 
-                    // last reply's post date/time, because that is the latest status in the block.
-                    // We order the timeline by the latest status in the block.
-                    if(statusesWithContext[j].replies != null && statusesWithContext[j].replies.length != 0) {
-                        var index = statusesWithContext[j].replies.length - 1;
-                        if(statusesWithContext[j].replies[index].statusDate < individualStatuses[i].statusDate) {
-                            statusesWithContext.splice(j, 0, { status: individualStatuses[i], replies: null });
-                            break;
-                        }
-                    } else {
-                        // Otherwise compare using the date of the individual status
-                        if(statusesWithContext[j].status.statusDate < individualStatuses[i].statusDate) {
-                            statusesWithContext.splice(j, 0, { status: individualStatuses[i], replies: null });
-                            break;
-                        }
-                    }
-                } catch(err) {
-                    // For statuses that are at the end (bottom) of the timeline
-                    statusesWithContext.push({ status: individualStatuses[i], replies: null });
-                    break;
-                }
-            }
-        }
-
-        return statusesWithContext;
-    }];
-    */
-
     $stateProvider
         .state('tatami.home', {
             url: '/home',
             abstract: true,
-            templateUrl: 'app/components/home/HomeView.html',
+            templateUrl: 'app/components/home/HomeView.min.html',
             resolve: {
                 profile: ['ProfileService', function(ProfileService) {
                     return ProfileService.get().$promise;
@@ -131,7 +47,7 @@ HomeModule.config(['$stateProvider', function($stateProvider) {
             url: '/status/:statusId',
             views: {
                 'homeBodyContent@tatami.home': {
-                    templateUrl: 'app/components/home/status/StatusView.html',
+                    templateUrl: 'app/components/home/status/StatusView.min.html',
                     controller: 'StatusController'
                 }
             },
@@ -155,11 +71,11 @@ HomeModule.config(['$stateProvider', function($stateProvider) {
             url: '/search/:searchTerm',
             views: {
                 'homeBodyHeader@tatami.home': {
-                    templateUrl: 'app/components/home/search/SearchHeaderView.html',
+                    templateUrl: 'app/components/home/search/SearchHeaderView.min.html',
                     controller: 'SearchHeaderController'
                 },
                 'homeBodyContent@tatami.home': {
-                    templateUrl: 'app/shared/lists/status/withoutContext/StatusListView.html',
+                    templateUrl: 'app/shared/lists/status/withoutContext/StatusListView.min.html',
                     controller: 'StatusListController'
                 }
             },
@@ -195,14 +111,14 @@ HomeModule.config(['$stateProvider', function($stateProvider) {
             url: '/timeline',
             views: {
                 'homeSide@tatami.home': {
-                    templateUrl: 'app/shared/sidebars/home/HomeSidebarView.html',
+                    templateUrl: 'app/shared/sidebars/home/HomeSidebarView.min.html',
                     controller: 'HomeSidebarController'
                 },
                 'homeBodyHeader@tatami.home': {
-                    templateUrl: 'app/components/home/timeline/TimelineHeaderView.html'
+                    templateUrl: 'app/components/home/timeline/TimelineHeaderView.min.html'
                 },
                 'homeBodyContent@tatami.home': {
-                    templateUrl: 'app/shared/lists/status/withoutContext/StatusListView.html',
+                    templateUrl: 'app/shared/lists/status/withoutContext/StatusListView.min.html',
                     controller: 'StatusListController'
                 }
             },
@@ -210,8 +126,6 @@ HomeModule.config(['$stateProvider', function($stateProvider) {
                 statuses: ['StatusService', function(StatusService) {
                     return StatusService.getHomeTimeline().$promise;
                 }],
-                //context: getContext,
-                //statusesWithContext: organizeContext,
                 showModal: ['statuses', function(statuses) {
                     return statuses.length === 0;
                 }]
@@ -221,7 +135,7 @@ HomeModule.config(['$stateProvider', function($stateProvider) {
             url: '',
             onEnter: ['$stateParams', '$modal', function($stateParams, $modal) {
                 $modal.open({
-                    templateUrl: 'app/components/home/welcome/WelcomeView.html',
+                    templateUrl: 'app/components/home/welcome/WelcomeView.min.html',
                     controller: 'WelcomeController'
                 });
             }]
@@ -230,14 +144,14 @@ HomeModule.config(['$stateProvider', function($stateProvider) {
             url: '/mentions',
             views: {
                 'homeSide@tatami.home': {
-                    templateUrl: 'app/shared/sidebars/home/HomeSidebarView.html',
+                    templateUrl: 'app/shared/sidebars/home/HomeSidebarView.min.html',
                     controller: 'HomeSidebarController'
                 },
                 'homeBodyHeader@tatami.home': {
-                    templateUrl: 'app/components/home/timeline/TimelineHeaderView.html'
+                    templateUrl: 'app/components/home/timeline/TimelineHeaderView.min.html'
                 },
                 'homeBodyContent@tatami.home': {
-                    templateUrl: 'app/shared/lists/status/withoutContext/StatusListView.html',
+                    templateUrl: 'app/shared/lists/status/withoutContext/StatusListView.min.html',
                     controller: 'StatusListController'
                 }
             },
@@ -252,14 +166,14 @@ HomeModule.config(['$stateProvider', function($stateProvider) {
             url: '/favorites',
             views: {
                 'homeSide@tatami.home': {
-                    templateUrl: 'app/shared/sidebars/home/HomeSidebarView.html',
+                    templateUrl: 'app/shared/sidebars/home/HomeSidebarView.min.html',
                     controller: 'HomeSidebarController'
                 },
                 'homeBodyHeader@tatami.home': {
-                    templateUrl: 'app/components/home/timeline/TimelineHeaderView.html'
+                    templateUrl: 'app/components/home/timeline/TimelineHeaderView.min.html'
                 },
                 'homeBodyContent@tatami.home': {
-                    templateUrl: 'app/shared/lists/status/withoutContext/StatusListView.html',
+                    templateUrl: 'app/shared/lists/status/withoutContext/StatusListView.min.html',
                     controller: 'StatusListController'
                 }
             },
@@ -273,38 +187,36 @@ HomeModule.config(['$stateProvider', function($stateProvider) {
             url: '/company',
             views: {
                 'homeSide@tatami.home': {
-                    templateUrl: 'app/shared/sidebars/home/HomeSidebarView.html',
+                    templateUrl: 'app/shared/sidebars/home/HomeSidebarView.min.html',
                     controller: 'HomeSidebarController'
                 },
                 'homeBodyHeader@tatami.home': {
-                    templateUrl: 'app/components/home/timeline/TimelineHeaderView.html'
+                    templateUrl: 'app/components/home/timeline/TimelineHeaderView.min.html'
                 },
                 'homeBodyContent@tatami.home': {
-                    templateUrl: 'app/shared/lists/status/withoutContext/StatusListView.html',
+                    templateUrl: 'app/shared/lists/status/withoutContext/StatusListView.min.html',
                     controller: 'StatusListController'
                 }
             },
             resolve: {
                 statuses: ['HomeService', function(HomeService) {
                     return HomeService.getCompanyTimeline().$promise;
-                }]//,
-                //context: getContext,
-                //statusesWithContext: organizeContext
+                }]
             }
         })
         .state('tatami.home.home.tag', {
             url: '/tag/:tag',
             views: {
                 'homeSide@tatami.home': {
-                    templateUrl: 'app/shared/sidebars/home/HomeSidebarView.html',
+                    templateUrl: 'app/shared/sidebars/home/HomeSidebarView.min.html',
                     controller: 'HomeSidebarController'
                 },
                 'homeBodyHeader@tatami.home': {
-                    templateUrl: 'app/components/home/tag/TagHeaderView.html',
+                    templateUrl: 'app/components/home/tag/TagHeaderView.min.html',
                     controller: 'TagHeaderController'
                 },
                 'homeBodyContent@tatami.home': {
-                    templateUrl: 'app/shared/lists/status/withoutContext/StatusListView.html',
+                    templateUrl: 'app/shared/lists/status/withoutContext/StatusListView.min.html',
                     controller: 'StatusListController'
                 }
             },
@@ -330,15 +242,15 @@ HomeModule.config(['$stateProvider', function($stateProvider) {
             url: '/statuses',
             views: {
                 'homeSide@tatami.home': {
-                    templateUrl: 'app/shared/sidebars/home/HomeSidebarView.html',
+                    templateUrl: 'app/shared/sidebars/home/HomeSidebarView.min.html',
                     controller: 'HomeSidebarController'
                 },
                 'homeBodyHeader@tatami.home': {
-                    templateUrl: 'app/components/home/group/GroupHeaderView.html',
+                    templateUrl: 'app/components/home/group/GroupHeaderView.min.html',
                     controller: 'GroupHeaderController'
                 },
                 'homeBodyContent@tatami.home': {
-                    templateUrl: 'app/shared/lists/status/withoutContext/StatusListView.html',
+                    templateUrl: 'app/shared/lists/status/withoutContext/StatusListView.min.html',
                     controller: 'StatusListController'
                 }
             },
@@ -352,15 +264,15 @@ HomeModule.config(['$stateProvider', function($stateProvider) {
             url: '/members',
             views: {
                 'homeSide@tatami.home': {
-                    templateUrl: 'app/shared/sidebars/home/HomeSidebarView.html',
+                    templateUrl: 'app/shared/sidebars/home/HomeSidebarView.min.html',
                     controller: 'HomeSidebarController'
                 },
                 'homeBodyHeader@tatami.home': {
-                    templateUrl: 'app/components/home/group/GroupHeaderView.html',
+                    templateUrl: 'app/components/home/group/GroupHeaderView.min.html',
                     controller: 'GroupHeaderController'
                 },
                 'homeBodyContent@tatami.home': {
-                    templateUrl: 'app/shared/lists/user/UserListView.html',
+                    templateUrl: 'app/shared/lists/user/UserListView.min.html',
                     controller: 'UserListController'
                 }
             },
@@ -387,15 +299,15 @@ HomeModule.config(['$stateProvider', function($stateProvider) {
             url: '/statuses',
             views: {
                 'homeSide@tatami.home': {
-                    templateUrl: 'app/shared/sidebars/profile/ProfileSidebarView.html',
+                    templateUrl: 'app/shared/sidebars/profile/ProfileSidebarView.min.html',
                     controller: 'ProfileSidebarController'
                 },
                 'homeBodyHeader@tatami.home': {
-                    templateUrl: 'app/components/home/profile/ProfileHeaderView.html',
+                    templateUrl: 'app/components/home/profile/ProfileHeaderView.min.html',
                     controller: 'ProfileHeaderController'
                 },
                 'homeBodyContent@tatami.home': {
-                    templateUrl: 'app/shared/lists/status/withoutContext/StatusListView.html',
+                    templateUrl: 'app/shared/lists/status/withoutContext/StatusListView.min.html',
                     controller: 'StatusListController'
                 }
             },
@@ -412,15 +324,15 @@ HomeModule.config(['$stateProvider', function($stateProvider) {
             url: '/following',
             views: {
                 'homeSide@tatami.home': {
-                    templateUrl: 'app/shared/sidebars/profile/ProfileSidebarView.html',
+                    templateUrl: 'app/shared/sidebars/profile/ProfileSidebarView.min.html',
                     controller: 'ProfileSidebarController'
                 },
                 'homeBodyHeader@tatami.home': {
-                    templateUrl: 'app/components/home/profile/ProfileHeaderView.html',
+                    templateUrl: 'app/components/home/profile/ProfileHeaderView.min.html',
                     controller: 'ProfileHeaderController'
                 },
                 'homeBodyContent@tatami.home': {
-                    templateUrl: 'app/shared/lists/user/UserListView.html',
+                    templateUrl: 'app/shared/lists/user/UserListView.min.html',
                     controller: 'UserListController'
                 }
             },
@@ -434,15 +346,15 @@ HomeModule.config(['$stateProvider', function($stateProvider) {
             url: '/followers',
             views: {
                 'homeSide@tatami.home': {
-                    templateUrl: 'app/shared/sidebars/profile/ProfileSidebarView.html',
+                    templateUrl: 'app/shared/sidebars/profile/ProfileSidebarView.min.html',
                     controller: 'ProfileSidebarController'
                 },
                 'homeBodyHeader@tatami.home': {
-                    templateUrl: 'app/components/home/profile/ProfileHeaderView.html',
+                    templateUrl: 'app/components/home/profile/ProfileHeaderView.min.html',
                     controller: 'ProfileHeaderController'
                 },
                 'homeBodyContent@tatami.home': {
-                    templateUrl: 'app/shared/lists/user/UserListView.html',
+                    templateUrl: 'app/shared/lists/user/UserListView.min.html',
                     controller: 'UserListController'
                 }
             },

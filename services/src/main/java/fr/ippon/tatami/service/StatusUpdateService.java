@@ -408,4 +408,12 @@ public class StatusUpdateService {
         timelineRepository.addStatusToTimeline(login, status.getStatusId());
         atmosphereService.notifyUser(login, status);
     }
+
+    public AuthenticationService getAuthenticationService() {
+        return authenticationService;
+    }
+
+    public void setAuthenticationService(AuthenticationService authenticationService) {
+        this.authenticationService = authenticationService;
+    }
 }

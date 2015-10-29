@@ -371,8 +371,8 @@
         <tatami.metrics.graphite.host></tatami.metrics.graphite.host>
         <tatami.metrics.graphite.port>2003</tatami.metrics.graphite.port>
 
-        <tatami.google.clientId></tatami.google.clientId>
-        <tatami.google.clientSecret></tatami.google.clientSecret>
+        <tatami.google.clientId>125608133711-1kjuvboctbhmrvvme03i4iiv1vsdi234.apps.googleusercontent.com</tatami.google.clientId>
+        <tatami.google.clientSecret>x-3yMW4Xg-tHwihrm4EJraKE</tatami.google.clientSecret>
 
         <!--Test configurations: Sonar, unit test, code coverage --> 
 

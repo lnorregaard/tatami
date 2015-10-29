@@ -9,6 +9,9 @@ import org.springframework.stereotype.Service;
 
 import javax.inject.Inject;
 
+import fr.ippon.tatami.security.AuthenticationService;
+
+
 /**
  * Notifies a user when he is mentionned.
  */
@@ -27,6 +30,10 @@ public class MentionService {
     @Inject
     private UserRepository userRepository;
 
+    @Inject
+    private AuthenticationService authenticationService;
+
+
     /**
      * A status that mentions a user is put in the user's mentionline and in his timeline.
      * The mentioned user can also be notified by email.
@@ -35,14 +42,20 @@ public class MentionService {
         mentionlineRepository.addStatusToMentionline(mentionedLogin, status.getStatusId());
 
         User mentionnedUser = userRepository.findUserByLogin(mentionedLogin);
+        User currentUser = authenticationService.getCurrentUser();
+
+
 
         if (mentionnedUser != null && (mentionnedUser.getPreferencesMentionEmail() == null || mentionnedUser.getPreferencesMentionEmail().equals(true))) {
             if (status.getStatusPrivate()) { // Private status
+
                 mailService.sendUserPrivateMessageEmail(mentionnedUser, status);
                 if (applePushService != null) {
                     applePushService.notifyUser(mentionedLogin, status);
                 }
             } else {
+
+
                 mailService.sendUserMentionEmail(mentionnedUser, status);
                 if (applePushService != null) {
                     applePushService.notifyUser(mentionedLogin, status);

@@ -409,11 +409,12 @@ public class StatusUpdateService {
         atmosphereService.notifyUser(login, status);
     }
 
-    public AuthenticationService getAuthenticationService() {
-        return authenticationService;
+
+    public MentionService getMentionService() {
+        return mentionService;
     }
 
-    public void setAuthenticationService(AuthenticationService authenticationService) {
-        this.authenticationService = authenticationService;
+    public void setMentionService(MentionService mentionService) {
+        this.mentionService = mentionService;
     }
 }

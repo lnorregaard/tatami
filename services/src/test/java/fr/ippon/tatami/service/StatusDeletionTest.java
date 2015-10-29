@@ -249,7 +249,7 @@ public class StatusDeletionTest extends AbstractCassandraTatamiTest {
         ReflectionTestUtils.setField(statusUpdateService, "authenticationService", mockAuthenticationService);
         ReflectionTestUtils.setField(groupService, "authenticationService", mockAuthenticationService);
         ReflectionTestUtils.setField(userService, "authenticationService", mockAuthenticationService);
-        statusUpdateService.setAuthenticationService(mockAuthenticationService);
+        statusUpdateService.getMentionService().setAuthenticationService(mockAuthenticationService);
     }
 
 }

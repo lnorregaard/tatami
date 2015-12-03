@@ -34,4 +34,6 @@ public class Constants {
      */
     public static final int CASSANDRA_MAX_ROWS = 10000;
 
+    public static boolean DEACTIVATED_USER_CAN_LOGIN = false;
+
 }

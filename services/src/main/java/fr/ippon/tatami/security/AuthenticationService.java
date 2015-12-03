@@ -5,6 +5,7 @@ import fr.ippon.tatami.repository.UserRepository;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import javax.inject.Inject;
@@ -33,5 +34,12 @@ public class AuthenticationService {
     public boolean hasAuthenticatedUser() {
         SecurityContext securityContext = SecurityContextHolder.getContext();
         return (securityContext.getAuthentication() != null);
+    }
+
+    public void validateStatus() throws UsernameNotFoundException {
+        User user = getCurrentUser();
+        if (user.getActivated() != null && !user.getActivated()) {
+            throw new UsernameNotFoundException("User " + user.getUsername() + " is deactivated. Contact administrator for further details." );
+        }
     }
 }

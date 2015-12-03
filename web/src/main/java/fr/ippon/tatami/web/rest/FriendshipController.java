@@ -2,11 +2,13 @@ package fr.ippon.tatami.web.rest;
 
 import com.yammer.metrics.annotation.Timed;
 import fr.ippon.tatami.domain.User;
+import fr.ippon.tatami.security.AuthenticationService;
 import fr.ippon.tatami.service.FriendshipService;
 import fr.ippon.tatami.service.UserService;
 import fr.ippon.tatami.service.dto.UserDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,6 +28,9 @@ public class FriendshipController {
 
     @Inject
     private FriendshipService friendshipService;
+
+    @Inject
+    private AuthenticationService authenticationService;
 
     @Inject
     private UserService userService;
@@ -96,6 +101,13 @@ public class FriendshipController {
     @Timed
     @Deprecated
     public boolean followUser(@RequestBody User user, HttpServletResponse response) {
+        try {
+            authenticationService.validateStatus();
+        } catch (UsernameNotFoundException e) {
+            log.info("The user is not active and can not follow user");
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            return false;
+        }
         log.debug("REST request to follow username : {}", user.getUsername());
         boolean success = friendshipService.followUser(user.getUsername());
         if (!success) {
@@ -117,6 +129,13 @@ public class FriendshipController {
     @Timed
     @Deprecated
     public boolean unfollowUser(@RequestBody User user, HttpServletResponse response) {
+        try {
+            authenticationService.validateStatus();
+        } catch (UsernameNotFoundException e) {
+            log.info("The user is not active and can not unfollow a user");
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            return false;
+        }
         log.debug("REST request to unfollow username  : {}", user.getUsername());
         boolean success = friendshipService.unfollowUser(user.getUsername());
         if (!success) {

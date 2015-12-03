@@ -14,10 +14,12 @@ import fr.ippon.tatami.web.rest.dto.Tag;
 import fr.ippon.tatami.web.rest.dto.Trend;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import javax.inject.Inject;
+import javax.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -87,6 +89,12 @@ public class TagController {
     @Timed
     @Deprecated
     public boolean followTag(@RequestBody Tag tag) {
+        try {
+            authenticationService.validateStatus();
+        } catch (UsernameNotFoundException e) {
+            log.info("The user is not active and can not follow a tag");
+            return false;
+        }
         log.debug("REST request to follow tag : {}", tag);
         return tagMembershipService.followTag(tag);
     }
@@ -103,6 +111,12 @@ public class TagController {
     @Timed
     @Deprecated
     public boolean unfollowTag(@RequestBody Tag tag) {
+        try {
+            authenticationService.validateStatus();
+        } catch (UsernameNotFoundException e) {
+            log.info("The user is not active and can not unfollow a tag");
+            return false;
+        }
         log.debug("REST request to unfollow tag  : {}", tag);
         return tagMembershipService.unfollowTag(tag);
     }

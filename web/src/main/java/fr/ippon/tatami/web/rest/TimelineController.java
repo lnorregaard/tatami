@@ -15,6 +15,7 @@ import fr.ippon.tatami.web.rest.dto.ActionStatus;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
@@ -126,6 +127,12 @@ public class TimelineController {
     @RequestMapping(value = "/rest/statuses/{statusId}",
             method = RequestMethod.DELETE)
     public void deleteStatus(@PathVariable("statusId") String statusId) {
+        try {
+            authenticationService.validateStatus();
+        } catch (UsernameNotFoundException e) {
+            log.warn("Can not delete status as the user is not active");
+            return;
+        }
         log.debug("REST request to get status Id : {}", statusId);
         timelineService.removeStatus(statusId);
     }
@@ -134,6 +141,11 @@ public class TimelineController {
             method = RequestMethod.PATCH)
     @ResponseBody
     public StatusDTO updateStatus(@RequestBody ActionStatus action, @PathVariable("statusId") String statusId) {
+        try {
+            authenticationService.validateStatus();
+        } catch (UsernameNotFoundException e) {
+            return null;
+        }
         try {
             StatusDTO status = timelineService.getStatus(statusId);
             if (action.isFavorite() != null && status.isFavorite() != action.isFavorite()) {
@@ -169,6 +181,12 @@ public class TimelineController {
             produces = "application/json")
     @Timed
     public String postStatus(@RequestBody StatusDTO status, HttpServletResponse response) throws ArchivedGroupException, ReplyStatusException {
+        try {
+            authenticationService.validateStatus();
+        } catch (UsernameNotFoundException e) {
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            return "{}";
+        }
         log.debug("REST request to add status : {}", status.getContent());
         String escapedContent = StringEscapeUtils.escapeHtml(status.getContent());
         Collection<String> attachmentIds = status.getAttachmentIds();

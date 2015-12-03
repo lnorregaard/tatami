@@ -1,10 +1,12 @@
 package fr.ippon.tatami.web.rest;
 
 import com.yammer.metrics.annotation.Timed;
+import fr.ippon.tatami.security.AuthenticationService;
 import fr.ippon.tatami.service.TimelineService;
 import fr.ippon.tatami.service.dto.StatusDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,6 +29,8 @@ public class FavoritesController {
     @Inject
     private TimelineService timelineService;
 
+    @Inject
+    private AuthenticationService authenticationService;
     /**
      * GET  /favorites -> get the favorite status of the current user
      */
@@ -47,6 +51,13 @@ public class FavoritesController {
             method = RequestMethod.POST)
     @ResponseBody
     public void favoriteStatus(@PathVariable("statusId") String statusId) {
+        try {
+            authenticationService.validateStatus();
+        } catch (UsernameNotFoundException e) {
+            log.info("The user is not active and can not make a favorite");
+            return;
+        }
+
         log.debug("REST request to like status : {}", statusId);
         timelineService.addFavoriteStatus(statusId);
     }
@@ -58,6 +69,12 @@ public class FavoritesController {
             method = RequestMethod.POST)
     @ResponseBody
     public void unfavoriteStatus(@PathVariable("statusId") String statusId) {
+        try {
+            authenticationService.validateStatus();
+        } catch (UsernameNotFoundException e) {
+            log.info("The user is not active and can not remove a favorite");
+            return;
+        }
         log.debug("REST request to unlike status : {}", statusId);
         timelineService.removeFavoriteStatus(statusId);
     }

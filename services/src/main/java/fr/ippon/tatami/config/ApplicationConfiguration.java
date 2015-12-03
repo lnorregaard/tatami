@@ -6,7 +6,6 @@ import org.springframework.context.annotation.*;
 import org.springframework.core.env.Environment;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StopWatch;
-import org.springframework.web.bind.annotation.RequestMethod;
 import springfox.documentation.builders.PathSelectors;
 import springfox.documentation.builders.RequestHandlerSelectors;
 import springfox.documentation.service.ApiInfo;
@@ -15,12 +14,8 @@ import springfox.documentation.spring.web.plugins.Docket;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
-import javax.servlet.ServletContext;
 import java.io.IOException;
 import java.time.LocalDate;
-import java.util.Date;
-
-import static springfox.documentation.builders.PathSelectors.regex;
 
 @Configuration
 @PropertySource({"classpath:/META-INF/tatami/tatami.properties",
@@ -100,6 +95,8 @@ public class ApplicationConfiguration {
         }
         Constants.VERSION = env.getRequiredProperty("tatami.version");
         Constants.GOOGLE_ANALYTICS_KEY = env.getProperty("tatami.google.analytics.key");
+        String canLoginString = env.getProperty("tatami.user.deactivated.can.login","false");
+        Constants.DEACTIVATED_USER_CAN_LOGIN = Boolean.valueOf(canLoginString);
 
         log.info("Tatami v. {} started!", Constants.VERSION);
         log.debug("Google Analytics key : {}", Constants.GOOGLE_ANALYTICS_KEY);

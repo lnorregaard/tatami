@@ -75,6 +75,12 @@ public class FriendshipController {
     @Timed
     @ResponseBody
     public UserDTO updateFriend(@RequestBody fr.ippon.tatami.web.rest.dto.UserActionStatus action, @PathVariable("username") String username) {
+        try {
+            authenticationService.validateStatus();
+        } catch (UsernameNotFoundException e) {
+            log.info("The user is not active and can not follow user");
+            return null;
+        }
         if ( action.getFriendShip() != null && action.getFriendShip() ) {
             if ( action.getFriend() ) {
                 friendshipService.followUser(username);
@@ -101,13 +107,6 @@ public class FriendshipController {
     @Timed
     @Deprecated
     public boolean followUser(@RequestBody User user, HttpServletResponse response) {
-        try {
-            authenticationService.validateStatus();
-        } catch (UsernameNotFoundException e) {
-            log.info("The user is not active and can not follow user");
-            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-            return false;
-        }
         log.debug("REST request to follow username : {}", user.getUsername());
         boolean success = friendshipService.followUser(user.getUsername());
         if (!success) {
@@ -129,13 +128,6 @@ public class FriendshipController {
     @Timed
     @Deprecated
     public boolean unfollowUser(@RequestBody User user, HttpServletResponse response) {
-        try {
-            authenticationService.validateStatus();
-        } catch (UsernameNotFoundException e) {
-            log.info("The user is not active and can not unfollow a user");
-            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-            return false;
-        }
         log.debug("REST request to unfollow username  : {}", user.getUsername());
         boolean success = friendshipService.unfollowUser(user.getUsername());
         if (!success) {

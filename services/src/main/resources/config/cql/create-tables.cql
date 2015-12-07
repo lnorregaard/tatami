@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS user (
     weekly_digest_subscription boolean,
     daily_digest_subscription boolean,
     attachmentsSize bigint,
+    properties map<text,text>,
     PRIMARY KEY(login)
 );
 

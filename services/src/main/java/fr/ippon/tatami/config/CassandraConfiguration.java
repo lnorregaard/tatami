@@ -506,6 +506,7 @@ public class CassandraConfiguration {
                 "    weekly_digest_subscription boolean,\n" +
                 "    daily_digest_subscription boolean,\n" +
                 "    attachmentsSize bigint,\n" +
+                "    properties map<text,text>,\n" +
                 "    PRIMARY KEY(login)\n" +
                 ");");
         session.execute("CREATE TABLE IF NOT EXISTS "+keyspace+".status (\n" +

@@ -11,6 +11,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.validation.groups.Default;
 import java.io.Serializable;
+import java.util.Map;
 
 /**
  * A user.
@@ -84,6 +85,9 @@ public class User implements Serializable {
     @Column(name="activated")
     private Boolean activated=true;
 
+    @Column
+    private Map<String,String> properties;
+
     @Transient
     private long statusCount;
 
@@ -93,6 +97,14 @@ public class User implements Serializable {
     @Transient
     private long followersCount;
 
+
+    public Map<String, String> getProperties() {
+        return properties;
+    }
+
+    public void setProperties(Map<String, String> properties) {
+        this.properties = properties;
+    }
 
     public Boolean getActivated() {
         return activated;

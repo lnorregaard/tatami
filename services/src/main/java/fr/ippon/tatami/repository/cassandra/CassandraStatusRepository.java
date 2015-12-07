@@ -351,7 +351,7 @@ public class CassandraStatusRepository implements StatusRepository {
     private AbstractStatus findShare(Row result) {
         Share share = new Share();
         share.setType(StatusType.SHARE);
-        share.setOriginalStatusId(result.getString(ORIGINAL_STATUS_ID));
+        share.setOriginalStatusId(result.getUUID(ORIGINAL_STATUS_ID).toString());
         return share;
     }
 

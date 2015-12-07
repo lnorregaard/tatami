@@ -70,7 +70,8 @@ public class AccountController {
     public User getProfile() {
         log.debug("REST request to get account's profile");
         User currentUser = authenticationService.getCurrentUser();
-        return userService.getUserByLogin(currentUser.getLogin());
+        currentUser = userService.getUserByLogin(currentUser.getLogin());
+        return currentUser;
     }
 
     /**
@@ -86,6 +87,7 @@ public class AccountController {
         currentUser.setLastName(updatedUser.getLastName().replace("<", " "));
         currentUser.setJobTitle(StringEscapeUtils.escapeHtml(updatedUser.getJobTitle().replace("<", " ")));
         currentUser.setPhoneNumber(updatedUser.getPhoneNumber().replace("<", " "));
+        currentUser.setProperties(updatedUser.getProperties());
         try {
             userService.updateUser(currentUser);
         } catch (ConstraintViolationException cve) {

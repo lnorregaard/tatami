@@ -18,6 +18,7 @@ import org.springframework.util.StringUtils;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.validation.*;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -112,6 +113,9 @@ public class CassandraUserRepository implements UserRepository {
             user.setStatusCount(counterRepository.getStatusCounter(login));
             user.setFollowersCount(counterRepository.getFollowersCounter(login));
             user.setFriendsCount(counterRepository.getFriendsCounter(login));
+            if (user.getProperties() == null) {
+                user.setProperties(new HashMap<>());
+            }
         }
         return user;
     }

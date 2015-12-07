@@ -84,7 +84,8 @@ public class UserService {
     Environment env;
 
     public User getUserByLogin(String login) {
-        return userRepository.findUserByLogin(login);
+        User user = userRepository.findUserByLogin(login);
+        return user;
     }
 
     public String getLoginByRssUid(String rssUid) {

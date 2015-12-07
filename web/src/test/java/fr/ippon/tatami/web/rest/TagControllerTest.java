@@ -62,6 +62,7 @@ public class TagControllerTest extends AbstractCassandraTatamiTest {
         TimelineController timelineController = new TimelineController();
         ReflectionTestUtils.setField(timelineController, "timelineService", timelineService);
         ReflectionTestUtils.setField(timelineController, "statusUpdateService", statusUpdateService);
+        ReflectionTestUtils.setField(timelineController, "authenticationService", mockAuthenticationService);
         this.timelineMockMvc = MockMvcBuilders.standaloneSetup(timelineController).build();
     }
 

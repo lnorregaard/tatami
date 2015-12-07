@@ -1,5 +1,6 @@
 package fr.ippon.tatami.security;
 
+import fr.ippon.tatami.config.Constants;
 import fr.ippon.tatami.domain.User;
 import fr.ippon.tatami.service.UserService;
 import org.slf4j.Logger;
@@ -71,7 +72,7 @@ public class TatamiUserDetailsService implements UserDetailsService {
         if (userFromCassandra == null) {
             throw new UsernameNotFoundException("User " + lowercaseLogin + " was not found in Cassandra");
         }
-        else if ( userFromCassandra.getActivated() != null && userFromCassandra.getActivated() == false ) {
+        else if (!Constants.DEACTIVATED_USER_CAN_LOGIN && userFromCassandra.getActivated() != null && !userFromCassandra.getActivated()) {
             throw new UsernameNotFoundException("User " + lowercaseLogin + " is deactivated. Contact administrator for further details." );
         }
         return getTatamiUserDetails(lowercaseLogin, userFromCassandra.getPassword());

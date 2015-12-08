@@ -5,6 +5,7 @@ import fr.ippon.tatami.domain.status.*;
 
 import javax.validation.ConstraintViolationException;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * The Status Repository.
@@ -43,4 +44,10 @@ public interface StatusRepository {
      * @return null if status was removed
      */
     AbstractStatus findStatusById(String statusId);
+
+    List<String> findStatusByStates(String types, Integer count, String start, String finish);
+
+    AbstractStatus findStatusById(String statusId, boolean excludeStates);
+
+    void updateState(String statusId, String state);
 }

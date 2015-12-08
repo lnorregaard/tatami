@@ -26,7 +26,7 @@ import java.time.LocalDate;
         "fr.ippon.tatami.security"})
 @Import(value = {
         AsyncConfiguration.class,
-        CacheConfiguration.class,
+//        CacheConfiguration.class,
         CassandraConfiguration.class,
         SearchConfiguration.class,
         MailConfiguration.class,
@@ -97,6 +97,7 @@ public class ApplicationConfiguration {
         Constants.GOOGLE_ANALYTICS_KEY = env.getProperty("tatami.google.analytics.key");
         String canLoginString = env.getProperty("tatami.user.deactivated.can.login","false");
         Constants.DEACTIVATED_USER_CAN_LOGIN = Boolean.valueOf(canLoginString);
+        Constants.MODERATOR_STATUS = Boolean.valueOf(env.getProperty("tatami.moderator.status","false"));
 
         log.info("Tatami v. {} started!", Constants.VERSION);
         log.debug("Google Analytics key : {}", Constants.GOOGLE_ANALYTICS_KEY);

@@ -134,7 +134,7 @@ public class TimelineController {
         try {
             return timelineService.getStatusForStates(states, count, start, finish);
         } catch (Exception e) {
-            if (log.isDebugEnabled()) {
+            if (log.isDebugEnabled()) {                     
                 e.printStackTrace();
             }
             return new ArrayList<StatusDTO>();
@@ -157,6 +157,11 @@ public class TimelineController {
                     log.debug("approve status: {}", statusId);
                     timelineService.approveStatus(statusId);
                 } else if (action.getState() != null && action.getState().equals("BLOCKED") && action.getComment() != null && !action.getComment().isEmpty()) {
+                    log.info("Block status: {} with message: {} for username : {} by moderator: {}",
+                            statusId,
+                            status.getContent(),
+                            status.getUsername(),
+                            authenticationService.getCurrentUser().getLogin());
                     timelineService.blockStatus(authenticationService.getCurrentUser().getLogin(),statusId,action.getComment(),status.getUsername());
                 } else {
                     log.debug("state or comment is null statusId: {} State: {} Comment: {}",statusId,action.getState(),action.getComment());

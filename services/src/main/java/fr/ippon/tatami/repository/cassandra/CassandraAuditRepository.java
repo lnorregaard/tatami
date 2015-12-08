@@ -40,7 +40,7 @@ public class CassandraAuditRepository implements AuditRepository {
 
     @Override
     public void blockStatus(String moderator, String statusId, String username, String comment) {
-        log.debug("Creating audit for status : {} username {} moderator {} comment: {}", statusId,username,moderator,comment);
+        log.info("Creating audit for status : {} username {} moderator {} comment: {}", statusId,username,moderator,comment);
         Statement statement = QueryBuilder.insertInto(TABLE)
                 .value(USERNAME,username)
                 .value(ID, UUIDs.timeBased())
@@ -54,7 +54,7 @@ public class CassandraAuditRepository implements AuditRepository {
 
     @Override
     public void blockUser(String moderator, String username, String comment) {
-        log.debug("Creating audit for user : {} moderator {} comment: {}", username,moderator,comment);
+        log.info("Creating audit for user : {} moderator {} comment: {}", username,moderator,comment);
         Statement statement = QueryBuilder.insertInto(TABLE)
                 .value(USERNAME,username)
                 .value(ID, UUIDs.timeBased())

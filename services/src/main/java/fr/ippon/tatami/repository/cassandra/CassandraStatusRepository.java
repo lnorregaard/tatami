@@ -4,6 +4,7 @@ import com.datastax.driver.core.*;
 import com.datastax.driver.core.querybuilder.Insert;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.querybuilder.Select;
+import com.datastax.driver.core.querybuilder.Update;
 import com.datastax.driver.core.utils.UUIDs;
 import com.datastax.driver.mapping.Mapper;
 import com.datastax.driver.mapping.MappingManager;
@@ -70,6 +71,8 @@ public class CassandraStatusRepository implements StatusRepository {
     //Bean validation
     private static final ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
     private static final Validator validator = factory.getValidator();
+
+    private final static int COLUMN_TTL = 60 * 60 * 24 * 90; // The column is stored for 90 days.
 
     //Cassandra Template
 
@@ -371,9 +374,15 @@ public class CassandraStatusRepository implements StatusRepository {
 
     @Override
     public void updateState(String statusId, String state) {
-        Statement statement = QueryBuilder.update("status")
+        Update.Where where = QueryBuilder.update("status")
                 .with(set("state",state))
                 .where(eq("statusId",UUID.fromString(statusId)));
+        if (state.equals("BLOCKED")) {
+            where.using(ttl(COLUMN_TTL));
+        } else {
+            where.using(ttl(Integer.MAX_VALUE));
+        }
+        Statement statement = where;
         session.execute(statement);
     }
 

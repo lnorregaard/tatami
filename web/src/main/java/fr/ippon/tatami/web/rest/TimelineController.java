@@ -124,15 +124,13 @@ public class TimelineController {
             produces = "application/json")
     @ResponseBody
     public Collection<StatusDTO> listStatusForModerator(@RequestParam(required = false) String states,
-                                                   @RequestParam(required = false) Integer count,
-                                                   @RequestParam(required = false) String start,
-                                                   @RequestParam(required = false) String finish) {
+                                                   @RequestParam(required = false) Integer count) {
 
         if (count == null || count == 0) {
             count = 20; //Default value
         }
         try {
-            return timelineService.getStatusForStates(states, count, start, finish);
+            return timelineService.getStatusForStates(states, count);
         } catch (Exception e) {
             if (log.isDebugEnabled()) {                     
                 e.printStackTrace();

@@ -656,8 +656,8 @@ public class TimelineService {
         atmosphereService.notifyUser(timelineLogin, share);
     }
 
-    public Collection<StatusDTO> getStatusForStates(String types, Integer count, String start, String finish) {
-        List<String> lines = statusRepository.findStatusByStates(types,count,start,finish);
+    public Collection<StatusDTO> getStatusForStates(String types, Integer count) {
+        List<String> lines = statusRepository.findStatusByStates(types,count);
         Collection<StatusDTO> statuses = new ArrayList<>(lines.size());
         for (String statusId : lines) {
             AbstractStatus abstractStatus = statusRepository.findStatusById(statusId,false);

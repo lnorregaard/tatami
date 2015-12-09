@@ -279,7 +279,7 @@ public class CassandraStatusRepository implements StatusRepository {
     }
 
     @Override
-    public List<String> findStatusByStates(String types, Integer count, String start, String finish) {
+    public List<String> findStatusByStates(String types, Integer count) {
         List<String> states = new ArrayList<>();
 
         if (types != null && types.contains(",")) {
@@ -295,11 +295,6 @@ public class CassandraStatusRepository implements StatusRepository {
             where = select.where(eq("type", "STATUS"));
         } else {
             where = select.where(in("state",states));
-        }
-        if(finish != null) {
-            where.and(lt("statusId", UUID.fromString(finish)));
-        } else if(start != null) {
-            where.and(gt("statusId",UUID.fromString(start)));
         }
         if (count > 0) {
             where.limit(count);

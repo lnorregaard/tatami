@@ -713,6 +713,9 @@ public class TimelineService {
             statusDTO.setState(abstractStatus.getState());
             statusDTO.setUsername(abstractStatus.getUsername());
             StatusType type = abstractStatus.getType();
+            if (type != null && type.equals(StatusType.STATUS)) {
+                statusDTO.setContent(((Status)abstractStatus).getContent());
+            }
             if (type == null) {
                 statusDTO.setType(StatusType.STATUS);
             } else {

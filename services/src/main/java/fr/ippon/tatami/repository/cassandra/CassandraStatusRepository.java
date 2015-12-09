@@ -73,7 +73,7 @@ public class CassandraStatusRepository implements StatusRepository {
     private static final Validator validator = factory.getValidator();
 
     private final static int COLUMN_TTL = 60 * 60 * 24 * 90; // The column is stored for 90 days.
-
+    private final static int MAXTTL = 630720000;
     //Cassandra Template
 
     @Inject
@@ -377,10 +377,10 @@ public class CassandraStatusRepository implements StatusRepository {
         Update.Where where = QueryBuilder.update("status")
                 .with(set("state",state))
                 .where(eq("statusId",UUID.fromString(statusId)));
-        if (state.equals("BLOCKED")) {
+        if (state != null && state.equals("BLOCKED")) {
             where.using(ttl(COLUMN_TTL));
         } else {
-            where.using(ttl(Integer.MAX_VALUE));
+            where.using(ttl(MAXTTL));
         }
         Statement statement = where;
         session.execute(statement);

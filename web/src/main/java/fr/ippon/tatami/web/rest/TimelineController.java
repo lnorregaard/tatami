@@ -154,8 +154,13 @@ public class TimelineController {
             StatusDTO status = timelineService.getPendingStatus(statusId);
             if (action != null) {
                 if (action.getState() != null && action.getState().equals("APPROVED")) {
-                    log.debug("approve status: {}", statusId);
+                    log.info("Approve status: {} with message: {} for username : {} by moderator: {}",
+                            statusId,
+                            status.getContent(),
+                            status.getUsername(),
+                            authenticationService.getCurrentUser().getLogin());
                     timelineService.approveStatus(statusId);
+                    status.setState(action.getState());
                 } else if (action.getState() != null && action.getState().equals("BLOCKED") && action.getComment() != null && !action.getComment().isEmpty()) {
                     log.info("Block status: {} with message: {} for username : {} by moderator: {}",
                             statusId,
@@ -163,6 +168,7 @@ public class TimelineController {
                             status.getUsername(),
                             authenticationService.getCurrentUser().getLogin());
                     timelineService.blockStatus(authenticationService.getCurrentUser().getLogin(),statusId,action.getComment(),status.getUsername());
+                    status.setState(action.getState());
                 } else {
                     log.debug("state or comment is null statusId: {} State: {} Comment: {}",statusId,action.getState(),action.getComment());
                     return null;

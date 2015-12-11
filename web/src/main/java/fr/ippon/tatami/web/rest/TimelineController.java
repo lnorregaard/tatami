@@ -12,6 +12,7 @@ import fr.ippon.tatami.service.TimelineService;
 import fr.ippon.tatami.service.dto.StatusDTO;
 import fr.ippon.tatami.service.exception.ArchivedGroupException;
 import fr.ippon.tatami.service.exception.ReplyStatusException;
+import fr.ippon.tatami.web.rest.dto.ActionModerator;
 import fr.ippon.tatami.web.rest.dto.ActionStatus;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.slf4j.Logger;
@@ -113,6 +114,72 @@ public class TimelineController {
                 e.printStackTrace();
             }
             return new ArrayList<StatusDTO>();
+        }
+    }
+
+    /**
+     * GET  /statuses/user_timeline?screen_name=jdubois -> get the latest statuses from user "jdubois"
+     */
+    @RequestMapping(value = "/rest/statuses/moderator",
+            method = RequestMethod.GET,
+            produces = "application/json")
+    @ResponseBody
+    public Collection<StatusDTO> listStatusForModerator(@RequestParam(required = false) String states,
+                                                   @RequestParam(required = false) Integer count) {
+
+        if (count == null || count == 0) {
+            count = 20; //Default value
+        }
+        try {
+            return timelineService.getStatusForStates(states, count);
+        } catch (Exception e) {
+            if (log.isDebugEnabled()) {                     
+                e.printStackTrace();
+            }
+            return new ArrayList<StatusDTO>();
+        }
+    }
+
+    @RequestMapping(value = "/rest/statuses/moderator/{statusId}",
+            method = RequestMethod.PATCH)
+    @ResponseBody
+    public StatusDTO updateStatus(@RequestBody ActionModerator action, @PathVariable("statusId") String statusId) {
+        try {
+            authenticationService.validateStatus();
+        } catch (UsernameNotFoundException e) {
+            return null;
+        }
+        try {
+            StatusDTO status = timelineService.getPendingStatus(statusId);
+            if (action != null) {
+                if (action.getState() != null && action.getState().equals("APPROVED")) {
+                    log.info("Approve status: {} with message: {} for username : {} by moderator: {}",
+                            statusId,
+                            status.getContent(),
+                            status.getUsername(),
+                            authenticationService.getCurrentUser().getLogin());
+                    timelineService.approveStatus(statusId);
+                    status.setState(action.getState());
+                } else if (action.getState() != null && action.getState().equals("BLOCKED") && action.getComment() != null && !action.getComment().isEmpty()) {
+                    log.info("Block status: {} with message: {} for username : {} by moderator: {}",
+                            statusId,
+                            status.getContent(),
+                            status.getUsername(),
+                            authenticationService.getCurrentUser().getLogin());
+                    timelineService.blockStatus(authenticationService.getCurrentUser().getLogin(),statusId,action.getComment(),status.getUsername());
+                    status.setState(action.getState());
+                } else {
+                    log.debug("state or comment is null statusId: {} State: {} Comment: {}",statusId,action.getState(),action.getComment());
+                    return null;
+                }
+            }
+            return status;
+        } catch (Exception e) {
+            StringWriter stack = new StringWriter();
+            PrintWriter pw = new PrintWriter(stack);
+            e.printStackTrace(pw);
+            log.debug("{}", stack.toString());
+            return null;
         }
     }
 

@@ -506,6 +506,7 @@ public class CassandraConfiguration {
                 "    weekly_digest_subscription boolean,\n" +
                 "    daily_digest_subscription boolean,\n" +
                 "    attachmentsSize bigint,\n" +
+                "    properties map<text,text>,\n" +
                 "    PRIMARY KEY(login)\n" +
                 ");");
         session.execute("CREATE TABLE IF NOT EXISTS "+keyspace+".status (\n" +
@@ -527,6 +528,7 @@ public class CassandraConfiguration {
                 "    detailsAvailable boolean,\n" +
                 "    originalStatusId timeuuid,\n" +
                 "    followerLogin varchar,\n" +
+                "    state varchar,\n" +
                 "    PRIMARY KEY(statusId)\n" +
                 ");\n");
         session.execute("CREATE TABLE IF NOT EXISTS "+keyspace+".timeline (\n" +
@@ -729,6 +731,14 @@ public class CassandraConfiguration {
                 "    adminLogin varchar,\n" +
                 "    PRIMARY KEY(domain)\n" +
                 ");\n");
+        session.execute("CREATE TABLE IF NOT EXISTS audit (\n" +
+                "    username varchar,\n" +
+                "    id timeuuid,\n" +
+                "    type varchar,\n" +
+                "    blockedId varchar,\n" +
+                "    moderator varchar,\n" +
+                "    comment varchar,\n" +
+                "    PRIMARY KEY(username,id)\n");
     }
 
     @Bean

@@ -50,7 +50,8 @@ public abstract class AbstractCassandraLineRepository {
     protected void addStatus(String key, String table, String statusId, int ttl) {
         Statement statement = QueryBuilder.insertInto(table)
                 .value("key", key)
-                .value("status", UUID.fromString(statusId));
+                .value("status", UUID.fromString(statusId))
+                .using(ttl(ttl));
         session.execute(statement);
     }
 

@@ -60,7 +60,6 @@
                 },
                 "name": {
                     "type": "multi_field",
-                    "path": "just_name",
                     "fields": {
                         "name": {
                             "type": "string"
@@ -71,7 +70,7 @@
                         },
                         "prefix" : {
                             "type" : "string",
-                            "index_analyzer" : "prefixIndex",
+                            "analyzer" : "prefixIndex",
                             "search_analyzer" : "prefixSearch"
                         }
                     }

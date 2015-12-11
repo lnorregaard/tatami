@@ -9,6 +9,7 @@ import fr.ippon.tatami.service.dto.StatusDTO;
 import fr.ippon.tatami.service.util.DomainUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Service;
 import fr.ippon.tatami.domain.status.*;
 
@@ -68,6 +69,10 @@ public class TimelineService {
 
     @Inject
     private FollowerRepository followerRepository;
+
+    @Inject
+    private AuditRepository auditRepository;
+
 
     @Inject
     private AuthenticationService authenticationService;
@@ -649,5 +654,75 @@ public class TimelineService {
     private void shareStatusToTimelineAndNotify(String sharedByLogin, String timelineLogin, Share share) {
         timelineRepository.shareStatusToTimeline(sharedByLogin, timelineLogin, share);
         atmosphereService.notifyUser(timelineLogin, share);
+    }
+
+    public Collection<StatusDTO> getStatusForStates(String types, Integer count) {
+        List<String> lines = statusRepository.findStatusByStates(types,count);
+        Collection<StatusDTO> statuses = new ArrayList<>(lines.size());
+        for (String statusId : lines) {
+            AbstractStatus abstractStatus = statusRepository.findStatusById(statusId,false);
+            if (abstractStatus != null) {
+                User statusUser = userService.getUserByLogin(abstractStatus.getLogin());
+                if (statusUser != null) {
+                    // Security check
+                    // bypass the security check when no user is logged in
+                    // => for non-authenticated rss access
+                    StatusDTO statusDTO = new StatusDTO();
+                    statusDTO.setStatusId(abstractStatus.getStatusId().toString());
+                    statusDTO.setStatusDate(abstractStatus.getStatusDate());
+                    statusDTO.setGeoLocalization(abstractStatus.getGeoLocalization());
+                    statusDTO.setActivated(statusUser.getActivated());
+                    statusDTO.setState(abstractStatus.getState());
+                    StatusType type = abstractStatus.getType();
+                    if (type == null) {
+                        statusDTO.setType(StatusType.STATUS);
+                    } else {
+                        statusDTO.setType(abstractStatus.getType());
+                    }
+
+                    statusDTO.setTimelineId(abstractStatus.getStatusId().toString());
+                    statuses.add(statusDTO);
+                } else {
+                    log.debug("Deleted user : {}", abstractStatus.getLogin());
+                }
+            } else {
+                log.debug("Deleted status : {}", statusId);
+            }
+        }
+        return statuses;
+    }
+
+    @Secured("ROLE_ADMIN")
+    public void approveStatus(String statusId) {
+        statusRepository.updateState(statusId,null);
+    }
+
+    @Secured("ROLE_ADMIN")
+    public void blockStatus(String moderator, String statusId, String comment,String username) {
+        statusRepository.updateState(statusId,"BLOCKED");
+        auditRepository.blockStatus(moderator,statusId,username,comment);
+    }
+
+    public StatusDTO getPendingStatus(String statusId) {
+        AbstractStatus abstractStatus = statusRepository.findStatusById(statusId,false);
+        if (abstractStatus != null) {
+            StatusDTO statusDTO = new StatusDTO();
+            statusDTO.setStatusId(abstractStatus.getStatusId().toString());
+            statusDTO.setStatusDate(abstractStatus.getStatusDate());
+            statusDTO.setGeoLocalization(abstractStatus.getGeoLocalization());
+            statusDTO.setState(abstractStatus.getState());
+            statusDTO.setUsername(abstractStatus.getUsername());
+            StatusType type = abstractStatus.getType();
+            if (type != null && type.equals(StatusType.STATUS)) {
+                statusDTO.setContent(((Status)abstractStatus).getContent());
+            }
+            if (type == null) {
+                statusDTO.setType(StatusType.STATUS);
+            } else {
+                statusDTO.setType(abstractStatus.getType());
+            }
+            return statusDTO;
+        }
+        return null;
     }
 }

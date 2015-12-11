@@ -4,7 +4,6 @@ import org.elasticsearch.action.admin.cluster.node.info.NodesInfoRequest;
 import org.elasticsearch.action.admin.cluster.node.info.NodesInfoResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.TransportClient;
-import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.slf4j.Logger;
@@ -14,6 +13,8 @@ import org.springframework.core.env.Environment;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 /**
  * Transport client configuration.
@@ -31,10 +32,10 @@ public class RemoteElasticsearchEngine implements ElasticsearchEngine {
     private void init() {
         log.info("Initializing Elasticsearch remote client...");
 
-        Settings settings = ImmutableSettings.settingsBuilder()
+        Settings settings = Settings.builder()
                 .put("cluster.name", env.getRequiredProperty("elasticsearch.cluster.name"))
                 .build();
-        client = new TransportClient(settings, false);
+        client = TransportClient.builder().settings(settings).build();
 
         // Looking for nodes configuration
         String nodes = env.getRequiredProperty("elasticsearch.cluster.nodes");
@@ -51,8 +52,8 @@ public class RemoteElasticsearchEngine implements ElasticsearchEngine {
             NodesInfoResponse nir =
                     client.admin().cluster().nodesInfo(new NodesInfoRequest()).actionGet();
 
-            log.info("Elasticsearch client is now connected to the " + nir.nodes().length + " node(s) cluster named \""
-                    + nir.clusterName() + "\"");
+            log.info("Elasticsearch client is now connected to the " + nir.getNodes().length + " node(s) cluster named \""
+                    + nir.getClusterName() + "\"");
         }
     }
 
@@ -69,6 +70,11 @@ public class RemoteElasticsearchEngine implements ElasticsearchEngine {
     private InetSocketTransportAddress parseAddress(String address) {
         String[] addressItems = address.split(":", 2);
         int port = Integer.parseInt(addressItems.length > 1 ? addressItems[1] : env.getRequiredProperty("elasticsearch.cluster.default.communication.port"));
-        return new InetSocketTransportAddress(addressItems[0], port);
+        try {
+            return new InetSocketTransportAddress(InetAddress.getByName(addressItems[0]), port);
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }

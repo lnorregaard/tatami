@@ -3,9 +3,12 @@ package fr.ippon.tatami.repository.cassandra;
 import com.datastax.driver.core.*;
 import com.datastax.driver.core.querybuilder.Insert;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
+import com.datastax.driver.core.querybuilder.Select;
+import com.datastax.driver.core.querybuilder.Update;
 import com.datastax.driver.core.utils.UUIDs;
 import com.datastax.driver.mapping.Mapper;
 import com.datastax.driver.mapping.MappingManager;
+import fr.ippon.tatami.config.Constants;
 import fr.ippon.tatami.domain.Attachment;
 import fr.ippon.tatami.domain.Group;
 import fr.ippon.tatami.repository.*;
@@ -22,6 +25,9 @@ import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.validation.*;
 import java.util.*;
+import java.util.stream.Collectors;
+
+import static com.datastax.driver.core.querybuilder.QueryBuilder.*;
 
 /**
  * Cassandra implementation of the status repository.
@@ -66,6 +72,8 @@ public class CassandraStatusRepository implements StatusRepository {
     private static final ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
     private static final Validator validator = factory.getValidator();
 
+    private final static int COLUMN_TTL = 60 * 60 * 24 * 90; // The column is stored for 90 days.
+    private final static int MAXTTL = 630720000;
     //Cassandra Template
 
     @Inject
@@ -126,6 +134,9 @@ public class CassandraStatusRepository implements StatusRepository {
         status.setStatusPrivate(statusPrivate);
 
         status.setContent(content);
+        if (Constants.MODERATOR_STATUS) {
+            status.setState("PENDING");
+        }
 
         Set<ConstraintViolation<Status>> constraintViolations = validator.validate(status);
         if (!constraintViolations.isEmpty()) {
@@ -261,21 +272,46 @@ public class CassandraStatusRepository implements StatusRepository {
         return mentionShare;
     }
 
-
-    private Optional<Status> findOneFromIndex(BoundStatement stmt) {
-        ResultSet rs = session.execute(stmt);
-        if (rs.isExhausted()) {
-            return Optional.empty();
-        }
-        return Optional.ofNullable(rs.one().getUUID("statusId"))
-                .map(id -> Optional.ofNullable(mapper.get(id)))
-                .get();
-    }
-
-
     @Override
     @Cacheable("status-cache")
     public AbstractStatus findStatusById(String statusId) {
+        return findStatusById(statusId,true);
+    }
+
+    @Override
+    public List<String> findStatusByStates(String types, Integer count) {
+        List<String> states = new ArrayList<>();
+
+        if (types != null && types.contains(",")) {
+            states = Arrays.asList(types.split(","));
+        } else if (types != null) {
+            states.add(types);
+        }
+        Select select = QueryBuilder.select()
+                .column("statusId")
+                .from("status");
+        Select.Where where = null;
+        if (states.isEmpty()) {
+            where = select.where(eq("type", "STATUS"));
+        } else {
+            where = select.where(in("state",states));
+        }
+        if (count > 0) {
+            where.limit(count);
+        }
+
+//        where.orderBy(desc("statusId"));
+        Statement statement = where;
+        ResultSet results = session.execute(statement);
+        return results
+                .all()
+                .stream()
+                .map(e -> e.getUUID("statusId").toString())
+                .collect(Collectors.toList());
+
+    }
+
+    public AbstractStatus findStatusById(String statusId, boolean excludeStates) {
         if (statusId == null || statusId.equals("")) {
             return null;
         }
@@ -290,6 +326,9 @@ public class CassandraStatusRepository implements StatusRepository {
         }
         Row row = rs.one();
         AbstractStatus status = null;
+        if (excludeStates && row.getString("state") != null) {
+            return status;
+        }
         String type = row.getString(TYPE);
         if (type == null || type.equals(StatusType.STATUS.name())) {
             status = findStatus(row, statusId);
@@ -310,6 +349,7 @@ public class CassandraStatusRepository implements StatusRepository {
         status.setStatusId(UUID.fromString(statusId));
         status.setLogin(row.getString(LOGIN));
         status.setUsername(row.getString(USERNAME));
+        status.setState(row.getString("state"));
 
         String domain = row.getString(DOMAIN);
         if (domain != null) {
@@ -325,6 +365,20 @@ public class CassandraStatusRepository implements StatusRepository {
         }
         return status;
 
+    }
+
+    @Override
+    public void updateState(String statusId, String state) {
+        Update.Where where = QueryBuilder.update("status")
+                .with(set("state",state))
+                .where(eq("statusId",UUID.fromString(statusId)));
+        if (state != null && state.equals("BLOCKED")) {
+            where.using(ttl(COLUMN_TTL));
+        } else {
+            where.using(ttl(MAXTTL));
+        }
+        Statement statement = where;
+        session.execute(statement);
     }
 
     private AbstractStatus findMentionShare(Row result) {

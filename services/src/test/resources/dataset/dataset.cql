@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS user (
     weekly_digest_subscription boolean,
     daily_digest_subscription boolean,
     attachmentsSize bigint,
+    properties map<text,text>,
     PRIMARY KEY(login)
 );
 
@@ -40,6 +41,7 @@ CREATE TABLE IF NOT EXISTS status (
     detailsAvailable boolean,
     originalStatusId timeuuid,
     followerLogin varchar,
+    state varchar,
     PRIMARY KEY(statusId)
 );
 
@@ -272,6 +274,17 @@ CREATE TABLE IF NOT EXISTS domainConfiguration (
     PRIMARY KEY(domain)
 );
 
+CREATE TABLE IF NOT EXISTS audit (
+    username varchar,
+    id timeuuid,
+    type varchar,
+    blockedId varchar,
+    moderator varchar,
+    comment varchar,
+    PRIMARY KEY(username,id)
+);
+
+
 INSERT INTO user (login , avatar , firstname , lastname , username , domain ) VALUES('jdubois@ippon.fr', 'avatar', 'Julien','Dubois','jdubois','ippon.fr');
 INSERT INTO user (login , avatar , firstname , lastname , username , domain ) VALUES('uuser@ippon.fr', 'avatar', 'Update','User','uuser','ippon.fr');
 INSERT INTO user (login , avatar , firstname , lastname , username , domain ) VALUES('timelineUser@ippon.fr','avatar','User','TimelineUser','timelineUser','ippon.fr');
@@ -347,5 +360,3 @@ INSERT INTO userline (key,status) VALUES ('userWithStatus@ippon.fr',f97d6470-984
 INSERT INTO shares (status,login) VALUES (f97d6470-9847-11e1-a6ca-e0f847068d52,'john_doe');
 
 INSERT INTO tagFollowers (key,login) VALUES ('test-ippon.fr' ,'jdubois@ippon.fr');
-
-

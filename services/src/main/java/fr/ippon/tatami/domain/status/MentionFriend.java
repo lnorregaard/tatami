@@ -47,6 +47,9 @@ public class MentionFriend implements AbstractStatus {
     @Column
     private boolean removed;
 
+    @Column
+    private String state;
+
     public UUID getStatusId() {
         return statusId;
     }
@@ -101,6 +104,16 @@ public class MentionFriend implements AbstractStatus {
 
     public void setRemoved(boolean removed) {
         this.removed = removed;
+    }
+
+    @Override
+    public void setState(String state) {
+        this.state = state;
+    }
+
+    @Override
+    public String getState() {
+        return state;
     }
 
     private String followerLogin;

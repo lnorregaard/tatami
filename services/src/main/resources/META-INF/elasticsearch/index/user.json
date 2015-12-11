@@ -61,7 +61,6 @@
                 },
                 "username": {
                     "type" : "multi_field",
-                    "path" : "just_name",
                     "fields" : {
                         "username": {
                             "type" : "string",
@@ -69,14 +68,13 @@
                         },
                         "prefix" : {
                             "type" : "string",
-                            "index_analyzer" : "prefixIndex",
+                            "analyzer" : "prefixIndex",
                             "search_analyzer" : "prefixSearch"
                         }
                     }
                 },
                 "firstName": {
                     "type" : "multi_field",
-                    "path" : "just_name",
                     "fields" : {
                         "firstName": {
                             "type": "string",
@@ -84,14 +82,13 @@
                         },
                         "prefix" : {
                             "type" : "string",
-                            "index_analyzer" : "prefixIndex",
+                            "analyzer" : "prefixIndex",
                             "search_analyzer" : "prefixSearch"
                         }
                     }
                 },
                 "lastName": {
                     "type" : "multi_field",
-                    "path" : "just_name",
                     "fields" : {
                         "lastName": {
                             "type": "string",
@@ -99,7 +96,7 @@
                         },
                         "prefix" : {
                             "type" : "string",
-                            "index_analyzer" : "prefixIndex",
+                            "analyzer" : "prefixIndex",
                             "search_analyzer" : "prefixSearch"
                         }
                     }

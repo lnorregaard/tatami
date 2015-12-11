@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS user (
     weekly_digest_subscription boolean,
     daily_digest_subscription boolean,
     attachmentsSize bigint,
+    properties map<text,text>,
     PRIMARY KEY(login)
 );
 
@@ -39,6 +40,7 @@ CREATE TABLE IF NOT EXISTS status (
     detailsAvailable boolean,
     originalStatusId timeuuid,
     followerLogin varchar,
+    state varchar,
     PRIMARY KEY(statusId)
 );
 
@@ -268,4 +270,14 @@ CREATE TABLE IF NOT EXISTS domainConfiguration (
     storageSize varchar,
     adminLogin varchar,
     PRIMARY KEY(domain)
+);
+
+CREATE TABLE IF NOT EXISTS audit (
+    username varchar,
+    id timeuuid,
+    type varchar,
+    blockedId varchar,
+    moderator varchar,
+    comment varchar,
+    PRIMARY KEY(username,id)
 );

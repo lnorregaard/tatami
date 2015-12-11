@@ -42,6 +42,9 @@ public class Status implements AbstractStatus {
     @Column
     private Date statusDate;
 
+    @Column
+    private String state;
+
     public String getGeoLocalization() {
         return geoLocalization;
     }
@@ -110,6 +113,16 @@ public class Status implements AbstractStatus {
 
     public void setRemoved(boolean removed) {
         this.removed = removed;
+    }
+
+    @Override
+    public void setState(String state) {
+        this.state = state;
+    }
+
+    @Override
+    public String getState() {
+        return state;
     }
 
 

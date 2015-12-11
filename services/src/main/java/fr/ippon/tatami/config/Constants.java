@@ -5,6 +5,8 @@ package fr.ippon.tatami.config;
  */
 public class Constants {
 
+    public static boolean MODERATOR_STATUS = false;
+
     private Constants() {
     }
 

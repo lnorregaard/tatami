@@ -98,6 +98,8 @@ public class StatusDTO implements Serializable {
 
     private boolean shareByMe;
 
+    private String state;
+
     public boolean isActivated() {
         return activated;
     }
@@ -355,5 +357,13 @@ public class StatusDTO implements Serializable {
                 ", sharedByUsername='" + sharedByUsername + '\'' +
                 ", shareByMe='" + shareByMe + '\'' +
                 '}';
+    }
+
+    public void setState(String state) {
+        this.state = state;
+    }
+
+    public String getState() {
+        return state;
     }
 }

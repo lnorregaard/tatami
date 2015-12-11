@@ -381,6 +381,12 @@
                         </exclusion>
                     </exclusions>
                 </dependency>
+                <dependency>
+                    <groupId>com.carrotsearch</groupId>
+                    <artifactId>hppc</artifactId>
+                    <version>0.7.1</version>
+                </dependency>
+
             </dependencies>
         </profile>
     </profiles>
@@ -443,7 +449,7 @@
         <!-- Dependencies -->
         <spring.version>4.2.2.RELEASE</spring.version>
         <spring.security.version>4.0.3.RELEASE</spring.security.version>
-        <elasticsearch.version>0.20.6</elasticsearch.version>
+        <elasticsearch.version>2.1.0</elasticsearch.version>
         <aspectj.version>1.6.11</aspectj.version>
         <slf4j.version>1.7.5</slf4j.version>
         <logback.version>1.0.13</logback.version>
@@ -458,7 +464,7 @@
         <javax.validation.api.version>1.0.0.GA</javax.validation.api.version>
         <hibernate.validator.version>4.3.0.Final</hibernate.validator.version>
         <jstl.version>1.2</jstl.version>
-        <jackson.version>2.1.2</jackson.version>
+        <jackson.version>2.6.3</jackson.version>
         <jodatime.version>2.1</jodatime.version>
         <commons.lang.version>2.6</commons.lang.version>
         <commons.io.version>2.3</commons.io.version>
@@ -513,6 +519,13 @@
     </prerequisites>
 
     <dependencies>
+
+        <dependency>
+            <groupId>com.carrotsearch</groupId>
+            <artifactId>hppc</artifactId>
+            <version>0.7.1</version>
+        </dependency>
+
         <dependency>
             <groupId>io.springfox</groupId>
             <artifactId>springfox-swagger2</artifactId>
@@ -560,6 +573,11 @@
         <dependency>
             <groupId>com.fasterxml.jackson.datatype</groupId>
             <artifactId>jackson-datatype-joda</artifactId>
+            <version>${jackson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
             <version>${jackson.version}</version>
         </dependency>
         <dependency>

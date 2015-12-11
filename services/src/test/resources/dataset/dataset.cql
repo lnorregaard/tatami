@@ -360,5 +360,3 @@ INSERT INTO userline (key,status) VALUES ('userWithStatus@ippon.fr',f97d6470-984
 INSERT INTO shares (status,login) VALUES (f97d6470-9847-11e1-a6ca-e0f847068d52,'john_doe');
 
 INSERT INTO tagFollowers (key,login) VALUES ('test-ippon.fr' ,'jdubois@ippon.fr');
-
-

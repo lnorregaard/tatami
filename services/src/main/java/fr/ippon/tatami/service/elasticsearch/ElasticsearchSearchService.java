@@ -9,7 +9,6 @@ import fr.ippon.tatami.domain.status.Status;
 import fr.ippon.tatami.repository.GroupRepository;
 import fr.ippon.tatami.service.SearchService;
 import org.apache.commons.lang.StringUtils;
-import org.elasticsearch.ElasticSearchException;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
 import org.elasticsearch.action.bulk.BulkItemResponse;
@@ -23,7 +22,7 @@ import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
-import org.elasticsearch.indices.IndexMissingException;
+import org.elasticsearch.indices.IndexAlreadyExistsException;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.sort.SortBuilders;
@@ -40,8 +39,9 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.*;
 
-import static org.elasticsearch.index.query.FilterBuilders.termFilter;
 import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
+import static org.elasticsearch.index.query.QueryBuilders.termQuery;
+import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
 
 public class ElasticsearchSearchService implements SearchService {
 
@@ -71,7 +71,7 @@ public class ElasticsearchSearchService implements SearchService {
     @PostConstruct
     private void init() {
         for (String type : TYPES) {
-            if (!client().admin().indices().prepareExists(indexName(type)).execute().actionGet().exists()) {
+            if (!client().admin().indices().prepareExists(indexName(type)).execute().actionGet().isExists()) {
                 log.info("Index {} does not exists in Elasticsearch, creating it!", indexName(type));
                 createIndex();
             }
@@ -97,19 +97,22 @@ public class ElasticsearchSearchService implements SearchService {
     private boolean deleteIndex() {
         for (String type : TYPES) {
             try {
-                boolean ack = client().admin().indices().prepareDelete(indexName(type)).execute().actionGet().acknowledged();
+                boolean ack = client().admin().indices().prepareDelete(indexName(type)).execute().actionGet().isAcknowledged();
                 if (!ack) {
                     log.error("Elasticsearch Index wasn't deleted !");
                     return false;
                 }
-            } catch (IndexMissingException e) {
-                // Failling to delete a missing index is supposed to be valid
-                log.warn("Elasticsearch Index " + indexName(type) + " missing, it was not deleted");
-
-            } catch (ElasticSearchException e) {
+            } catch (Exception e) {
                 log.error("Elasticsearch Index " + indexName(type) + " was not deleted", e);
                 return false;
+
             }
+//            } catch (IndexMissingException e) {
+//                // Failling to delete a missing index is supposed to be valid
+//                log.warn("Elasticsearch Index " + indexName(type) + " missing, it was not deleted");
+//
+//            } catch (ElasticSearchException e) {
+//            }
         }
         log.debug("Elasticsearch Index deleted!");
         return true;
@@ -143,16 +146,14 @@ public class ElasticsearchSearchService implements SearchService {
                     }
                 }
 
-                boolean ack = createIndex.execute().actionGet().acknowledged();
+                boolean ack = createIndex.execute().actionGet().isAcknowledged();
                 if (!ack) {
                     log.error("Cannot create index " + indexName(type));
                     return false;
                 }
 
-            } catch (ElasticSearchException e) {
-                log.error("Cannot create index " + indexName(type), e);
-                return false;
-
+            } catch (IndexAlreadyExistsException e) {
+                log.debug("Index exists" + indexName(type));
             } catch (IOException e) {
                 log.error("Cannot create index " + indexName(type), e);
                 return false;
@@ -230,11 +231,11 @@ public class ElasticsearchSearchService implements SearchService {
             size = SearchService.DEFAULT_PAGE_SIZE;
         }
 
-        try {
+//        try {
             SearchRequestBuilder searchRequest = client().prepareSearch(indexName(statusMapper.type()))
                     .setTypes(statusMapper.type())
                     .setQuery(matchQuery(ALL_FIELD, query))
-                    .setFilter(termFilter("domain", domain))
+                    .setQuery(termsQuery("domain",domain))
                     .addFields()
                     .setFrom(page * size)
                     .setSize(size)
@@ -245,7 +246,7 @@ public class ElasticsearchSearchService implements SearchService {
             }
             SearchResponse searchResponse = searchRequest.execute().actionGet();
 
-            SearchHits searchHits = searchResponse.hits();
+            SearchHits searchHits = searchResponse.getHits();
             Long hitsNumber = searchHits.totalHits();
             if (hitsNumber == 0) {
                 return Collections.emptyList();
@@ -260,14 +261,14 @@ public class ElasticsearchSearchService implements SearchService {
             log.debug("search status with words ({}) = {}", query, items);
             return items;
 
-        } catch (IndexMissingException e) {
-            log.warn("The index " + indexName(statusMapper.type()) + " was not found in the Elasticsearch cluster.");
-            return Collections.emptyList();
-
-        } catch (ElasticSearchException e) {
-            log.error("Error happened while searching status in index " + indexName(statusMapper.type()));
-            return Collections.emptyList();
-        }
+//        } catch (IndexMissingException e) {
+//            log.warn("The index " + indexName(statusMapper.type()) + " was not found in the Elasticsearch cluster.");
+//            return Collections.emptyList();
+//
+//        } catch (ElasticSearchException e) {
+//            log.error("Error happened while searching status in index " + indexName(statusMapper.type()));
+//            return Collections.emptyList();
+//        }
     }
 
     private final ElasticsearchMapper<User> userMapper = new ElasticsearchMapper<User>() {
@@ -393,7 +394,7 @@ public class ElasticsearchSearchService implements SearchService {
             client().prepareIndex(indexName(type), type, id).setSource(source).execute(new ActionListener<IndexResponse>() {
                 @Override
                 public void onResponse(IndexResponse response) {
-                    log.debug(type + " id " + id + " was " + (response.version() == 1 ? "indexed" : "updated") + " into Elasticsearch");
+                    log.debug(type + " id " + id + " was " + (response.getVersion() == 1 ? "indexed" : "updated") + " into Elasticsearch");
                 }
 
                 @Override
@@ -442,7 +443,7 @@ public class ElasticsearchSearchService implements SearchService {
         if (response.hasFailures()) {
             int errorCount = 0;
             for (BulkItemResponse itemResponse : response) {
-                if (itemResponse.failed()) {
+                if (itemResponse.isFailed()) {
                     log.error("The " + type + " of id " + itemResponse.getId() + " wasn't indexed in bulk operation: " + itemResponse.getFailureMessage());
                     ++errorCount;
                 }
@@ -474,7 +475,7 @@ public class ElasticsearchSearchService implements SearchService {
             @Override
             public void onResponse(DeleteResponse deleteResponse) {
                 if (log.isDebugEnabled()) {
-                    if (deleteResponse.notFound()) {
+                    if (!deleteResponse.isFound()) {
                         log.debug("{} of id {} was not found therefore not deleted.", type, id);
                     } else {
                         log.debug("{} of id {} was deleted from Elasticsearch.", type, id);
@@ -490,12 +491,11 @@ public class ElasticsearchSearchService implements SearchService {
     }
 
     private Collection<String> searchByPrefix(String domain, String prefix, int size, ElasticsearchMapper<?> mapper) {
-        try {
 
             SearchRequestBuilder searchRequest = client().prepareSearch(indexName(mapper.type()))
                     .setTypes(mapper.type())
                     .setQuery(matchQuery("prefix", prefix))
-                    .setFilter(termFilter("domain", domain))
+                    .setQuery(termQuery("domain", domain))
                     .addFields()
                     .setFrom(0)
                     .setSize(size)
@@ -508,7 +508,7 @@ public class ElasticsearchSearchService implements SearchService {
                     .execute()
                     .actionGet();
 
-            SearchHits searchHits = searchResponse.hits();
+            SearchHits searchHits = searchResponse.getHits();
             if (searchHits.totalHits() == 0)
                 return Collections.emptyList();
 
@@ -521,14 +521,6 @@ public class ElasticsearchSearchService implements SearchService {
             log.debug("search " + mapper.type() + " by prefix(\"" + domain + "\", \"" + prefix + "\") = result : " + ids);
             return ids;
 
-        } catch (IndexMissingException e) {
-            log.warn("The index " + indexName(mapper.type()) + " was not found in the Elasticsearch cluster.");
-            return Collections.emptyList();
-
-        } catch (ElasticSearchException e) {
-            log.error("Error while searching user by prefix in index " + indexName(mapper.type()), e);
-            return Collections.emptyList();
-        }
 
     }
 

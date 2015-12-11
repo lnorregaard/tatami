@@ -1,6 +1,7 @@
 package fr.ippon.tatami.web.rest;
 
 import com.yammer.metrics.annotation.Timed;
+import fr.ippon.tatami.config.Constants;
 import fr.ippon.tatami.domain.Group;
 import fr.ippon.tatami.domain.User;
 import fr.ippon.tatami.domain.status.StatusDetails;
@@ -207,6 +208,9 @@ public class TimelineController {
                     group = testGroup;
                     break;
                 }
+            }
+            if (Constants.NON_GROUP_MEMBER_POST_TIMELINE) {
+                group = groupService.getGroupById(currentUser.getDomain(), statusGroupId);
             }
             if (group == null) {
                 log.info("Permission denied! User {} tried to access " +

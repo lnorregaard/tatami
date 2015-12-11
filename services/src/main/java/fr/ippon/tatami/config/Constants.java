@@ -36,4 +36,7 @@ public class Constants {
 
     public static boolean DEACTIVATED_USER_CAN_LOGIN = false;
 
+    public static boolean ANONYMOUS_SHOW_GROUP_TIMELINE = false;
+    public static boolean NON_GROUP_MEMBER_POST_TIMELINE = false;
+
 }

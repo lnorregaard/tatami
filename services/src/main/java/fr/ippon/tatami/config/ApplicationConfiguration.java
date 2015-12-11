@@ -18,8 +18,10 @@ import java.io.IOException;
 import java.time.LocalDate;
 
 @Configuration
-@PropertySource({"classpath:/META-INF/tatami/tatami.properties",
-        "classpath:/META-INF/tatami/customization.properties"})
+@PropertySources({
+        @PropertySource({"classpath:/META-INF/tatami/tatami.properties",
+                "classpath:/META-INF/tatami/customization.properties"}),
+        @PropertySource(value = "file:${CONF_DIR}/tatami.properties", ignoreResourceNotFound = true)})
 @ComponentScan(basePackages = {
         "fr.ippon.tatami.repository",
         "fr.ippon.tatami.service",
@@ -97,6 +99,9 @@ public class ApplicationConfiguration {
         Constants.GOOGLE_ANALYTICS_KEY = env.getProperty("tatami.google.analytics.key");
         String canLoginString = env.getProperty("tatami.user.deactivated.can.login","false");
         Constants.DEACTIVATED_USER_CAN_LOGIN = Boolean.valueOf(canLoginString);
+        Constants.MODERATOR_STATUS = Boolean.valueOf(env.getProperty("tatami.moderator.status","false"));
+        Constants.ANONYMOUS_SHOW_GROUP_TIMELINE = Boolean.valueOf(env.getProperty("tatami.anonymous.show.group.timeline","false"));
+        Constants.NON_GROUP_MEMBER_POST_TIMELINE = Boolean.valueOf(env.getProperty("tatami.non.group.member.post.timeline","false"));
 
         log.info("Tatami v. {} started!", Constants.VERSION);
         log.debug("Google Analytics key : {}", Constants.GOOGLE_ANALYTICS_KEY);

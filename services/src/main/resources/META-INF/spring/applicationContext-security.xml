@@ -40,7 +40,7 @@
         <intercept-url pattern="/tatami/404-error" access="permitAll()"/>
         <intercept-url pattern="/tatami/500-error" access="permitAll()"/>
         <intercept-url pattern="/tatami/rest/users" method="POST" access="permitAll()"/>
-
+        <intercept-url pattern="/tatami/rest/groups/**" method="GET" access="permitAll()"/>
         <intercept-url pattern="/metrics/**" access="hasRole('ROLE_ADMIN')"/>
         <intercept-url pattern="/**" access="isAuthenticated()"/>
         <access-denied-handler error-page="/tatami/login"/>
@@ -106,6 +106,8 @@
                 class="org.springframework.security.ldap.DefaultSpringSecurityContextSource">
         <beans:constructor-arg value="${tatami.ldapauth.url}"/>
     </beans:bean>
+
+
 
     <beans:bean id="ldapAuthenticationProvider" class="fr.ippon.tatami.security.TatamiLdapAuthenticationProvider">
         <beans:constructor-arg>

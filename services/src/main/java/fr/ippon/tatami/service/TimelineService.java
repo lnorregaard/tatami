@@ -181,7 +181,7 @@ public class TimelineService {
         User currentUser = null;
         Collection<Group> usergroups;
         List<String> favoriteLine;
-        if (authenticationService.hasAuthenticatedUser()) {
+        if (authenticationService.hasAuthenticatedUser() && authenticationService.getCurrentUser() != null) {
             currentUser = authenticationService.getCurrentUser();
             usergroups = groupService.getGroupsForUser(currentUser);
             favoriteLine = favoritelineRepository.getFavoriteline(currentUser.getLogin());
@@ -283,9 +283,9 @@ public class TimelineService {
 
         Collection<String> loginWhoShare = sharesRepository.findLoginsWhoSharedAStatus(statusDTO.getStatusId());
         User currentUser = authenticationService.getCurrentUser();
-        if(loginWhoShare.contains(currentUser.getLogin()) )
+        if(currentUser != null && loginWhoShare.contains(currentUser.getLogin()) )
             isSharedByMe = true;
-        else if(currentUser.getUsername().equals(statusDTO.getSharedByUsername())) //Greg ce n'est pas normal de devoir faire ça
+        else if(currentUser != null && currentUser.getUsername().equals(statusDTO.getSharedByUsername())) //Greg ce n'est pas normal de devoir faire ça
             isSharedByMe = true;
         else
             isSharedByMe = false;

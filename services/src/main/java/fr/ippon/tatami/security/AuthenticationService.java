@@ -23,12 +23,17 @@ public class AuthenticationService {
 
     public User getCurrentUser() {
         SecurityContext securityContext = SecurityContextHolder.getContext();
+        if (securityContext != null && securityContext
+                .getAuthentication() != null && securityContext
+                .getAuthentication().getPrincipal() instanceof UserDetails) {
+            UserDetails springSecurityUser =
+                    (UserDetails) securityContext
+                            .getAuthentication().getPrincipal();
 
-        UserDetails springSecurityUser =
-                (UserDetails) securityContext
-                        .getAuthentication().getPrincipal();
-
-        return userRepository.findUserByLogin(springSecurityUser.getUsername());
+            return userRepository.findUserByLogin(springSecurityUser.getUsername());
+        } else {
+            return null;
+        }
     }
 
     public boolean hasAuthenticatedUser() {

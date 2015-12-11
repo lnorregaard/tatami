@@ -1,6 +1,7 @@
 package fr.ippon.tatami.web.rest;
 
 import com.yammer.metrics.annotation.Timed;
+import fr.ippon.tatami.config.Constants;
 import fr.ippon.tatami.domain.Group;
 import fr.ippon.tatami.domain.User;
 import fr.ippon.tatami.security.AuthenticationService;
@@ -74,6 +75,9 @@ public class GroupController {
     @Timed
     public Group getGroup(@PathVariable("groupId") String groupId) {
         User currentUser = authenticationService.getCurrentUser();
+        if (currentUser == null) {
+            return null;
+        }
         String domain = DomainUtil.getDomainFromLogin(currentUser.getLogin());
         Group publicGroup = groupService.getGroupById(domain, UUID.fromString(groupId));
         if (publicGroup != null && publicGroup.isPublicGroup()) {
@@ -158,7 +162,7 @@ public class GroupController {
             count = 20;
         }
         Group group = this.getGroup(groupId);
-        if (group == null) {
+        if (group == null && !Constants.ANONYMOUS_SHOW_GROUP_TIMELINE) {
             return new ArrayList<StatusDTO>();
         } else {
             return timelineService.getGroupline(groupId, count, start, finish);

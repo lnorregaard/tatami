@@ -254,30 +254,9 @@ public class StatusUpdateService {
             manageMentions(status, null, currentLogin, domain, new ArrayList<String>());
 
         } else { // Public status
-            Collection<String> followersForUser = followerRepository.findFollowersForUser(currentLogin);
-
-            // add status to the dayline, userline
-            String day = StatsService.DAYLINE_KEY_FORMAT.format(status.getStatusDate());
-            daylineRepository.addStatusToDayline(status, day);
-            userlineRepository.addStatusToUserline(status.getLogin(), status.getStatusId().toString());
-
-            // add the status to the group line and group followers
-            manageGroups(status, group, followersForUser);
-
-            // tag managgement
-            manageStatusTags(status, group);
-
-            // add status to the mentioned users' timeline
-            manageMentions(status, group, currentLogin, domain, followersForUser);
-
-            // Increment status count for the current user
-            counterRepository.incrementStatusCounter(currentLogin);
-
-            // Add to the searchStatus engine
-            searchService.addStatus(status);
-
-            // add status to the company wall
-            addToCompanyWall(status, group);
+            if (!Constants.MODERATOR_STATUS) {
+                postPublicStatus(group, status);
+            }
         }
 
         if (log.isInfoEnabled()) {
@@ -285,6 +264,35 @@ public class StatusUpdateService {
             log.info("Status created in " + (finishTime - startTime) + "ms.");
         }
         return status;
+    }
+
+    public void postPublicStatus(Group group, Status status) {
+        String userLogin = status.getLogin();
+        String domain = status.getDomain();
+        Collection<String> followersForUser = followerRepository.findFollowersForUser(userLogin);
+
+        // add status to the dayline, userline
+        String day = StatsService.DAYLINE_KEY_FORMAT.format(status.getStatusDate());
+        daylineRepository.addStatusToDayline(status, day);
+        userlineRepository.addStatusToUserline(status.getLogin(), status.getStatusId().toString());
+
+        // add the status to the group line and group followers
+        manageGroups(status, group, followersForUser);
+
+        // tag managgement
+        manageStatusTags(status, group);
+
+        // add status to the mentioned users' timeline
+        manageMentions(status, group, userLogin, domain, followersForUser);
+
+        // Increment status count for the current user
+        counterRepository.incrementStatusCounter(userLogin);
+
+        // Add to the searchStatus engine
+        searchService.addStatus(status);
+
+        // add status to the company wall
+        addToCompanyWall(status, group);
     }
 
     private void manageGroups(Status status, Group group, Collection<String> followersForUser) {

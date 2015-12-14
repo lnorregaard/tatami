@@ -86,6 +86,9 @@ public class TimelineService {
     @Inject
     private AtmosphereService atmosphereService;
 
+    @Inject
+    private StatusUpdateService statusUpdateService;
+
     public StatusDTO getStatus(String statusId) {
         List<String> line = new ArrayList<String>();
         line.add(statusId);
@@ -694,7 +697,13 @@ public class TimelineService {
 
     @Secured("ROLE_ADMIN")
     public void approveStatus(String statusId) {
-        statusRepository.updateState(statusId,null);
+        AbstractStatus abstractStatus = statusRepository.findStatusById(statusId,false);
+        Status status = (Status) abstractStatus;
+        if (status.getState() != null) {
+            statusRepository.updateState(statusId, null);
+            Group group = groupService.getGroupById(status.getDomain(), UUID.fromString(status.getGroupId()));
+            statusUpdateService.postPublicStatus(group, status);
+        }
     }
 
     @Secured("ROLE_ADMIN")

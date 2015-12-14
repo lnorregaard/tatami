@@ -61,7 +61,11 @@ public class GroupController {
     @Timed
     public Collection<Group> getGroups() {
         User currentUser = authenticationService.getCurrentUser();
-        return groupService.getGroupsForUser(currentUser);
+        if (currentUser != null) {
+            return groupService.getGroupsForUser(currentUser);
+        } else {
+            return new ArrayList<>();
+        }
     }
 
 

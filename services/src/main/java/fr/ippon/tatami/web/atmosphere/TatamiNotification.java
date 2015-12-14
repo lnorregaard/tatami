@@ -45,7 +45,9 @@ public class TatamiNotification implements Serializable {
     @Override
     public int hashCode() {
         int result = login.hashCode();
-        result = 31 * result + statusDTO.hashCode();
+        if (statusDTO != null) {
+            result = 31 * result + statusDTO.hashCode();
+        }
         return result;
     }
 

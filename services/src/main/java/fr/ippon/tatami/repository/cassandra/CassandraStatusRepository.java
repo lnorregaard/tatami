@@ -368,6 +368,7 @@ public class CassandraStatusRepository implements StatusRepository {
     }
 
     @Override
+    @CacheEvict(value = "status-cache", key = "#statusId")
     public void updateState(String statusId, String state) {
         Update.Where where = QueryBuilder.update("status")
                 .with(set("state",state))

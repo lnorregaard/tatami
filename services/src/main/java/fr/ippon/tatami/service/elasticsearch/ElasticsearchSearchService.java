@@ -337,7 +337,7 @@ public class ElasticsearchSearchService implements SearchService {
 
         @Override
         public String prefixSearchSortField() {
-            return "name-not-analyzed";
+            return "name";
         }
 
         @Override

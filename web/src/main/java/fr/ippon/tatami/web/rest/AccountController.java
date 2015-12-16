@@ -1,6 +1,7 @@
 package fr.ippon.tatami.web.rest;
 
 import com.yammer.metrics.annotation.Timed;
+import fr.ippon.tatami.config.Constants;
 import fr.ippon.tatami.domain.User;
 import fr.ippon.tatami.security.AuthenticationService;
 import fr.ippon.tatami.service.UserService;
@@ -88,6 +89,9 @@ public class AccountController {
         currentUser.setJobTitle(StringEscapeUtils.escapeHtml(updatedUser.getJobTitle().replace("<", " ")));
         currentUser.setPhoneNumber(updatedUser.getPhoneNumber().replace("<", " "));
         currentUser.setProperties(updatedUser.getProperties());
+        if (Constants.USER_AND_FRIENDS) {
+            currentUser.setUsername(updatedUser.getUsername());
+        }
         try {
             userService.updateUser(currentUser);
         } catch (ConstraintViolationException cve) {

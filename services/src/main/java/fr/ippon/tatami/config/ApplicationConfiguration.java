@@ -102,6 +102,7 @@ public class ApplicationConfiguration {
         Constants.MODERATOR_STATUS = Boolean.valueOf(env.getProperty("tatami.moderator.status","false"));
         Constants.ANONYMOUS_SHOW_GROUP_TIMELINE = Boolean.valueOf(env.getProperty("tatami.anonymous.show.group.timeline","false"));
         Constants.NON_GROUP_MEMBER_POST_TIMELINE = Boolean.valueOf(env.getProperty("tatami.non.group.member.post.timeline","false"));
+        Constants.USER_AND_FRIENDS = Boolean.valueOf(env.getProperty("tatami.user.rename.and.friends.request","false"));
 
         log.info("Tatami v. {} started!", Constants.VERSION);
         log.debug("Google Analytics key : {}", Constants.GOOGLE_ANALYTICS_KEY);

@@ -5,7 +5,6 @@ package fr.ippon.tatami.config;
  */
 public class Constants {
 
-    public static boolean MODERATOR_STATUS = false;
 
     private Constants() {
     }
@@ -40,5 +39,7 @@ public class Constants {
 
     public static boolean ANONYMOUS_SHOW_GROUP_TIMELINE = false;
     public static boolean NON_GROUP_MEMBER_POST_TIMELINE = false;
+    public static boolean USER_AND_FRIENDS = false;
+    public static boolean MODERATOR_STATUS = false;
 
 }

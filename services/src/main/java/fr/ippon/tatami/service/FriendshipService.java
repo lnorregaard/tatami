@@ -60,27 +60,31 @@ public class FriendshipService {
         String loginToFollow = DomainUtil.getLoginFromUsernameAndDomain(usernameToFollow, domain);
         User followedUser = userRepository.findUserByLogin(loginToFollow);
         if (followedUser != null && !followedUser.equals(currentUser)) {
-            if (counterRepository.getFriendsCounter(currentUser.getLogin()) > 0) {
-                for (String alreadyFollowingTest : friendRepository.findFriendsForUser(currentUser.getLogin())) {
-                    if (alreadyFollowingTest.equals(loginToFollow)) {
-                        log.debug("User {} already follows user {}", currentUser.getLogin(), followedUser.getLogin());
-                        return false;
-                    }
-                }
-            }
-            friendRepository.addFriend(currentUser.getLogin(), followedUser.getLogin());
-            counterRepository.incrementFriendsCounter(currentUser.getLogin());
-            followerRepository.addFollower(followedUser.getLogin(), currentUser.getLogin());
-            counterRepository.incrementFollowersCounter(followedUser.getLogin());
-            // mention the friend that the user has started following him
-            MentionFriend mentionFriend = statusRepository.createMentionFriend(followedUser.getLogin(), currentUser.getLogin());
-            mentionlineRepository.addStatusToMentionline(mentionFriend.getLogin(), mentionFriend.getStatusId().toString());
-            log.debug("User {} now follows user {} ", currentUser.getLogin(), followedUser.getLogin());
-            return true;
+            return followUser(currentUser, followedUser);
         } else {
             log.debug("Followed user does not exist : " + loginToFollow);
             return false;
         }
+    }
+
+    private boolean followUser(User currentUser, User followedUser) {
+        if (counterRepository.getFriendsCounter(currentUser.getLogin()) > 0) {
+            for (String alreadyFollowingTest : friendRepository.findFriendsForUser(currentUser.getLogin())) {
+                if (alreadyFollowingTest.equals(followedUser.getLogin())) {
+                    log.debug("User {} already follows user {}", currentUser.getLogin(), followedUser.getLogin());
+                    return false;
+                }
+            }
+        }
+        friendRepository.addFriend(currentUser.getLogin(), followedUser.getLogin());
+        counterRepository.incrementFriendsCounter(currentUser.getLogin());
+        followerRepository.addFollower(followedUser.getLogin(), currentUser.getLogin());
+        counterRepository.incrementFollowersCounter(followedUser.getLogin());
+        // mention the friend that the user has started following him
+        MentionFriend mentionFriend = statusRepository.createMentionFriend(followedUser.getLogin(), currentUser.getLogin());
+        mentionlineRepository.addStatusToMentionline(mentionFriend.getLogin(), mentionFriend.getStatusId().toString());
+        log.debug("User {} now follows user {} ", currentUser.getLogin(), followedUser.getLogin());
+        return true;
     }
 
     /**

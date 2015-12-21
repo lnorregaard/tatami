@@ -17,7 +17,7 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
 public abstract class AbstractCassandraFriendRepository {
 
     @Inject
-    Session session;
+    protected Session session;
 
     protected abstract String getFriendsTable();
 

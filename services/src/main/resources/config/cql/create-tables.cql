@@ -282,4 +282,9 @@ CREATE TABLE IF NOT EXISTS audit (
     PRIMARY KEY(username,id)
 );
 
+CREATE TABLE IF NOT EXISTS friendrequests (
+    login varchar,
+    friendLogin varchar,
+    PRIMARY KEY(login,friendLogin)
+);
 

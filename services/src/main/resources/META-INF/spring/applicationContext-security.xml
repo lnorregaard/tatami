@@ -41,6 +41,7 @@
         <intercept-url pattern="/tatami/500-error" access="permitAll()"/>
         <intercept-url pattern="/tatami/rest/users" method="POST" access="permitAll()"/>
         <intercept-url pattern="/tatami/rest/groups/**" method="GET" access="permitAll()"/>
+        <intercept-url pattern="/tatami/rest/domain/**" method="GET" access="permitAll()"/>
         <intercept-url pattern="/metrics/**" access="hasRole('ROLE_ADMIN')"/>
         <intercept-url pattern="/**" access="isAuthenticated()"/>
         <access-denied-handler error-page="/tatami/login"/>

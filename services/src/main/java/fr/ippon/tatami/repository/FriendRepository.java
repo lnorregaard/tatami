@@ -14,4 +14,10 @@ public interface FriendRepository {
     void removeFriend(String login, String friendLogin);
 
     List<String> findFriendsForUser(String login);
+
+    boolean getFriendRequest(String login, String friendLogin);
+
+    void removeFriendRequest(String login, String friendLogin);
+
+    boolean addFriendRequest(String currentUserLogin, String followedUserLogin);
 }

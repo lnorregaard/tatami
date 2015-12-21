@@ -92,6 +92,28 @@ public class UserController {
     }
 
     /**
+     * GET  /rest/usersOnDomain/search -> search users by prefix on domain<br>
+     * Should return a collection of users matching the query.<br>
+     * The collection doesn't contain the current user even if he matches the query.<br>
+     * If nothing matches, an empty collection (but not null) is returned.<br>
+     *
+     * @param query the query
+     * @return a Collection of User
+     */
+    @RequestMapping(value = "/rest/domain/{domain}/users/search",
+            method = RequestMethod.GET,
+            produces = "application/json")
+    @ResponseBody
+    @Timed
+    public Collection<User> searchUsers(@PathVariable("domain") String domain,
+                                        @RequestParam("q") String query) {
+        String prefix = query.toLowerCase();
+        this.log.debug("REST request to find users on domain {} starting with : {}", domain, prefix);
+        Collection<String> logins = searchService.searchUserByPrefix(domain, prefix);
+        return userService.getUsersByLogin(logins);
+    }
+
+    /**
      * GET  /users -> Get all users of domain
      */
     @RequestMapping(value = "/rest/users",

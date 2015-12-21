@@ -1,5 +1,6 @@
 package fr.ippon.tatami.service;
 
+import fr.ippon.tatami.config.Constants;
 import fr.ippon.tatami.domain.User;
 import fr.ippon.tatami.domain.status.MentionFriend;
 import fr.ippon.tatami.repository.*;
@@ -60,7 +61,24 @@ public class FriendshipService {
         String loginToFollow = DomainUtil.getLoginFromUsernameAndDomain(usernameToFollow, domain);
         User followedUser = userRepository.findUserByLogin(loginToFollow);
         if (followedUser != null && !followedUser.equals(currentUser)) {
-            return followUser(currentUser, followedUser);
+            if (Constants.USER_AND_FRIENDS) {
+                String currentUserLogin = currentUser.getLogin();
+                String followedUserLogin = followedUser.getLogin();
+                boolean alreadySentFriendRequest = friendRepository.getFriendRequest(currentUserLogin, followedUserLogin);
+                boolean friendSentFriendRequest = friendRepository.getFriendRequest(followedUserLogin, currentUserLogin);
+                if (alreadySentFriendRequest) {
+                    return false;
+                } else if (friendSentFriendRequest) {
+                    followUser(currentUser,followedUser);
+                    followUser(followedUser,currentUser);
+                    friendRepository.removeFriendRequest(followedUserLogin,currentUserLogin);
+                    return true;
+                } else {
+                    return friendRepository.addFriendRequest(currentUserLogin,followedUserLogin);
+                }
+            } else {
+                return followUser(currentUser, followedUser);
+            }
         } else {
             log.debug("Followed user does not exist : " + loginToFollow);
             return false;
@@ -97,6 +115,9 @@ public class FriendshipService {
         User currentUser = authenticationService.getCurrentUser();
         String loginToUnfollow = this.getLoginFromUsername(usernameToUnfollow);
         User userToUnfollow = userRepository.findUserByLogin(loginToUnfollow);
+        if (Constants.USER_AND_FRIENDS) {
+            unfollowUser(userToUnfollow,currentUser);
+        }
         return unfollowUser(currentUser, userToUnfollow);
     }
 

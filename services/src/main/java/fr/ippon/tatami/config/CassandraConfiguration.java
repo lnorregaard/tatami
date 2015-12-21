@@ -739,6 +739,12 @@ public class CassandraConfiguration {
                 "    moderator varchar,\n" +
                 "    comment varchar,\n" +
                 "    PRIMARY KEY(username,id)\n");
+        session.execute("CREATE TABLE IF NOT EXISTS friendrequests (\n" +
+                "    login varchar,\n" +
+                "    friendLogin varchar,\n" +
+                "    PRIMARY KEY(login,friendLogin)");
+
+
     }
 
     @Bean

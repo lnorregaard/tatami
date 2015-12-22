@@ -46,35 +46,6 @@ public class CassandraFriendRepository extends AbstractCassandraFriendRepository
     }
 
     @Override
-    public boolean getFriendRequest(String login, String friendLogin) {
-        Statement statement = QueryBuilder.select()
-                .column("friendLogin")
-                .from("friendRequests")
-                .where(eq("login", login))
-                .and(eq("friendLogin",friendLogin));
-        ResultSet results = session.execute(statement);
-        return !results
-                .isExhausted();
-    }
-
-    @Override
-    public void removeFriendRequest(String login, String friendLogin) {
-        Statement statement = QueryBuilder.delete().from("friendRequests")
-                .where(eq("login", login))
-                .and(eq("friendLogin", friendLogin));
-        session.execute(statement);
-    }
-
-    @Override
-    public boolean addFriendRequest(String currentUserLogin, String followedUserLogin) {
-        Statement statement = QueryBuilder.insertInto("friendRequests")
-                .value("login", currentUserLogin)
-                .value("friendLogin", followedUserLogin);
-        session.execute(statement);
-        return true;
-    }
-
-    @Override
     public String getFriendsTable() {
         return FRIENDS;
     }

@@ -38,6 +38,9 @@ public class FriendshipService {
     private FriendRepository friendRepository;
 
     @Inject
+    private FriendRequestRepository friendRequestRepository;
+
+    @Inject
     private CounterRepository counterRepository;
 
     @Inject
@@ -64,17 +67,17 @@ public class FriendshipService {
             if (Constants.USER_AND_FRIENDS) {
                 String currentUserLogin = currentUser.getLogin();
                 String followedUserLogin = followedUser.getLogin();
-                boolean alreadySentFriendRequest = friendRepository.getFriendRequest(currentUserLogin, followedUserLogin);
-                boolean friendSentFriendRequest = friendRepository.getFriendRequest(followedUserLogin, currentUserLogin);
+                boolean alreadySentFriendRequest = friendRequestRepository.getFriendRequest(currentUserLogin, followedUserLogin);
+                boolean friendSentFriendRequest = friendRequestRepository.getFriendRequest(followedUserLogin, currentUserLogin);
                 if (alreadySentFriendRequest) {
                     return false;
                 } else if (friendSentFriendRequest) {
                     followUser(currentUser,followedUser);
                     followUser(followedUser,currentUser);
-                    friendRepository.removeFriendRequest(followedUserLogin,currentUserLogin);
+                    friendRequestRepository.removeFriendRequest(followedUserLogin,currentUserLogin);
                     return true;
                 } else {
-                    return friendRepository.addFriendRequest(currentUserLogin,followedUserLogin);
+                    return friendRequestRepository.addFriendRequest(currentUserLogin,followedUserLogin);
                 }
             } else {
                 return followUser(currentUser, followedUser);

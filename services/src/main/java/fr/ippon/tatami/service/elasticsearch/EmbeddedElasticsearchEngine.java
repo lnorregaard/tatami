@@ -26,7 +26,7 @@ public class EmbeddedElasticsearchEngine implements ElasticsearchEngine {
         log.info("Initializing Elasticsearch embedded cluster...");
 
         node = nodeBuilder()
-                .settings(Settings.builder().loadFromSource("META-INF/elasticsearch/elasticsearch-embedded.yml").put("path.home", "target/"))
+                .settings(Settings.builder().loadFromSource("META-INF/elasticsearch/elasticsearch-embedded.yml").put("path.home", "/"))
 
                 .node();
 

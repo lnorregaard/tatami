@@ -6,9 +6,11 @@ import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.node.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.env.Environment;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import javax.inject.Inject;
 
 import static org.elasticsearch.node.NodeBuilder.nodeBuilder;
 
@@ -19,6 +21,9 @@ public class EmbeddedElasticsearchEngine implements ElasticsearchEngine {
 
     private final Logger log = LoggerFactory.getLogger(EmbeddedElasticsearchEngine.class);
 
+    @Inject
+    private Environment env;
+
     private Node node;
 
     @PostConstruct
@@ -26,7 +31,7 @@ public class EmbeddedElasticsearchEngine implements ElasticsearchEngine {
         log.info("Initializing Elasticsearch embedded cluster...");
 
         node = nodeBuilder()
-                .settings(Settings.builder().loadFromSource("META-INF/elasticsearch/elasticsearch-embedded.yml").put("path.home", "target/"))
+                .settings(Settings.builder().loadFromSource("META-INF/elasticsearch/elasticsearch-embedded.yml").put("path.home", env.getProperty("tatami.elasticsearch.path.data")+"/"))
 
                 .node();
 

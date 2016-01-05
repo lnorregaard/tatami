@@ -23,7 +23,7 @@
     <http pattern="/tatami/lostpassword/**" security="none"/>
     <http pattern="/tatami/rest/status/**" security="none"/>
     <http pattern="/swagger-ui/**" security="none"/>
-    <http pattern="/tatami/swagger-ui/**" security="none"/>
+    <http pattern="/tatami/v2/**" security="none"/>
 
     <http pattern="/tatami/j_spring_pac4j_security_check" use-expressions="true" entry-point-ref="googleEntryPoint">
         <intercept-url pattern="/tatami/j_spring_pac4j_security_check" access="isAuthenticated()"/>
@@ -44,17 +44,17 @@
         <intercept-url pattern="/tatami/rest/domain/**" method="GET" access="permitAll()"/>
         <intercept-url pattern="/metrics/**" access="hasRole('ROLE_ADMIN')"/>
         <intercept-url pattern="/**" access="isAuthenticated()"/>
-        <access-denied-handler error-page="/tatami/login"/>
+        <access-denied-handler error-page="${tatami.start.path}tatami/login"/>
         <form-login
-                login-processing-url="/tatami/authentication"
-                login-page="/tatami/login"
-                authentication-failure-url="/tatami/login?action=loginFailure"
-                default-target-url="/tatami/"
+                login-processing-url="${tatami.start.path}tatami/authentication"
+                login-page="${tatami.start.path}tatami/login"
+                authentication-failure-url="${tatami.start.path}tatami/login?action=loginFailure"
+                default-target-url="${tatami.start.path}tatami/"
                 authentication-success-handler-ref="tatamiAuthenticationSuccessHandler"/>
 
-        <logout logout-url="/tatami/logout"
-                logout-success-url="/tatami/login"/>
-        <session-management invalid-session-url="/tatami/login"/>
+        <logout logout-url="${tatami.start.path}tatami/logout"
+                logout-success-url="${tatami.start.path}tatami/login"/>
+        <session-management invalid-session-url="${tatami.start.path}tatami/login"/>
     </http>
 
     <authentication-manager alias="authenticationManager">
@@ -81,7 +81,7 @@
     </beans:bean>
 
     <beans:bean id="clientFilter" class="org.pac4j.springframework.security.web.ClientAuthenticationFilter">
-        <beans:constructor-arg value="/tatami/callback"/>
+        <beans:constructor-arg value="${tatami.start.path}tatami/callback"/>
         <beans:property name="clients" ref="clients"/>
         <beans:property name="authenticationManager" ref="authenticationManager"/>
     </beans:bean>

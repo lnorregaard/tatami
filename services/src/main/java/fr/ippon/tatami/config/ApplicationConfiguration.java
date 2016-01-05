@@ -67,8 +67,7 @@ public class ApplicationConfiguration {
                         String.class)
                 .genericModelSubstitutes(ResponseEntity.class)
                 .useDefaultResponseMessages(false)
-                .enableUrlTemplating(true)
-                .pathMapping("/tatami");
+                .enableUrlTemplating(true);
         watch.stop();
         log.debug("Started Swagger in {} ms", watch.getTotalTimeMillis());
         return docket;

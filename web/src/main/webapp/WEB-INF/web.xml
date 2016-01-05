@@ -51,12 +51,12 @@
 
     <error-page>
         <error-code>500</error-code>
-        <location>/tatami/errors/500</location>
+        <location>${tatami.start.path}tatami/errors/500</location>
     </error-page>
 
     <error-page>
         <error-code>404</error-code>
-        <location>/tatami/errors/404</location>
+        <location>${tatami.start.path}tatami/errors/404</location>
     </error-page>
 
 </web-app>

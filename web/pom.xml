@@ -131,7 +131,8 @@
                             <directory>src/main/webapp/WEB-INF</directory>
                             <targetPath>WEB-INF</targetPath>
                             <includes>
-                                <include>web.xml</include>
+                                <include>**/web.xml</include>
+                                <include>**/jboss-web.xml</include>
                             </includes>
                             <filtering>true</filtering>
                         </resource>

@@ -421,7 +421,7 @@
         <tatami.automatic.registration>false</tatami.automatic.registration>
         <tatami.metrics.graphite.host></tatami.metrics.graphite.host>
         <tatami.metrics.graphite.port>2003</tatami.metrics.graphite.port>
-
+        <tatami.start.path>/</tatami.start.path>
         <tatami.google.clientId></tatami.google.clientId>
         <tatami.google.clientSecret></tatami.google.clientSecret>
 

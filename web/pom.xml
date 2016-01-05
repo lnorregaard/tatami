@@ -116,6 +116,7 @@
                 <artifactId>maven-war-plugin</artifactId>
                 <version>${maven.war.version}</version>
                 <configuration>
+                    <warName>tatami-${version}-${buildNumber}</warName>
                     <archive>
                         <manifest>
                             <addDefaultImplementationEntries>true</addDefaultImplementationEntries>

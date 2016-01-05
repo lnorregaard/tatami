@@ -32,8 +32,8 @@
         <url>https://github.com/ippontech/tatami/issues</url>
     </issueManagement>
     <scm>
-        <url>http://github.com/ippontech/tatami</url>
-        <connection>scm:git:git@github.com:ippontech/tatami.git</connection>
+        <url>http://github.com/lnorregaard/tatami</url>
+        <connection>scm:git:git@github.com:lnorregaard/tatami.git</connection>
     </scm>
 
     <profiles>
@@ -64,6 +64,19 @@
                                 <phase>process-resources</phase>
                                 <goals>
                                     <goal>generate</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>buildnumber-maven-plugin</artifactId>
+                        <version>1.1</version>
+                        <executions>
+                            <execution>
+                                <phase>validate</phase>
+                                <goals>
+                                    <goal>create</goal>
                                 </goals>
                             </execution>
                         </executions>

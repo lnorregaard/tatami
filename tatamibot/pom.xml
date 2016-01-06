@@ -5,7 +5,7 @@
     <parent>
         <artifactId>tatami</artifactId>
         <groupId>fr.ippon.tatami</groupId>
-        <version>test</version>
+        <version>stable</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 

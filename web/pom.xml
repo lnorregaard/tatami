@@ -16,12 +16,12 @@
         <dependency>
             <groupId>fr.ippon.tatami</groupId>
             <artifactId>services</artifactId>
-            <version>test</version>
+            <version>${tatami.version}</version>
         </dependency>
         <dependency>
             <groupId>fr.ippon.tatami</groupId>
             <artifactId>services</artifactId>
-            <version>test</version>
+            <version>${tatami.version}</version>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>

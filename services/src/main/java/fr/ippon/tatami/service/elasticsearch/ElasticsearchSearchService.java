@@ -22,6 +22,7 @@ import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
+import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.indices.IndexAlreadyExistsException;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
@@ -39,9 +40,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.*;
 
-import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
-import static org.elasticsearch.index.query.QueryBuilders.termQuery;
-import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
+import static org.elasticsearch.index.query.QueryBuilders.*;
 
 public class ElasticsearchSearchService implements SearchService {
 
@@ -490,6 +489,42 @@ public class ElasticsearchSearchService implements SearchService {
         });
     }
 
+    public Collection<String> searchByUsername(String domain, String prefix, int size) {
+
+        BoolQueryBuilder boolQuery = new BoolQueryBuilder();
+        boolQuery.must(termQuery("domain",domain));
+        boolQuery.should(matchQuery("username",prefix));
+        boolQuery.minimumShouldMatch("2");
+
+        SearchRequestBuilder searchRequest = client().prepareSearch(indexName(userMapper.type()))
+                .setTypes(userMapper.type())
+                .setQuery(boolQuery)
+                .addFields()
+                .setFrom(0)
+                .setSize(size);
+
+        if (log.isTraceEnabled()) {
+            log.trace("elasticsearch query : " + searchRequest);
+        }
+        SearchResponse searchResponse = searchRequest
+                .execute()
+                .actionGet();
+
+        SearchHits searchHits = searchResponse.getHits();
+        if (searchHits.totalHits() == 0)
+            return Collections.emptyList();
+
+        SearchHit[] hits = searchHits.hits();
+        final List<String> ids = new ArrayList<String>(hits.length);
+        for (SearchHit hit : hits) {
+            ids.add(hit.getId());
+        }
+
+        log.debug("search " + userMapper.type() + " by prefix(\"" + domain + "\", \"" + prefix + "\") = result : " + ids);
+        return ids;
+
+
+    }
     private Collection<String> searchByPrefix(String domain, String prefix, int size, ElasticsearchMapper<?> mapper) {
 
             SearchRequestBuilder searchRequest = client().prepareSearch(indexName(mapper.type()))

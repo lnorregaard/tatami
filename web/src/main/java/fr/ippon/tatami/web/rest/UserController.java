@@ -107,10 +107,13 @@ public class UserController {
     @Timed
     public Collection<User> searchUsers(@PathVariable("domain") String domain,
                                         @RequestParam("q") String query,
-                                        @RequestParam("limit") int limit) {
+                                        @RequestParam(value = "limit",required = false) Integer limit) {
         String prefix = query.toLowerCase();
         this.log.debug("REST request to find users on domain {} starting with : {}", domain, prefix);
-        Collection<String> logins = searchService.searchUserByPrefix(domain, prefix);
+        if (limit == null || limit <= 0) {
+            limit = 10;
+        }
+        Collection<String> logins = searchService.searchByUsername(domain, prefix, limit);
         return userService.getUsersByLogin(logins);
     }
 

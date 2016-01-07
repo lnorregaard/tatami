@@ -66,6 +66,8 @@ public interface SearchService {
 
     Collection<String> searchUserByPrefix(String domain,
                                           String prefix);
+    Collection<String> searchByUsername(String domain,
+                                          String prefix, int size);
 
     void addGroup(Group group);
 

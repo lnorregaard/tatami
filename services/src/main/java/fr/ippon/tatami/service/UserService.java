@@ -111,6 +111,7 @@ public class UserService {
         for (String login : logins) {
             user = userRepository.findUserByLogin(login);
             if (user != null) {
+                user.setLogin("");
                 users.add(user);
             }
         }

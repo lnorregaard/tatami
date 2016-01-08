@@ -373,6 +373,60 @@ public class ElasticsearchSearchService implements SearchService {
         return groups;
     }
 
+    @Override
+    public Collection<String> searchUserByUsernameAndFirstnameAndLastname(String domain, String username, String firstname, String lastname, boolean exact, boolean all) {
+        BoolQueryBuilder boolQuery = new BoolQueryBuilder();
+        boolQuery.must(termQuery("domain",domain));
+        int minimumMatch = 1;
+        minimumMatch += addSearchFieldToQuery(boolQuery,"username",username,exact);
+        minimumMatch += addSearchFieldToQuery(boolQuery,"firstName",firstname,exact);
+        minimumMatch += addSearchFieldToQuery(boolQuery,"lastName",lastname,exact);
+        boolQuery.minimumShouldMatch(""+minimumMatch);
+
+        SearchRequestBuilder searchRequest = client().prepareSearch(indexName(userMapper.type()))
+                .setTypes(userMapper.type())
+                .setQuery(boolQuery)
+                .addFields()
+                .setFrom(0);
+        if (!all) {
+            searchRequest.setSize(DEFAULT_TOP_N_SEARCH_USER);
+        }
+        if (exact) {
+            searchRequest.addSort(SortBuilders.fieldSort("username").order(SortOrder.ASC));
+        }
+        if (log.isTraceEnabled()) {
+            log.trace("elasticsearch query : " + searchRequest);
+        }
+        SearchResponse searchResponse = searchRequest
+                .execute()
+                .actionGet();
+
+        SearchHits searchHits = searchResponse.getHits();
+        if (searchHits.totalHits() == 0)
+            return Collections.emptyList();
+
+        SearchHit[] hits = searchHits.hits();
+        final List<String> ids = new ArrayList<String>(hits.length);
+        for (SearchHit hit : hits) {
+            ids.add(hit.getId());
+        }
+
+        log.debug("search " + userMapper.type() + " by search(\"" + domain + "\", \"" + username + ", \"" + firstname + ", \"" + lastname + ", \") = result : " + ids);
+        return ids;
+    }
+
+    private int addSearchFieldToQuery(BoolQueryBuilder boolQuery, String field, String value, boolean exact) {
+        if (value != null) {
+            if (exact) {
+                boolQuery.should(matchPhraseQuery(field,value));
+            } else {
+                boolQuery.should(matchPhrasePrefixQuery(field,value).cutoffFrequency(0.001F));
+            }
+            return 1;
+        }
+        return 0;
+    }
+
     /**
      * Indexes an object to elasticsearch.
      * This method is asynchronous.

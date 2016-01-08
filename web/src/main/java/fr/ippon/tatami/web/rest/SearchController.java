@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Search engine controller.
@@ -179,6 +180,47 @@ public class SearchController {
         if (query != null && !query.equals("")) {
             this.log.debug("REST request to find users starting with : {}", prefix);
             users = userService.getUsersByLogin(logins);
+        } else {
+            users = new ArrayList<User>();
+        }
+        return userService.buildUserDTOList(users);
+
+    }
+
+
+    /**
+     * GET  /search/users" -> search user by username and/or firstname<br>
+     * Should return a collection of users matching the username and firstname.<br>
+     * The collection doesn't contain the current user even if he matches the query.<br>
+     * If nothing matches, an empty collection (but not null) is returned.<br>
+     *
+     * @param query the query
+     * @return a Collection of User
+     */
+    @RequestMapping(value = "/rest/search/users/extra",
+            method = RequestMethod.GET,
+            produces = "application/json")
+    @ResponseBody
+    @Timed
+    public Collection<UserDTO> searchUsersByUsernameAndFirstname(@RequestParam(value = "username", required = false) String username,
+                                                                 @RequestParam(value = "firstname", required = false) String firstname,
+                                                                 @RequestParam(value = "lastname", required = false) String lastname,
+                                                                 @RequestParam(value = "exact", required = false) boolean exact,
+                                                                 @RequestParam(value = "all", required = false) boolean all) {
+        if (username != null) {
+            username = username.toLowerCase();
+        }
+        User currentUser = authenticationService.getCurrentUser();
+        String domain = DomainUtil.getDomainFromLogin(currentUser.getLogin());
+        Collection<String> logins = searchService.searchUserByUsernameAndFirstnameAndLastname(domain, username,firstname,lastname,exact,all);
+        Collection<User> users;
+
+        if (logins != null && !logins.isEmpty()) {
+            this.log.debug("REST request to find users with exact match: {}, with username: {} and first name {} and last name {}", exact, username, firstname, lastname);
+            users = userService.getUsersByLogin(logins
+                    .stream()
+                    .filter(login -> !login.equals(currentUser.getLogin()))
+                    .collect(Collectors.toList()));
         } else {
             users = new ArrayList<User>();
         }

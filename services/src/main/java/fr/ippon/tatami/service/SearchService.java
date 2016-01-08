@@ -74,4 +74,6 @@ public interface SearchService {
     void removeGroup(Group group);
 
     Collection<Group> searchGroupByPrefix(String domain, String prefix, int size);
+
+    Collection<String> searchUserByUsernameAndFirstnameAndLastname(String domain, String username, String firstname, String lastname, boolean exact, boolean all);
 }

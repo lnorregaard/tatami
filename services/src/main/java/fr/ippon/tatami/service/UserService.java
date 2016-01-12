@@ -39,6 +39,9 @@ public class UserService {
     private UserRepository userRepository;
 
     @Inject
+    private UsernameService usernameService;
+
+    @Inject
     private DomainRepository domainRepository;
 
     @Inject
@@ -133,17 +136,20 @@ public class UserService {
     public void updateUser(User user) {
         User currentUser = authenticationService.getCurrentUser();
         user.setLogin(currentUser.getLogin());
-        user.setUsername(currentUser.getUsername());
         user.setDomain(currentUser.getDomain());
         user.setAvatar(currentUser.getAvatar());
         user.setAttachmentsSize(currentUser.getAttachmentsSize());
         try {
+            usernameService.updateUsername(user, currentUser);
             userRepository.updateUser(user);
             searchService.removeUser(user);
             searchService.addUser(user);
         } catch (ConstraintViolationException cve) {
             log.info("Constraint violated while updating user " + user + " : " + cve);
             throw cve;
+        } catch (UsernameExistException e) {
+            log.info("username not unique while updating user " + user + " : " + e);
+            throw e;
         }
     }
 
@@ -189,6 +195,10 @@ public class UserService {
         user.setPreferencesMentionEmail(true);
         user.setWeeklyDigestSubscription(true);
 
+        try {
+            usernameService.createUsername(user);
+        } catch (UsernameExistException e) {
+        }
         counterRepository.createStatusCounter(user.getLogin());
         counterRepository.createFriendsCounter(user.getLogin());
         counterRepository.createFollowersCounter(user.getLogin());
@@ -244,9 +254,14 @@ public class UserService {
         counterRepository.deleteCounters(user.getLogin());
         log.debug("Delete user step 5 : user " + user.getLogin() + " has no counter.");
 
+
+        usernameService.deleteUsernameForUser(user);
+        log.debug("Delete user step 6 : username " + user.getUsername() + " is deleted.");
+
         // Delete user
         userRepository.deleteUser(user);
-        log.debug("Delete user step 6 : user " + user.getLogin() + " is deleted.");
+        log.debug("Delete user step 7 : user " + user.getLogin() + " is deleted.");
+
 
         // Tweets are not deleted, but are not available to users anymore (unless the same user is created again)
 

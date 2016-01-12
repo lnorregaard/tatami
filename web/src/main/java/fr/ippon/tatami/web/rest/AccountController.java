@@ -5,6 +5,7 @@ import fr.ippon.tatami.config.Constants;
 import fr.ippon.tatami.domain.User;
 import fr.ippon.tatami.security.AuthenticationService;
 import fr.ippon.tatami.service.UserService;
+import fr.ippon.tatami.service.UsernameExistException;
 import fr.ippon.tatami.service.util.DomainUtil;
 import fr.ippon.tatami.web.rest.dto.Preferences;
 import fr.ippon.tatami.web.rest.dto.UserPassword;
@@ -89,12 +90,18 @@ public class AccountController {
         currentUser.setJobTitle(StringEscapeUtils.escapeHtml(updatedUser.getJobTitle().replace("<", " ")));
         currentUser.setPhoneNumber(updatedUser.getPhoneNumber().replace("<", " "));
         currentUser.setProperties(updatedUser.getProperties());
-        if (Constants.USER_AND_FRIENDS) {
-            currentUser.setUsername(updatedUser.getUsername());
-        }
         try {
-            userService.updateUser(currentUser);
+            if (Constants.USER_AND_FRIENDS) {
+                updatedUser.setLogin(currentUser.getLogin());
+                updatedUser.setDomain(currentUser.getDomain());
+                userService.updateUser(updatedUser);
+            } else {
+                userService.updateUser(currentUser);
+            }
         } catch (ConstraintViolationException cve) {
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            return null;
+        } catch (UsernameExistException e) {
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
             return null;
         }

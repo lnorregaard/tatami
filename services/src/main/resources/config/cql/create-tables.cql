@@ -59,6 +59,14 @@ CREATE TABLE IF NOT EXISTS domain (
     PRIMARY KEY(domainId, login)
 );
 
+CREATE TABLE IF NOT EXISTS username (
+    username varchar,
+    domain varchar,
+    created timeuuid,
+    login varchar,
+    PRIMARY KEY ((username,domain),created)
+);
+
 CREATE TABLE IF NOT EXISTS counter (
     login varchar,
     STATUS_COUNTER counter,

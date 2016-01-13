@@ -140,7 +140,9 @@ public class UserService {
         user.setAvatar(currentUser.getAvatar());
         user.setAttachmentsSize(currentUser.getAttachmentsSize());
         try {
-            usernameService.updateUsername(user, currentUser);
+            if (Constants.USER_AND_FRIENDS) {
+                usernameService.updateUsername(user, currentUser);
+            }
             userRepository.updateUser(user);
             searchService.removeUser(user);
             searchService.addUser(user);
@@ -194,10 +196,8 @@ public class UserService {
         user.setPhoneNumber("");
         user.setPreferencesMentionEmail(true);
         user.setWeeklyDigestSubscription(true);
-
-        try {
+        if (Constants.USER_AND_FRIENDS) {
             usernameService.createUsername(user);
-        } catch (UsernameExistException e) {
         }
         counterRepository.createStatusCounter(user.getLogin());
         counterRepository.createFriendsCounter(user.getLogin());
@@ -254,10 +254,10 @@ public class UserService {
         counterRepository.deleteCounters(user.getLogin());
         log.debug("Delete user step 5 : user " + user.getLogin() + " has no counter.");
 
-
-        usernameService.deleteUsernameForUser(user);
-        log.debug("Delete user step 6 : username " + user.getUsername() + " is deleted.");
-
+        if (Constants.USER_AND_FRIENDS) {
+            usernameService.deleteUsernameForUser(user);
+            log.debug("Delete user step 6 : username " + user.getUsername() + " is deleted.");
+        }
         // Delete user
         userRepository.deleteUser(user);
         log.debug("Delete user step 7 : user " + user.getLogin() + " is deleted.");

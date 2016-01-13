@@ -509,6 +509,13 @@ public class CassandraConfiguration {
                 "    properties map<text,text>,\n" +
                 "    PRIMARY KEY(login)\n" +
                 ");");
+        session.execute("CREATE TABLE IF NOT EXISTS username (\n" +
+                "    username varchar,\n" +
+                "    domain varchar,\n" +
+                "    created timeuuid,\n" +
+                "    login varchar,\n" +
+                "    PRIMARY KEY ((username,domain),created)\n" +
+                ");");
         session.execute("CREATE TABLE IF NOT EXISTS "+keyspace+".status (\n" +
                 "    statusId timeuuid,\n" +
                 "    type varchar,\n" +

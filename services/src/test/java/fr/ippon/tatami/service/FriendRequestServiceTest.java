@@ -92,8 +92,9 @@ public class FriendRequestServiceTest extends AbstractCassandraTatamiTest {
         userService.createUser(userWhoWillBeFollowed);
         userWhoWillBeFollowed.setDailyDigestSubscription(false);
         userWhoWillBeFollowed.setWeeklyDigestSubscription(false);
+        Constants.USER_AND_FRIENDS = false;
         userService.updateUser(userWhoWillBeFollowed);
-
+        Constants.USER_AND_FRIENDS = true;
         User userWhoFollow = userService.getUserByUsername("userWhoWantToFollow");
         assertThat(userWhoFollow.getFriendsCount(), is(0L));
 

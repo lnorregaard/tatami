@@ -195,6 +195,8 @@ CREATE TABLE IF NOT EXISTS avatar (
     PRIMARY KEY(id)
 );
 
+CREATE INDEX IF NOT EXISTS avatar_filename_idx ON tatami.avatar (filename);
+
 CREATE TABLE IF NOT EXISTS mailDigest (
     digestId varchar,
     login varchar,

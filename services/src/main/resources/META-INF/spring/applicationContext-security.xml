@@ -33,7 +33,7 @@
     <http auto-config="true" use-expressions="true" create-session="ifRequired">
         <csrf disabled="true"/>
         <custom-filter after="BASIC_AUTH_FILTER" ref="clientFilter" />
-        <remember-me key="tatamiRememberKey" token-validity-seconds="1209599"/>
+        <!--<remember-me key="tatamiRememberKey" token-validity-seconds="1209599"/>-->
         <intercept-url pattern="/tatami/presentation" access="permitAll()"/>
         <intercept-url pattern="/tatami/tos" access="permitAll()"/>
         <intercept-url pattern="/tatami/license" access="permitAll()"/>
@@ -85,6 +85,8 @@
         <beans:property name="clients" ref="clients"/>
         <beans:property name="authenticationManager" ref="authenticationManager"/>
     </beans:bean>
+
+
 
     <beans:bean id="googleAuthProvider" class="fr.ippon.tatami.security.GoogleAuthenticationProvider">
         <beans:property name="clients" ref="clients"/>

@@ -75,7 +75,7 @@ public class CassandraUserlineRepository extends AbstractCassandraLineRepository
     @Override
     public void deleteUserline(String login) {
         Statement statement = QueryBuilder.delete().from(ColumnFamilyKeys.USERLINE_CF)
-                .where(eq("login", login));
+                .where(eq("key", login));
         session.execute(statement);
     }
 

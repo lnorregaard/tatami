@@ -22,6 +22,14 @@ CREATE TABLE IF NOT EXISTS user (
     PRIMARY KEY(login)
 );
 
+CREATE TABLE IF NOT EXISTS username (
+    username varchar,
+    domain varchar,
+    created timeuuid,
+    login varchar,
+    PRIMARY KEY ((username,domain),created)
+);
+
 CREATE TABLE IF NOT EXISTS status (
     statusId timeuuid,
     type varchar,

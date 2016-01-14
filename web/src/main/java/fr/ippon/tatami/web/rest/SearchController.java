@@ -15,16 +15,10 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
 import javax.inject.Inject;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -194,7 +188,7 @@ public class SearchController {
      * The collection doesn't contain the current user even if he matches the query.<br>
      * If nothing matches, an empty collection (but not null) is returned.<br>
      *
-     * @param query the query
+     * @param username the query
      * @return a Collection of User
      */
     @RequestMapping(value = "/rest/search/users/extra",
@@ -227,5 +221,52 @@ public class SearchController {
         return userService.buildUserDTOList(users);
 
     }
+
+
+    /**
+     * GET  /search/firstnames" -> search firstname<br>
+     * Should return a collection of strings matching the firstname.<br>
+     * If nothing matches, an empty collection (but not null) is returned.<br>
+     *
+     * @param firstname the query
+     * @return a Collection of User
+     */
+    @RequestMapping(value = "/rest/search/firstnames",
+            method = RequestMethod.GET,
+            produces = "application/json")
+    @ResponseBody
+    @Timed
+    public Collection<String> searchFirstname(@RequestParam(value = "firstname", required = true) String firstname,
+                                                                 @RequestParam(value = "limit", required = false) Integer limit) {
+        User currentUser = authenticationService.getCurrentUser();
+        String domain = DomainUtil.getDomainFromLogin(currentUser.getLogin());
+        if (limit == null) {
+            limit = 100;
+        }
+        return searchService.searchFirstName(firstname,limit.intValue());
+    }
+
+
+    /**
+     * POST /search/firstnames" -> upload a colleciton of first names<br>
+     *
+     */
+    @RequestMapping(value = "/rest/search/firstnames",
+            method = RequestMethod.POST,
+            consumes = "text/plain")
+    @ResponseBody
+    @Timed
+    public void uploadFirstnames(@RequestBody String firstnames) {
+        log.debug(firstnames);
+        if (firstnames != null) {
+            String[] arr = firstnames.split("\\s*\n\\s*");
+            List<String> list = Arrays.asList(arr);
+            List<String> result = list.stream()
+                    .map(String::toLowerCase)
+                    .collect(Collectors.toList());
+            searchService.addFirstnames(list);
+        }
+    }
+
 
 }

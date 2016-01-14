@@ -3,6 +3,7 @@ package fr.ippon.tatami.service;
 import fr.ippon.tatami.domain.Group;
 import fr.ippon.tatami.domain.User;
 import fr.ippon.tatami.domain.status.Status;
+import org.springframework.scheduling.annotation.Async;
 
 import java.util.Collection;
 import java.util.List;
@@ -75,5 +76,15 @@ public interface SearchService {
 
     Collection<Group> searchGroupByPrefix(String domain, String prefix, int size);
 
+
     Collection<String> searchUserByUsernameAndFirstnameAndLastname(String domain, String username, String firstname, String lastname, boolean exact, boolean all);
+
+    @Async
+    void addFirstName(String firstname);
+
+    void addFirstnames(Collection<String> firstnames);
+
+    void removeFirstname(String firstname);
+
+    Collection<String> searchFirstName(String firstname, int limit);
 }

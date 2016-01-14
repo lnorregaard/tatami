@@ -48,7 +48,7 @@ public class ElasticsearchSearchService implements SearchService {
 
     private static final String ALL_FIELD = "_all";
 
-    private static final List<String> TYPES = Collections.unmodifiableList(Arrays.asList("user", "status", "group"));
+    private static final List<String> TYPES = Collections.unmodifiableList(Arrays.asList("user", "status", "group","firstname"));
 
     @Inject
     private ElasticsearchEngine engine;
@@ -124,39 +124,46 @@ public class ElasticsearchSearchService implements SearchService {
      */
     private boolean createIndex() {
         for (String type : TYPES) {
-            try {
-                CreateIndexRequestBuilder createIndex = client().admin().indices().prepareCreate(indexName(type));
-                URL mappingUrl = getClass().getClassLoader().getResource("META-INF/elasticsearch/index/" + type + ".json");
-
-                ObjectMapper jsonMapper = new ObjectMapper();
-                JsonNode indexConfig = jsonMapper.readTree(mappingUrl);
-                JsonNode indexSettings = indexConfig.get("settings");
-                if (indexSettings != null && indexSettings.isObject()) {
-                    createIndex.setSettings(jsonMapper.writeValueAsString(indexSettings));
-                }
-
-                JsonNode mappings = indexConfig.get("mappings");
-                if (mappings != null && mappings.isObject()) {
-                    for (Iterator<Map.Entry<String, JsonNode>> i = mappings.fields(); i.hasNext(); ) {
-                        Map.Entry<String, JsonNode> field = i.next();
-                        ObjectNode mapping = jsonMapper.createObjectNode();
-                        mapping.put(field.getKey(), field.getValue());
-                        createIndex.addMapping(field.getKey(), jsonMapper.writeValueAsString(mapping));
-                    }
-                }
-
-                boolean ack = createIndex.execute().actionGet().isAcknowledged();
-                if (!ack) {
-                    log.error("Cannot create index " + indexName(type));
-                    return false;
-                }
-
-            } catch (IndexAlreadyExistsException e) {
-                log.debug("Index exists" + indexName(type));
-            } catch (IOException e) {
-                log.error("Cannot create index " + indexName(type), e);
+            if (!createSpecificIndex(type)) {
                 return false;
             }
+        }
+        return true;
+    }
+
+    private boolean createSpecificIndex(String type) {
+        try {
+            CreateIndexRequestBuilder createIndex = client().admin().indices().prepareCreate(indexName(type));
+            URL mappingUrl = getClass().getClassLoader().getResource("META-INF/elasticsearch/index/" + type + ".json");
+
+            ObjectMapper jsonMapper = new ObjectMapper();
+            JsonNode indexConfig = jsonMapper.readTree(mappingUrl);
+            JsonNode indexSettings = indexConfig.get("settings");
+            if (indexSettings != null && indexSettings.isObject()) {
+                createIndex.setSettings(jsonMapper.writeValueAsString(indexSettings));
+            }
+
+            JsonNode mappings = indexConfig.get("mappings");
+            if (mappings != null && mappings.isObject()) {
+                for (Iterator<Map.Entry<String, JsonNode>> i = mappings.fields(); i.hasNext(); ) {
+                    Map.Entry<String, JsonNode> field = i.next();
+                    ObjectNode mapping = jsonMapper.createObjectNode();
+                    mapping.put(field.getKey(), field.getValue());
+                    createIndex.addMapping(field.getKey(), jsonMapper.writeValueAsString(mapping));
+                }
+            }
+
+            boolean ack = createIndex.execute().actionGet().isAcknowledged();
+            if (!ack) {
+                log.error("Cannot create index " + indexName(type));
+                return false;
+            }
+
+        } catch (IndexAlreadyExistsException e) {
+            log.debug("Index exists" + indexName(type));
+        } catch (IOException e) {
+            log.error("Cannot create index " + indexName(type), e);
+            return false;
         }
         return true;
     }
@@ -372,6 +379,41 @@ public class ElasticsearchSearchService implements SearchService {
         }
         return groups;
     }
+
+    @Override
+    public Collection<String> searchFirstName(String firstname, int limit) {
+        BoolQueryBuilder boolQuery = new BoolQueryBuilder();
+        int minimumMatch = 0;
+        minimumMatch += addSearchFieldToQuery(boolQuery,"name",firstname,false);
+        boolQuery.minimumShouldMatch(""+minimumMatch);
+
+        SearchRequestBuilder searchRequest = client().prepareSearch(indexName(firstnameMapper.type()))
+                .setTypes(firstnameMapper.type())
+                .setQuery(boolQuery)
+                .addFields()
+                .setFrom(0)
+                .setSize(limit);
+        if (log.isTraceEnabled()) {
+            log.trace("elasticsearch query : " + searchRequest);
+        }
+        SearchResponse searchResponse = searchRequest
+                .execute()
+                .actionGet();
+
+        SearchHits searchHits = searchResponse.getHits();
+        if (searchHits.totalHits() == 0)
+            return Collections.emptyList();
+
+        SearchHit[] hits = searchHits.hits();
+        final List<String> ids = new ArrayList<String>(hits.length);
+        for (SearchHit hit : hits) {
+            ids.add(hit.getId());
+        }
+
+        log.debug("search " + firstnameMapper.type() + " by search(\"" + firstname + ") = result : " + ids);
+        return ids;
+    }
+
 
     @Override
     public Collection<String> searchUserByUsernameAndFirstnameAndLastname(String domain, String username, String firstname, String lastname, boolean exact, boolean all) {
@@ -660,4 +702,58 @@ public class ElasticsearchSearchService implements SearchService {
          */
         XContentBuilder toJson(T o) throws IOException;
     }
+
+    private final ElasticsearchMapper<String> firstnameMapper = new ElasticsearchMapper<String>() {
+        @Override
+        public String id(String firstname) {
+            return firstname;
+        }
+
+        @Override
+        public String type() {
+            return "firstname";
+        }
+
+        @Override
+        public String prefixSearchSortField() {
+            return "name";
+        }
+
+        @Override
+        public XContentBuilder toJson(String firstname) throws IOException {
+            return XContentFactory.jsonBuilder()
+                    .startObject()
+                    .field("name", firstname)
+                    .endObject();
+        }
+    };
+    @Override
+    @Async
+    public void addFirstName(final String firstname) {
+        Assert.notNull(firstname, "user cannot be null");
+        index(firstname, firstnameMapper);
+    }
+
+    @Override
+    public void addFirstnames(Collection<String> firstnames) {
+        if (!client().admin().indices().prepareExists(indexName("firstname")).execute().actionGet().isExists()) {
+            log.info("Index {} does not exists in Elasticsearch, creating it!", indexName("firstname"));
+            createSpecificIndex("firstname");
+        } else {
+            boolean ack = client().admin().indices().prepareDelete(indexName("firstname")).execute().actionGet().isAcknowledged();
+            if (!ack) {
+                log.error("Elasticsearch Index wasn't deleted !");
+                return;
+            } else {
+                createSpecificIndex("firstname");
+            }
+        }
+        indexAll(firstnames, firstnameMapper);
+    }
+
+    @Override
+    public void removeFirstname(String firstname) {
+        delete(firstname, firstnameMapper);
+    }
+
 }

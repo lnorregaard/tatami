@@ -98,7 +98,7 @@ public class UserService {
     public User getUserByUsername(String username) {
         User currentUser = authenticationService.getCurrentUser();
         String domain = DomainUtil.getDomainFromLogin(currentUser.getLogin());
-        String login = DomainUtil.getLoginFromUsernameAndDomain(username, domain);
+        String login = usernameService.getLoginFromUsernameAndDomain(username, domain);
         return getUserByLogin(login);
     }
 
@@ -211,7 +211,7 @@ public class UserService {
     }
 
     public void createTatamibot(String domain) {
-        String login = DomainUtil.getLoginFromUsernameAndDomain(Constants.TATAMIBOT_NAME, domain);
+        String login = usernameService.getLoginFromUsernameAndDomain(Constants.TATAMIBOT_NAME, domain);
         User tatamiBotUser = new User();
         tatamiBotUser.setLogin(login);
         this.createUser(tatamiBotUser);

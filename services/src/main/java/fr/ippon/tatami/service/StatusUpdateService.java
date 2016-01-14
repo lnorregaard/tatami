@@ -97,6 +97,10 @@ public class StatusUpdateService {
     @Inject
     private AtmosphereService atmosphereService;
 
+    @Inject
+    private UsernameService usernameService;
+
+
     public void postStatus(String content, boolean statusPrivate, Collection<String> attachmentIds, String geoLocalization) {
         createStatus(content, statusPrivate, null, "", "", "", attachmentIds, null, geoLocalization);
     }
@@ -360,7 +364,7 @@ public class StatusUpdateService {
 
                 log.debug("Mentionning : {}", mentionedUsername);
                 String mentionedLogin =
-                        DomainUtil.getLoginFromUsernameAndDomain(mentionedUsername, domain);
+                        usernameService.getLoginFromUsernameAndDomain(mentionedUsername, domain);
 
                 // If this is a private group, and if the mentioned user is not in the group, he will not see the status
                 if (!isPublicGroup(group)) {

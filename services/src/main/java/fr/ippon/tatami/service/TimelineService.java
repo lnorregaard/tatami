@@ -89,6 +89,9 @@ public class TimelineService {
     @Inject
     private StatusUpdateService statusUpdateService;
 
+    @Inject
+    private UsernameService usernameService;
+
     public StatusDTO getStatus(String statusId) {
         List<String> line = new ArrayList<String>();
         line.add(statusId);
@@ -503,7 +506,7 @@ public class TimelineService {
             login = currentUser.getLogin();
         } else {  // another user, in the same domain
             String domain = DomainUtil.getDomainFromLogin(currentUser.getLogin());
-            login = DomainUtil.getLoginFromUsernameAndDomain(username, domain);
+            login = usernameService.getLoginFromUsernameAndDomain(username, domain);
         }
         List<String> statuses = userlineRepository.getUserline(login, nbStatus, start, finish);
         Collection<StatusDTO> dtos = buildStatusList(statuses);

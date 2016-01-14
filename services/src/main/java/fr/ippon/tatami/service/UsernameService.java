@@ -29,7 +29,7 @@ import java.util.function.Predicate;
 /**
  * Manages the application's users.
  *
- * @author Julien Dubois
+ * @author Lars Nørregaard
  */
 @Service
 public class UsernameService {
@@ -78,5 +78,15 @@ public class UsernameService {
 
     private Predicate<Username> isUsernameEquals(User user) {
         return e -> user.getLogin().equals(e.getLogin());
+    }
+
+    public String getLoginFromUsernameAndDomain(String username, String domain) {
+        if (Constants.USER_AND_FRIENDS) {
+            List<Username> usernames = usernameRepository.findUsernamesByDomainAndUsername(domain, username);
+            if (usernames.size() == 1) {
+                return usernames.iterator().next().getLogin();
+            }
+        }
+        return DomainUtil.getLoginFromUsernameAndDomain(username, domain);
     }
 }

@@ -52,6 +52,9 @@ public class FriendshipService {
     @Inject
     private AuthenticationService authenticationService;
 
+    @Inject
+    private UsernameService usernameService;
+
     /**
      * Follow a user.
      *
@@ -60,8 +63,7 @@ public class FriendshipService {
     public boolean followUser(String usernameToFollow) {
         log.debug("Following user : {}", usernameToFollow);
         User currentUser = authenticationService.getCurrentUser();
-        String domain = DomainUtil.getDomainFromLogin(currentUser.getLogin());
-        String loginToFollow = DomainUtil.getLoginFromUsernameAndDomain(usernameToFollow, domain);
+        String loginToFollow = getLoginFromUsername(usernameToFollow);
         User followedUser = userRepository.findUserByLogin(loginToFollow);
         if (followedUser != null && !followedUser.equals(currentUser)) {
             if (Constants.USER_AND_FRIENDS) {
@@ -231,6 +233,6 @@ public class FriendshipService {
     private String getLoginFromUsername(String username) {
         User currentUser = authenticationService.getCurrentUser();
         String domain = DomainUtil.getDomainFromLogin(currentUser.getLogin());
-        return DomainUtil.getLoginFromUsernameAndDomain(username, domain);
+        return usernameService.getLoginFromUsernameAndDomain(username, domain);
     }
 }

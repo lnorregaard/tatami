@@ -139,6 +139,19 @@ public class UserService {
         user.setDomain(currentUser.getDomain());
         user.setAvatar(currentUser.getAvatar());
         user.setAttachmentsSize(currentUser.getAttachmentsSize());
+        user.setPassword(currentUser.getPassword());
+        if (user.getActivated() == null) {
+            user.setActivated(currentUser.getActivated());
+        }
+        if (user.getDailyDigestSubscription() == null) {
+            user.setDailyDigestSubscription(currentUser.getDailyDigestSubscription());
+        }
+        if (user.getPreferencesMentionEmail() == null) {
+            user.setPreferencesMentionEmail(currentUser.getPreferencesMentionEmail());
+        }
+        if (user.getWeeklyDigestSubscription() == null) {
+            user.setWeeklyDigestSubscription(currentUser.getWeeklyDigestSubscription());
+        }
         try {
             if (Constants.USER_AND_FRIENDS) {
                 usernameService.updateUsername(user, currentUser);

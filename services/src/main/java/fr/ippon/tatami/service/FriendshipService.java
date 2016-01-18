@@ -74,8 +74,11 @@ public class FriendshipService {
             if (Constants.USER_AND_FRIENDS) {
                 String currentUserLogin = currentUser.getLogin();
                 String followedUserLogin = followedUser.getLogin();
+                log.debug("currentUserLogin: {}, followedUserLogin: {}",currentUserLogin,followedUserLogin);
                 boolean alreadySentFriendRequest = friendRequestRepository.getFriendRequest(currentUserLogin, followedUserLogin);
+                log.debug("alreadySentFriendRequest: {}, currentUserLogin: {}, followedUserLogin: {}",alreadySentFriendRequest,currentUserLogin,followedUserLogin);
                 boolean friendSentFriendRequest = friendRequestRepository.getFriendRequest(followedUserLogin, currentUserLogin);
+                log.debug("friendSentFriendRequest: {}, currentUserLogin: {}, followedUserLogin: {}",friendSentFriendRequest,currentUserLogin,followedUserLogin);
                 if (alreadySentFriendRequest) {
                     return false;
                 } else if (friendSentFriendRequest) {

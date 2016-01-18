@@ -65,7 +65,7 @@ public class FriendshipService {
         User currentUser = authenticationService.getCurrentUser();
         String loginToFollow = getLoginFromUsername(usernameToFollow);
         log.debug("Following login : {}", loginToFollow);
-        if (loginToFollow == null || loginToFollow.equals("")) {
+        if (loginToFollow == null || loginToFollow.equals("")) {
             log.info("Could not find user "+loginToFollow);
             return false;
         }

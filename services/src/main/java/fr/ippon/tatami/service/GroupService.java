@@ -51,7 +51,7 @@ public class GroupService {
     private FriendRepository friendRepository;
 
     @CacheEvict(value = "group-user-cache", allEntries = true)
-    public void createGroup(String name, String description, boolean publicGroup) {
+    public UUID createGroup(String name, String description, boolean publicGroup) {
         log.debug("Creating group : {}", name);
         User currentUser = authenticationService.getCurrentUser();
         String domain = DomainUtil.getDomainFromLogin(currentUser.getLogin());
@@ -61,6 +61,7 @@ public class GroupService {
         userGroupRepository.addGroupAsAdmin(currentUser.getLogin(), groupId);
         Group group = getGroupById(domain, groupId);
         searchService.addGroup(group);
+        return groupId;
     }
 
     @CacheEvict(value = {"group-user-cache", "group-cache"}, allEntries = true)

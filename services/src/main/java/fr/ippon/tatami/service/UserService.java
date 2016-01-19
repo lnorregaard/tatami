@@ -114,7 +114,6 @@ public class UserService {
         for (String login : logins) {
             user = userRepository.findUserByLogin(login);
             if (user != null) {
-                user.setLogin("");
                 users.add(user);
             }
         }
@@ -485,7 +484,9 @@ public class UserService {
 
     private UserDTO getUserDTOFromUser(User user) {
         UserDTO friend = new UserDTO();
-        friend.setLogin(user.getLogin());
+        if (!Constants.ANONYMOUS_SHOW_GROUP_TIMELINE) {
+            friend.setLogin(user.getLogin());
+        }
         friend.setUsername(user.getUsername());
         friend.setAvatar(user.getAvatar());
         friend.setFirstName(user.getFirstName());

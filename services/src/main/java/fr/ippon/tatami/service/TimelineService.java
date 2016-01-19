@@ -702,7 +702,7 @@ public class TimelineService {
     public void approveStatus(String statusId) {
         AbstractStatus abstractStatus = statusRepository.findStatusById(statusId,false);
         Status status = (Status) abstractStatus;
-        if (status.getState() == null) {
+        if (status.getState() != null) {
             statusRepository.updateState(statusId, null);
             Group group = null;
             if (status.getGroupId() != null) {

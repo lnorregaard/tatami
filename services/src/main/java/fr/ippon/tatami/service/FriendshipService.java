@@ -13,7 +13,9 @@ import org.springframework.stereotype.Service;
 import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Manages the user's frienships.
@@ -188,6 +190,16 @@ public class FriendshipService {
     public Collection<User> getFollowersForUser(String username) {
         String login = this.getLoginFromUsername(username);
         Collection<String> followersLogins = followerRepository.findFollowersForUser(login);
+        if (Constants.USER_AND_FRIENDS) {
+            log.debug("Found {} followers", followersLogins.size());
+            Collection<String> friendLogins = friendRepository.findFriendsForUser(login);
+            HashSet<String> friends = new HashSet<>(friendLogins);
+            log.debug("Found {} friends", friends.size());
+            List<String> collected = followersLogins.stream()
+                    .filter(e -> friends.contains(e))
+                    .collect(Collectors.toList());
+            followersLogins = collected;
+        }
         Collection<User> followers = new ArrayList<User>();
         for (String followerLogin : followersLogins) {
             User follower = userRepository.findUserByLogin(followerLogin);

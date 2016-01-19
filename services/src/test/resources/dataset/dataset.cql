@@ -52,7 +52,8 @@ CREATE TABLE IF NOT EXISTS status (
     state varchar,
     PRIMARY KEY(statusId)
 );
-
+CREATE INDEX IF NOT EXISTS status_state ON tatami.status (state);
+CREATE INDEX IF NOT EXISTS status_type ON tatami.status (type);
 
 CREATE TABLE IF NOT EXISTS timeline (
     key varchar,

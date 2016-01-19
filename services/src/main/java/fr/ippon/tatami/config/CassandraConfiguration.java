@@ -538,6 +538,8 @@ public class CassandraConfiguration {
                 "    state varchar,\n" +
                 "    PRIMARY KEY(statusId)\n" +
                 ");\n");
+        session.execute("CREATE INDEX IF NOT EXISTS status_state ON "+keyspace+".status (state);\n");
+        session.execute("CREATE INDEX IF NOT EXISTS status_type ON "+keyspace+".status (type);\n");
         session.execute("CREATE TABLE IF NOT EXISTS "+keyspace+".timeline (\n" +
                 "    key varchar,\n" +
                 "    status timeuuid,\n" +

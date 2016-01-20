@@ -24,6 +24,7 @@
     <http pattern="/tatami/rest/status/**" security="none"/>
     <http pattern="/swagger-ui/**" security="none"/>
     <http pattern="/tatami/v2/**" security="none"/>
+    <http pattern="/tatami/avatar/**" security="none"/>
 
     <http pattern="/tatami/j_spring_pac4j_security_check" use-expressions="true" entry-point-ref="googleEntryPoint">
         <intercept-url pattern="/tatami/j_spring_pac4j_security_check" access="isAuthenticated()"/>
@@ -34,6 +35,7 @@
         <csrf disabled="true"/>
         <custom-filter after="BASIC_AUTH_FILTER" ref="clientFilter" />
         <!--<remember-me key="tatamiRememberKey" token-validity-seconds="1209599"/>-->
+        <intercept-url pattern="/tatami/avatar" access="permitAll()"/>
         <intercept-url pattern="/tatami/presentation" access="permitAll()"/>
         <intercept-url pattern="/tatami/tos" access="permitAll()"/>
         <intercept-url pattern="/tatami/license" access="permitAll()"/>

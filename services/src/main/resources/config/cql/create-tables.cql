@@ -298,4 +298,5 @@ CREATE TABLE IF NOT EXISTS friendrequests (
     friendLogin varchar,
     PRIMARY KEY(login,friendLogin)
 );
+CREATE INDEX IF NOT EXISTS friendlogin_friendrequests ON friendrequests (friendLogin);
 

@@ -87,6 +87,7 @@ public class FriendshipService {
                     followUser(currentUser,followedUser);
                     followUser(followedUser,currentUser);
                     friendRequestRepository.removeFriendRequest(followedUserLogin,currentUserLogin);
+                    friendRequestRepository.removeFriendRequest(currentUserLogin,followedUserLogin);
                     return true;
                 } else {
                     return friendRequestRepository.addFriendRequest(currentUserLogin,followedUserLogin);
@@ -131,7 +132,11 @@ public class FriendshipService {
         String loginToUnfollow = this.getLoginFromUsername(usernameToUnfollow);
         User userToUnfollow = userRepository.findUserByLogin(loginToUnfollow);
         if (Constants.USER_AND_FRIENDS) {
+            friendRequestRepository.removeFriendRequest(loginToUnfollow,currentUser.getLogin());
+            friendRequestRepository.removeFriendRequest(currentUser.getLogin(),loginToUnfollow);
+            unfollowUser(currentUser,userToUnfollow);
             unfollowUser(userToUnfollow,currentUser);
+            return true;
         }
         return unfollowUser(currentUser, userToUnfollow);
     }
@@ -191,6 +196,7 @@ public class FriendshipService {
         String login = this.getLoginFromUsername(username);
         Collection<String> followersLogins = followerRepository.findFollowersForUser(login);
         if (Constants.USER_AND_FRIENDS) {
+            followersLogins = friendRequestRepository.findFriendRequests(login);
             log.debug("Found {} followers", followersLogins.size());
             Collection<String> friendLogins = friendRepository.findFriendsForUser(login);
             HashSet<String> friends = new HashSet<>(friendLogins);

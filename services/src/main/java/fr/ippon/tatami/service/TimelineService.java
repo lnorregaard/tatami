@@ -675,17 +675,29 @@ public class TimelineService {
                     // => for non-authenticated rss access
                     StatusDTO statusDTO = new StatusDTO();
                     statusDTO.setStatusId(abstractStatus.getStatusId().toString());
+
                     statusDTO.setStatusDate(abstractStatus.getStatusDate());
                     statusDTO.setGeoLocalization(abstractStatus.getGeoLocalization());
                     statusDTO.setActivated(statusUser.getActivated());
                     statusDTO.setState(abstractStatus.getState());
+                    statusDTO.setUsername(abstractStatus.getUsername());
                     StatusType type = abstractStatus.getType();
                     if (type == null) {
                         statusDTO.setType(StatusType.STATUS);
                     } else {
                         statusDTO.setType(abstractStatus.getType());
                     }
+                    if (type == StatusType.STATUS) {
+                        statusDTO.setContent(((Status)abstractStatus).getContent());
+                        statusDTO.setGroupId(((Status)abstractStatus).getGroupId());
+                        Group group = groupService.getGroupById(statusUser.getDomain(), UUID.fromString(statusDTO.getGroupId()));
+                        // if this is a private group and the user is not part of it, he cannot see the status
+                        if (group != null) {
+                            statusDTO.setPublicGroup(group.isPublicGroup());
+                            statusDTO.setGroupName(group.getName());
+                        }
 
+                    }
                     statusDTO.setTimelineId(abstractStatus.getStatusId().toString());
                     statuses.add(statusDTO);
                 } else {

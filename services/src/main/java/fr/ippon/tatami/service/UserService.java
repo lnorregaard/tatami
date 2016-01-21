@@ -20,10 +20,7 @@ import org.springframework.cache.annotation.CacheEvict;
 
 import javax.inject.Inject;
 import javax.validation.ConstraintViolationException;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 /**
  * Manages the application's users.
@@ -498,6 +495,12 @@ public class UserService {
         friend.setFriendsCount(user.getFriendsCount());
         friend.setFollowersCount(user.getFollowersCount());
         friend.setActivated(user.getActivated());
+        if (user.getProperties() == null) {
+            friend.setProperties(new HashMap<>());
+        } else {
+            friend.setProperties(user.getProperties());
+        }
+
         return friend;
     }
 }

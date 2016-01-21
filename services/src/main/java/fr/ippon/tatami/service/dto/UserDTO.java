@@ -1,6 +1,7 @@
 package fr.ippon.tatami.service.dto;
 
 import java.io.Serializable;
+import java.util.Map;
 
 /**
  * DTO to present a "complete" status to the presentation layer.
@@ -36,6 +37,8 @@ public class UserDTO implements Serializable {
     private boolean isYou = false;
 
     private boolean isActivated=true;
+
+    private Map<String,String> properties;
 
     public boolean isActivated() {
         return isActivated;
@@ -147,6 +150,14 @@ public class UserDTO implements Serializable {
 
     public void setYou(boolean you) {
         isYou = you;
+    }
+
+    public Map<String, String> getProperties() {
+        return properties;
+    }
+
+    public void setProperties(Map<String, String> properties) {
+        this.properties = properties;
     }
 
     @Override

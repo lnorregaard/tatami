@@ -48,7 +48,7 @@ public class ElasticsearchSearchService implements SearchService {
 
     private static final String ALL_FIELD = "_all";
 
-    private static final List<String> TYPES = Collections.unmodifiableList(Arrays.asList("user", "status", "group","firstname"));
+    private static final List<String> TYPES = Collections.unmodifiableList(Arrays.asList("user", "status", "group","firstname", "favourite"));
 
     @Inject
     private ElasticsearchEngine engine;
@@ -486,18 +486,10 @@ public class ElasticsearchSearchService implements SearchService {
             final XContentBuilder source = mapper.toJson(object);
 
             log.debug("Ready to index the {} id {} into Elasticsearch: {}", type, id, stringify(source));
-            client().prepareIndex(indexName(type), type, id).setSource(source).execute(new ActionListener<IndexResponse>() {
-                @Override
-                public void onResponse(IndexResponse response) {
-                    log.debug(type + " id " + id + " was " + (response.getVersion() == 1 ? "indexed" : "updated") + " into Elasticsearch");
-                }
-
-                @Override
-                public void onFailure(Throwable e) {
-                    log.error("The " + type + " id " + id + " wasn't indexed : " + stringify(source), e);
-                }
-            });
-
+            client()
+                    .prepareIndex(indexName(type), type, id)
+                    .setSource(source)
+                    .execute(getESActionListener(type, id, source));
         } catch (IOException e) {
             log.error("The " + type + " id " + id + " wasn't indexed", e);
         }
@@ -735,6 +727,7 @@ public class ElasticsearchSearchService implements SearchService {
     }
 
     @Override
+    @Async
     public void addFirstnames(Collection<String> firstnames) {
         if (!client().admin().indices().prepareExists(indexName("firstname")).execute().actionGet().isExists()) {
             log.info("Index {} does not exists in Elasticsearch, creating it!", indexName("firstname"));
@@ -754,6 +747,71 @@ public class ElasticsearchSearchService implements SearchService {
     @Override
     public void removeFirstname(String firstname) {
         delete(firstname, firstnameMapper);
+    }
+
+
+    /**
+     * Indexes a user to favourite.
+     * This method is asynchronous.
+     *
+     * @param favourite that needs to be indexed.
+     * @param login that needs to be indexed.
+     */
+    @Override
+    @Async
+    public void indexUserFavourite(String favourite, String login) {
+        Assert.notNull(favourite);
+        Assert.notNull(login);
+
+        String type = "favourite";
+        String index = indexName(type);
+        String id = favourite;
+        try {
+            addFavouriteToIndex(favourite, type, index, id);
+            addUserFavouriteToIndex(favourite, login, index);
+        } catch (IOException e) {
+            log.error("The " + type + " id " + id + " wasn't indexed", e);
+        }
+    }
+
+    private void addUserFavouriteToIndex(String favourite, String login, String index) throws IOException {
+        String id;
+        id = login+"-"+favourite;
+        final String type = "user";
+        XContentBuilder userFavouriteJson = XContentFactory.jsonBuilder()
+                .startObject()
+                .field("id", id)
+                .field("login", login)
+                .field("favourite", favourite)
+                .endObject();
+
+        log.debug("Ready to index the {} id {} into Elasticsearch: {}", type, id, stringify(userFavouriteJson));
+        client().prepareIndex(index, type, id).setSource(userFavouriteJson).setParent(favourite).execute(getESActionListener(type, id, userFavouriteJson));
+    }
+
+    private void addFavouriteToIndex(final String favourite, final String type, final String index, final String id) throws IOException {
+        final XContentBuilder favouriteJson = XContentFactory.jsonBuilder()
+                .startObject()
+                .field("id", favourite)
+                .endObject();
+
+        log.debug("Ready to index the {} id {} into Elasticsearch: {}", type, id, stringify(favouriteJson));
+        client().prepareIndex(index, type, id).setSource(favouriteJson).execute(getESActionListener(type, id, favouriteJson));
+    }
+
+
+    private ActionListener<IndexResponse> getESActionListener(final String type, final String id, final XContentBuilder favouriteJson) {
+        return new ActionListener<IndexResponse>() {
+            @Override
+            public void onResponse(IndexResponse response) {
+                log.debug(type + " id " + id + " was " + (response.getVersion() == 1 ? "indexed" : "updated") + " into Elasticsearch");
+            }
+
+            @Override
+            public void onFailure(Throwable e) {
+                log.error("The " + type + " id " + id + " wasn't indexed : " + stringify(favouriteJson), e);
+            }
+        };
     }
 
 }

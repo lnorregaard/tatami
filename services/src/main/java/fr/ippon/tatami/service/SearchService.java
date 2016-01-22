@@ -87,4 +87,7 @@ public interface SearchService {
     void removeFirstname(String firstname);
 
     Collection<String> searchFirstName(String firstname, int limit);
+
+    @Async
+    void indexUserFavourite(String favourite, String login);
 }

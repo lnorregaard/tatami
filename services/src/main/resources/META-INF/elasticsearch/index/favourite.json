@@ -1,0 +1,30 @@
+{
+    "mappings": {
+        "favourite": {
+            "properties": {
+                "id": {
+                    "type": "string"
+                }
+            }
+        },
+        "user": {
+            "_parent": {
+                "type": "favourite"
+            },
+            "_routing": {
+                "required": true
+            },
+            "properties": {
+                "favourite": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "login": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}

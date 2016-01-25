@@ -26,6 +26,9 @@ import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.indices.IndexAlreadyExistsException;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
+import org.elasticsearch.search.aggregations.AggregationBuilder;
+import org.elasticsearch.search.aggregations.AggregationBuilders;
+import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortOrder;
 import org.slf4j.Logger;
@@ -39,6 +42,7 @@ import javax.inject.Inject;
 import java.io.IOException;
 import java.net.URL;
 import java.util.*;
+import java.util.function.Consumer;
 
 import static org.elasticsearch.index.query.QueryBuilders.*;
 
@@ -754,6 +758,31 @@ public class ElasticsearchSearchService implements SearchService {
     }
 
 
+    @Override
+    public Map<String, Long> countUsersForUserFavourites(List<String> favourites, User user) {
+        AggregationBuilder aggregation =
+                AggregationBuilders
+                        .terms("aggregated").field("_parent");
+        BoolQueryBuilder boolQuery = new BoolQueryBuilder();
+        boolQuery.must(termsQuery("favourite",favourites));
+
+        SearchResponse sr = client().prepareSearch()
+                .setQuery(boolQuery)
+                .addAggregation(aggregation)
+                .execute().actionGet();
+        sr.getAggregations().get("aggregated");
+
+        Terms result = sr.getAggregations().get("aggregated");
+        Map<String,Long> favouriteCount = new HashMap<>();
+        favourites.stream().forEach(
+                addCountForFavouriteConsumer(result, favouriteCount));
+        return favouriteCount;
+    }
+
+    private Consumer<String> addCountForFavouriteConsumer(Terms result, Map<String, Long> favouriteCount) {
+        return favourite -> favouriteCount.put(favourite,result.getBucketByKey(favourite).getDocCount());
+    }
+
     /**
      * Indexes a user to favourite.
      * This method is asynchronous.
@@ -789,6 +818,8 @@ public class ElasticsearchSearchService implements SearchService {
         client().prepareDelete(index, type, id).setParent(favourite).execute(getDeleteListener(id, type));
 
     }
+
+
 
     private void addUserFavouriteToIndex(String favourite, String login, String index) throws IOException {
         String id = login+"-"+favourite;

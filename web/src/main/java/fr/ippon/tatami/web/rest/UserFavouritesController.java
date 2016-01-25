@@ -5,14 +5,12 @@ import fr.ippon.tatami.security.AuthenticationService;
 import fr.ippon.tatami.service.SearchService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
 import javax.inject.Inject;
+import java.util.List;
+import java.util.Map;
 
 /**
  * REST controller for managing user favourites.
@@ -38,13 +36,7 @@ public class UserFavouritesController {
     @ResponseBody
     public void addUserFavourite(@PathVariable("favourite") String favourite) {
         User user = null;
-        try {
-            authenticationService.validateStatus();
-            user = authenticationService.getCurrentUser();
-        } catch (UsernameNotFoundException e) {
-            log.info("The user is not active and can not make a user favourite");
-            return;
-        }
+        user = authenticationService.getCurrentUser();
         log.debug("REST request to like favourite : {}", favourite);
         searchService.indexUserFavourite(favourite,user.getLogin());
     }
@@ -53,19 +45,34 @@ public class UserFavouritesController {
      * DELETE /user/favourites/:id -> Unfavourites the status
      */
     @RequestMapping(value = "/rest/user/favourites/{favourite}",
-            method = RequestMethod.POST)
+            method = RequestMethod.DELETE)
     @ResponseBody
     public void unfavoriteStatus(@PathVariable("favourite") String favourite) {
         User user = null;
-        try {
-            authenticationService.validateStatus();
-            user = authenticationService.getCurrentUser();
-        } catch (UsernameNotFoundException e) {
-            log.info("The user is not active and can not delete a user favourite");
-            return;
-        }
+        user = authenticationService.getCurrentUser();
         log.debug("REST request to unlike favourite : {}", favourite);
         searchService.removeUserFavourite(favourite,user.getLogin());
     }
+
+    /**
+     * GET /user/favourites/count -> create a user favourite
+     */
+    @RequestMapping(value = "/rest/user/favourites/count",
+            method = RequestMethod.GET)
+    @ResponseBody
+    public Map<String, Long> countUserFavourites(@RequestParam("id") List<String> ids) {
+//        User user = null;
+//        try {
+//            authenticationService.validateStatus();
+//            user = authenticationService.getCurrentUser();
+//        } catch (UsernameNotFoundException e) {
+//            log.info("The user is not active and can not make a user favourite");
+//            return;
+//        }
+        User user = authenticationService.getCurrentUser();
+        log.debug("REST request to get favourites : {}", ids);
+        return searchService.countUsersForUserFavourites(ids,user);
+    }
+
 
 }

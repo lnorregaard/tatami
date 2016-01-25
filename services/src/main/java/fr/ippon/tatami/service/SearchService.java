@@ -7,6 +7,7 @@ import org.springframework.scheduling.annotation.Async;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Service used to search statuses and users.
@@ -87,6 +88,8 @@ public interface SearchService {
     void removeFirstname(String firstname);
 
     Collection<String> searchFirstName(String firstname, int limit);
+
+    Map<String, Long> countUsersForUserFavourites(List<String> favourites, User user);
 
     @Async
     void indexUserFavourite(String favourite, String login);

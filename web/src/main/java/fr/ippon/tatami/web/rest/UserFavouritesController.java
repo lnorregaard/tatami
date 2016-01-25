@@ -3,6 +3,7 @@ package fr.ippon.tatami.web.rest;
 import fr.ippon.tatami.domain.User;
 import fr.ippon.tatami.security.AuthenticationService;
 import fr.ippon.tatami.service.SearchService;
+import fr.ippon.tatami.service.dto.UserFavouriteCountDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
@@ -10,7 +11,6 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.inject.Inject;
 import java.util.List;
-import java.util.Map;
 
 /**
  * REST controller for managing user favourites.
@@ -60,7 +60,7 @@ public class UserFavouritesController {
     @RequestMapping(value = "/rest/user/favourites/count",
             method = RequestMethod.GET)
     @ResponseBody
-    public Map<String, Long> countUserFavourites(@RequestParam("id") List<String> ids) {
+    public List<UserFavouriteCountDTO> countUserFavourites(@RequestParam("id") List<String> ids) {
 //        User user = null;
 //        try {
 //            authenticationService.validateStatus();

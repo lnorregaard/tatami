@@ -6,8 +6,10 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import fr.ippon.tatami.domain.Group;
 import fr.ippon.tatami.domain.User;
 import fr.ippon.tatami.domain.status.Status;
+import fr.ippon.tatami.repository.FriendRepository;
 import fr.ippon.tatami.repository.GroupRepository;
 import fr.ippon.tatami.service.SearchService;
+import fr.ippon.tatami.service.dto.UserFavouriteCountDTO;
 import org.apache.commons.lang.StringUtils;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
@@ -43,6 +45,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import static org.elasticsearch.index.query.QueryBuilders.*;
 
@@ -62,6 +65,9 @@ public class ElasticsearchSearchService implements SearchService {
 
     @Inject
     private GroupRepository groupRepository;
+
+    @Inject
+    private FriendRepository friendRepository;
 
     private Client client() {
         return engine.client();
@@ -759,12 +765,38 @@ public class ElasticsearchSearchService implements SearchService {
 
 
     @Override
-    public Map<String, Long> countUsersForUserFavourites(List<String> favourites, User user) {
+    public List<UserFavouriteCountDTO> countUsersForUserFavourites(List<String> favourites, User user) {
+        List<UserFavouriteCountDTO> favouritesCount = new ArrayList<>();
+        List<String> logins = new ArrayList<>();
+        if (user != null) {
+            logins = friendRepository.findFriendsForUser(user.getLogin());
+        }
+
+        final Map<String,Long> total = getCountUserFavourites(favourites, null);
+        final Map<String, Long> friendTotal = getFriendTotal(favourites, logins);
+        return total.keySet()
+                .stream()
+                .map(id -> new UserFavouriteCountDTO(id,total.get(id),friendTotal.get(id)))
+                .collect(Collectors.toList());
+    }
+
+    private Map<String, Long> getFriendTotal(List<String> favourites, List<String> logins) {
+        Map<String, Long> friendTotal = new HashMap<>();
+        if (logins != null && !logins.isEmpty()) {
+            friendTotal = getCountUserFavourites(favourites, logins);
+        }
+        return friendTotal;
+    }
+
+    private Map<String, Long> getCountUserFavourites(List<String> favourites, List<String> logins) {
         AggregationBuilder aggregation =
                 AggregationBuilders
                         .terms("aggregated").field("_parent");
         BoolQueryBuilder boolQuery = new BoolQueryBuilder();
         boolQuery.must(termsQuery("favourite",favourites));
+        if (logins != null) {
+            boolQuery.must(termsQuery("login", logins));
+        }
 
         SearchResponse sr = client().prepareSearch()
                 .setQuery(boolQuery)
@@ -774,13 +806,17 @@ public class ElasticsearchSearchService implements SearchService {
 
         Terms result = sr.getAggregations().get("aggregated");
         Map<String,Long> favouriteCount = new HashMap<>();
-        favourites.stream().forEach(
-                addCountForFavouriteConsumer(result, favouriteCount));
+        if (result != null) {
+            favourites.stream().forEach(favourite ->
+                    addCountForFavouriteConsumer(favourite, result, favouriteCount));
+        }
         return favouriteCount;
     }
 
-    private Consumer<String> addCountForFavouriteConsumer(Terms result, Map<String, Long> favouriteCount) {
-        return favourite -> favouriteCount.put(favourite,result.getBucketByKey(favourite).getDocCount());
+    private void addCountForFavouriteConsumer(String favourite, Terms result, Map<String, Long> favouriteCount) {
+        if (result.getBucketByKey(favourite) != null) {
+            favouriteCount.put(favourite,result.getBucketByKey(favourite).getDocCount());
+        }
     }
 
     /**

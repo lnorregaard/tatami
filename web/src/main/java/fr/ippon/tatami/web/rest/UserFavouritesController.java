@@ -49,21 +49,23 @@ public class UserFavouritesController {
         searchService.indexUserFavourite(favourite,user.getLogin());
     }
 
-//    /**
-//     * DELETE /user/favorites/:id -> Unfavorites the status
-//     */
-//    @RequestMapping(value = "/rest/user/favourites/{statusId}",
-//            method = RequestMethod.POST)
-//    @ResponseBody
-//    public void unfavoriteStatus(@PathVariable("statusId") String statusId) {
-//        try {
-//            authenticationService.validateStatus();
-//        } catch (UsernameNotFoundException e) {
-//            log.info("The user is not active and can not remove a favorite");
-//            return;
-//        }
-//        log.debug("REST request to unlike status : {}", statusId);
-//        timelineService.removeFavoriteStatus(statusId);
-//    }
+    /**
+     * DELETE /user/favourites/:id -> Unfavourites the status
+     */
+    @RequestMapping(value = "/rest/user/favourites/{favourite}",
+            method = RequestMethod.POST)
+    @ResponseBody
+    public void unfavoriteStatus(@PathVariable("favourite") String favourite) {
+        User user = null;
+        try {
+            authenticationService.validateStatus();
+            user = authenticationService.getCurrentUser();
+        } catch (UsernameNotFoundException e) {
+            log.info("The user is not active and can not delete a user favourite");
+            return;
+        }
+        log.debug("REST request to unlike favourite : {}", favourite);
+        searchService.removeUserFavourite(favourite,user.getLogin());
+    }
 
 }

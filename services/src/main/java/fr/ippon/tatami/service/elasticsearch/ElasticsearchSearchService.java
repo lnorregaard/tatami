@@ -558,7 +558,11 @@ public class ElasticsearchSearchService implements SearchService {
 
         log.debug("Ready to delete the {} of id {} from Elasticsearch: ", type, id);
 
-        client().prepareDelete(indexName(type), type, id).execute(new ActionListener<DeleteResponse>() {
+        client().prepareDelete(indexName(type), type, id).execute(getDeleteListener(id, type));
+    }
+
+    private ActionListener<DeleteResponse> getDeleteListener(final String id, final String type) {
+        return new ActionListener<DeleteResponse>() {
             @Override
             public void onResponse(DeleteResponse deleteResponse) {
                 if (log.isDebugEnabled()) {
@@ -574,7 +578,7 @@ public class ElasticsearchSearchService implements SearchService {
             public void onFailure(Throwable e) {
                 log.error("The " + type + " of id " + id + " wasn't deleted from Elasticsearch.", e);
             }
-        });
+        };
     }
 
     public Collection<String> searchByUsername(String domain, String prefix, int size) {
@@ -774,9 +778,20 @@ public class ElasticsearchSearchService implements SearchService {
         }
     }
 
+    @Override
+    public void removeUserFavourite(String favourite, String login) {
+        String type = "user";
+        String index = indexName("favourite");
+        String id = login+"-"+favourite;
+
+        log.debug("Ready to delete the {} of id {} and parent {} from Elasticsearch: ", type, id, favourite);
+
+        client().prepareDelete(index, type, id).setParent(favourite).execute(getDeleteListener(id, type));
+
+    }
+
     private void addUserFavouriteToIndex(String favourite, String login, String index) throws IOException {
-        String id;
-        id = login+"-"+favourite;
+        String id = login+"-"+favourite;
         final String type = "user";
         XContentBuilder userFavouriteJson = XContentFactory.jsonBuilder()
                 .startObject()

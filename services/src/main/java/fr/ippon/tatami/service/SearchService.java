@@ -90,4 +90,6 @@ public interface SearchService {
 
     @Async
     void indexUserFavourite(String favourite, String login);
+
+    void removeUserFavourite(String favourite, String login);
 }

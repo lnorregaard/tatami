@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import fr.ippon.tatami.domain.Group;
+import fr.ippon.tatami.domain.Ping;
 import fr.ippon.tatami.domain.User;
 import fr.ippon.tatami.domain.Username;
 import fr.ippon.tatami.domain.status.Status;
@@ -654,7 +655,7 @@ public class ElasticsearchSearchService implements SearchService {
                 return Collections.emptyList();
 
             SearchHit[] hits = searchHits.hits();
-        final List<String> ids = getIdsFromSearch(hits);
+            final List<String> ids = getIdsFromSearch(hits);
 
             log.debug("search " + mapper.type() + " by prefix(\"" + domain + "\", \"" + prefix + "\") = result : " + ids);
             return ids;
@@ -902,6 +903,30 @@ public class ElasticsearchSearchService implements SearchService {
             return getUserFavourites(usernames.get(0));
         }
         return new ArrayList<>();
+    }
+
+    @Override
+    public Ping createElasticSearchPing(Ping ping) {
+        long start = System.currentTimeMillis();
+        if (ping == null) {
+            ping = new Ping();
+        }
+        SearchRequestBuilder searchRequest = client().prepareSearch(indexName(userMapper.type()))
+                .setTypes(userMapper.type())
+                .addFields()
+                .setFrom(0)
+                .setSize(1);
+
+        if (log.isTraceEnabled()) {
+            log.trace("elasticsearch query : " + searchRequest);
+        }
+        SearchResponse searchResponse = searchRequest
+                .execute()
+                .actionGet();
+
+        SearchHits searchHits = searchResponse.getHits();
+        ping.setElasticSearch(System.currentTimeMillis()-start);
+        return ping;
     }
 
     private Collection<String> getUserFavourites(Username username) {

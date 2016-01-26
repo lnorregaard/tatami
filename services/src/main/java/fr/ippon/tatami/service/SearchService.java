@@ -1,6 +1,7 @@
 package fr.ippon.tatami.service;
 
 import fr.ippon.tatami.domain.Group;
+import fr.ippon.tatami.domain.Ping;
 import fr.ippon.tatami.domain.User;
 import fr.ippon.tatami.domain.status.Status;
 import fr.ippon.tatami.service.dto.UserFavouriteCountDTO;
@@ -99,4 +100,6 @@ public interface SearchService {
     List<String> getFriendsForUserFavourite(String id, User user, int from, int size);
 
     Collection<String> getUserFavouritesForUser(String username, String domain);
+
+    Ping createElasticSearchPing(Ping ping);
 }

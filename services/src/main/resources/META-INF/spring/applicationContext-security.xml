@@ -23,6 +23,7 @@
     <http pattern="/tatami/lostpassword/**" security="none"/>
     <http pattern="/tatami/rest/status/**" security="none"/>
     <http pattern="/tatami/user/favourites/count" security="none"/>
+    <http pattern="/tatami/ping" security="none"/>
     <http pattern="/swagger-ui/**" security="none"/>
     <http pattern="/tatami/v2/**" security="none"/>
     <http pattern="/tatami/avatar/**" security="none"/>

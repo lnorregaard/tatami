@@ -5,9 +5,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import fr.ippon.tatami.domain.Group;
 import fr.ippon.tatami.domain.User;
+import fr.ippon.tatami.domain.Username;
 import fr.ippon.tatami.domain.status.Status;
 import fr.ippon.tatami.repository.FriendRepository;
 import fr.ippon.tatami.repository.GroupRepository;
+import fr.ippon.tatami.repository.UsernameRepository;
 import fr.ippon.tatami.service.SearchService;
 import fr.ippon.tatami.service.dto.UserFavouriteCountDTO;
 import org.apache.commons.lang.StringUtils;
@@ -25,6 +27,8 @@ import org.elasticsearch.client.Client;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.HasChildQueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.indices.IndexAlreadyExistsException;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
@@ -44,9 +48,9 @@ import javax.inject.Inject;
 import java.io.IOException;
 import java.net.URL;
 import java.util.*;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import static java.util.stream.Collectors.*;
 import static org.elasticsearch.index.query.QueryBuilders.*;
 
 public class ElasticsearchSearchService implements SearchService {
@@ -68,6 +72,9 @@ public class ElasticsearchSearchService implements SearchService {
 
     @Inject
     private FriendRepository friendRepository;
+
+    @Inject
+    private UsernameRepository usernameRepository;
 
     private Client client() {
         return engine.client();
@@ -415,10 +422,7 @@ public class ElasticsearchSearchService implements SearchService {
             return Collections.emptyList();
 
         SearchHit[] hits = searchHits.hits();
-        final List<String> ids = new ArrayList<String>(hits.length);
-        for (SearchHit hit : hits) {
-            ids.add(hit.getId());
-        }
+        final List<String> ids = getIdsFromSearch(hits);
 
         log.debug("search " + firstnameMapper.type() + " by search(\"" + firstname + ") = result : " + ids);
         return ids;
@@ -458,13 +462,16 @@ public class ElasticsearchSearchService implements SearchService {
             return Collections.emptyList();
 
         SearchHit[] hits = searchHits.hits();
-        final List<String> ids = new ArrayList<String>(hits.length);
-        for (SearchHit hit : hits) {
-            ids.add(hit.getId());
-        }
+        final List<String> ids = getIdsFromSearch(hits);
 
         log.debug("search " + userMapper.type() + " by search(\"" + domain + "\", \"" + username + ", \"" + firstname + ", \"" + lastname + ", \") = result : " + ids);
         return ids;
+    }
+
+    private List<String> getIdsFromSearch(SearchHit[] hits) {
+        return Arrays.stream(hits)
+                .map(hit -> hit.getId())
+                .collect(Collectors.toList());
     }
 
     private int addSearchFieldToQuery(BoolQueryBuilder boolQuery, String field, String value, boolean exact) {
@@ -617,10 +624,7 @@ public class ElasticsearchSearchService implements SearchService {
             return Collections.emptyList();
 
         SearchHit[] hits = searchHits.hits();
-        final List<String> ids = new ArrayList<String>(hits.length);
-        for (SearchHit hit : hits) {
-            ids.add(hit.getId());
-        }
+        final List<String> ids = getIdsFromSearch(hits);
 
         log.debug("search " + userMapper.type() + " by prefix(\"" + domain + "\", \"" + prefix + "\") = result : " + ids);
         return ids;
@@ -650,10 +654,7 @@ public class ElasticsearchSearchService implements SearchService {
                 return Collections.emptyList();
 
             SearchHit[] hits = searchHits.hits();
-            final List<String> ids = new ArrayList<String>(hits.length);
-            for (SearchHit hit : hits) {
-                ids.add(hit.getId());
-            }
+        final List<String> ids = getIdsFromSearch(hits);
 
             log.debug("search " + mapper.type() + " by prefix(\"" + domain + "\", \"" + prefix + "\") = result : " + ids);
             return ids;
@@ -766,7 +767,6 @@ public class ElasticsearchSearchService implements SearchService {
 
     @Override
     public List<UserFavouriteCountDTO> countUsersForUserFavourites(List<String> favourites, User user) {
-        List<UserFavouriteCountDTO> favouritesCount = new ArrayList<>();
         List<String> logins = new ArrayList<>();
         if (user != null) {
             logins = friendRepository.findFriendsForUser(user.getLogin());
@@ -777,7 +777,7 @@ public class ElasticsearchSearchService implements SearchService {
         return total.keySet()
                 .stream()
                 .map(id -> new UserFavouriteCountDTO(id,total.get(id),friendTotal.get(id)))
-                .collect(Collectors.toList());
+                .collect(toList());
     }
 
     private Map<String, Long> getFriendTotal(List<String> favourites, List<String> logins) {
@@ -855,6 +855,74 @@ public class ElasticsearchSearchService implements SearchService {
 
     }
 
+    @Override
+    public List<String> getFriendsForUserFavourite(String id, User user) {
+        List<String> logins = new ArrayList<>();
+        if (user != null) {
+            logins = friendRepository.findFriendsForUser(user.getLogin());
+        }
+
+        BoolQueryBuilder boolQuery = new BoolQueryBuilder();
+        boolQuery.must(termsQuery("login",logins));
+        boolQuery.must(termQuery("favourite",id));
+
+        SearchRequestBuilder searchRequest = client().prepareSearch(indexName("favourite"))
+                .setTypes("user")
+                .setQuery(boolQuery)
+                .addFields()
+                .setFrom(0);
+        searchRequest.setSize(logins.size());
+        searchRequest.addSort(SortBuilders.fieldSort("login").order(SortOrder.DESC));
+        if (log.isTraceEnabled()) {
+            log.trace("elasticsearch query : " + searchRequest);
+        }
+        SearchResponse searchResponse = searchRequest
+                .execute()
+                .actionGet();
+
+        SearchHits searchHits = searchResponse.getHits();
+        if (searchHits.totalHits() == 0)
+            return Collections.emptyList();
+
+        SearchHit[] hits = searchHits.hits();
+        final List<String> ids = new ArrayList<String>(hits.length);
+        List<String> ids = getLoginsFromHits(hits);
+
+        log.debug("search favourites " + " by search(\"" + id + "\", \"" + logins + "\") = result : " + ids);
+        return ids;
+    }
+
+    @Override
+    public Collection<String> getUserFavouritesForUser(String username, String domain) {
+        List<Username> usernames = usernameRepository.findUsernamesByDomainAndUsername(domain,username);
+        if (usernames != null && !usernames.isEmpty()) {
+            return getUserFavourites(usernames.get(0));
+        }
+        return new ArrayList<>();
+    }
+
+    private Collection<String> getUserFavourites(Username username) {
+        SearchRequestBuilder searchRequestBuilder = client().prepareSearch(indexName("favourite"));
+
+        //Query 1. Search on all books that have the term 'book' in the title and return the 'authors'.
+        HasChildQueryBuilder favouriteHasChildQuery = QueryBuilders.hasChildQuery("user", QueryBuilders.matchQuery("login", username.getLogin()));
+        SearchResponse searchResponse = searchRequestBuilder.setQuery(favouriteHasChildQuery).execute().actionGet();
+
+        SearchHits searchHits = searchResponse.getHits();
+        if (searchHits.totalHits() == 0)
+            return Collections.emptyList();
+
+        SearchHit[] hits = searchHits.hits();
+        List<String> ids = getLoginsFromHits(hits);
+        log.debug("search favourites " + " for user(\"" + username.getLogin() + "\") = result : " + ids);
+        return ids;
+    }
+
+    private List<String> getLoginsFromHits(SearchHit[] hits) {
+        return Arrays.stream(hits)
+                    .map(hit -> hit.getFields().get("login").getValue().toString())
+                    .collect(Collectors.toList());
+    }
 
 
     private void addUserFavouriteToIndex(String favourite, String login, String index) throws IOException {

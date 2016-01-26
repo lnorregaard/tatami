@@ -856,7 +856,7 @@ public class ElasticsearchSearchService implements SearchService {
     }
 
     @Override
-    public List<String> getFriendsForUserFavourite(String id, User user) {
+    public List<String> getFriendsForUserFavourite(String id, User user, int from, int size) {
         List<String> logins = new ArrayList<>();
         if (user != null) {
             logins = friendRepository.findFriendsForUser(user.getLogin());
@@ -870,8 +870,12 @@ public class ElasticsearchSearchService implements SearchService {
                 .setTypes("user")
                 .setQuery(boolQuery)
                 .addFields()
-                .setFrom(0);
-        searchRequest.setSize(logins.size());
+                .setFrom(from);
+        if (size > 0 && size < logins.size()) {
+            searchRequest.setSize(size+1);
+        } else {
+            searchRequest.setSize(logins.size());
+        }
         searchRequest.addSort(SortBuilders.fieldSort("login").order(SortOrder.DESC));
         if (log.isTraceEnabled()) {
             log.trace("elasticsearch query : " + searchRequest);
@@ -885,7 +889,6 @@ public class ElasticsearchSearchService implements SearchService {
             return Collections.emptyList();
 
         SearchHit[] hits = searchHits.hits();
-        final List<String> ids = new ArrayList<String>(hits.length);
         List<String> ids = getLoginsFromHits(hits);
 
         log.debug("search favourites " + " by search(\"" + id + "\", \"" + logins + "\") = result : " + ids);

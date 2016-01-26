@@ -79,18 +79,20 @@ public class UserFavouritesController {
     @RequestMapping(value = "/rest/user/favourites/{favourite}/friends",
             method = RequestMethod.GET)
     @ResponseBody
-    public Collection<User> getFriendsForUserFavourite(@PathVariable("favourite") String id) {
+    public Collection<User> getFriendsForUserFavourite(@PathVariable("favourite") String id,
+                                                       @RequestParam(value = "from",required = false) int from,
+                                                       @RequestParam(value = "size",required = false) int size) {
         User user = authenticationService.getCurrentUser();
         log.debug("REST request to get firends for user: {} and favourite : {}", user,id);
 
-        List<String> logins = searchService.getFriendsForUserFavourite(id,user);
+        List<String> logins = searchService.getFriendsForUserFavourite(id,user,from,size);
         return userService.getUsersByLogin(logins);
     }
 
     /**
      * GET /user/favourites/friends -> create a user favourite
      */
-    @RequestMapping(value = "/rest/user/{username}/favourites/",
+    @RequestMapping(value = "/rest/user/{username}/favourites",
             method = RequestMethod.GET)
     @ResponseBody
     public Collection<String> getFavouritesForUser(@PathVariable("username") String username) {

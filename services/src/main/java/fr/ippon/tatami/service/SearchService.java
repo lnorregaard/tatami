@@ -96,7 +96,7 @@ public interface SearchService {
 
     void removeUserFavourite(String favourite, String login);
 
-    List<String> getFriendsForUserFavourite(String id, User user);
+    List<String> getFriendsForUserFavourite(String id, User user, int from, int size);
 
     Collection<String> getUserFavouritesForUser(String username, String domain);
 }

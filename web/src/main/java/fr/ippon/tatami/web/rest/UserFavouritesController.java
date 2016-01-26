@@ -64,11 +64,14 @@ public class UserFavouritesController {
     /**
      * GET /user/favourites/count -> count user for favourites
      */
-    @RequestMapping(value = "/rest/user/favourites/count",
+    @RequestMapping(value = {"/rest/user/favourites/count","/user/favourites/count"},
             method = RequestMethod.GET)
     @ResponseBody
     public List<UserFavouriteCountDTO> countUserFavourites(@RequestParam("id") List<String> ids) {
-        User user = authenticationService.getCurrentUser();
+        User user = null;
+        if (authenticationService.hasAuthenticatedUser()) {
+            user = authenticationService.getCurrentUser();
+        }
         log.debug("REST request to get favourites : {}", ids);
         return searchService.countUsersForUserFavourites(ids,user);
     }
@@ -80,12 +83,19 @@ public class UserFavouritesController {
             method = RequestMethod.GET)
     @ResponseBody
     public Collection<User> getFriendsForUserFavourite(@PathVariable("favourite") String id,
-                                                       @RequestParam(value = "from",required = false) int from,
-                                                       @RequestParam(value = "size",required = false) int size) {
+                                                       @RequestParam(value = "from",required = false) Integer from,
+                                                       @RequestParam(value = "size",required = false) Integer size) {
         User user = authenticationService.getCurrentUser();
         log.debug("REST request to get firends for user: {} and favourite : {}", user,id);
-
-        List<String> logins = searchService.getFriendsForUserFavourite(id,user,from,size);
+        int simpleFrom= 0;
+        if (from != null) {
+            simpleFrom = from;
+        }
+        int simpleSize = 0;
+        if (size != null) {
+            simpleSize = size;
+        }
+        List<String> logins = searchService.getFriendsForUserFavourite(id,user,simpleFrom,simpleSize);
         return userService.getUsersByLogin(logins);
     }
 

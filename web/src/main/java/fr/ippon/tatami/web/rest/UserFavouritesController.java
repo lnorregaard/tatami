@@ -15,6 +15,7 @@ import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * REST controller for managing user favourites.
@@ -45,6 +46,7 @@ public class UserFavouritesController {
         User user = null;
         user = authenticationService.getCurrentUser();
         log.debug("REST request to like favourite : {}", favourite);
+        favourite = favourite.replace(":","_");
         searchService.indexUserFavourite(favourite,user.getLogin());
     }
 
@@ -58,6 +60,7 @@ public class UserFavouritesController {
         User user = null;
         user = authenticationService.getCurrentUser();
         log.debug("REST request to unlike favourite : {}", favourite);
+        favourite = favourite.replace(":","_");
         searchService.removeUserFavourite(favourite,user.getLogin());
     }
 
@@ -73,7 +76,10 @@ public class UserFavouritesController {
             user = authenticationService.getCurrentUser();
         }
         log.debug("REST request to get favourites : {}", ids);
-        return searchService.countUsersForUserFavourites(ids,user);
+        List<String> idsReplaced = ids.stream()
+                .map(id -> id.replace(":", "_"))
+                .collect(Collectors.toList());
+        return searchService.countUsersForUserFavourites(idsReplaced,user);
     }
 
     /**
@@ -86,6 +92,7 @@ public class UserFavouritesController {
                                                        @RequestParam(value = "from",required = false) Integer from,
                                                        @RequestParam(value = "size",required = false) Integer size) {
         User user = authenticationService.getCurrentUser();
+        id = id.replace(":","_");
         log.debug("REST request to get firends for user: {} and favourite : {}", user,id);
         int simpleFrom= 0;
         if (from != null) {
@@ -109,7 +116,9 @@ public class UserFavouritesController {
         log.debug("REST request to get firends for user: {} ", username);
         if (authenticationService.hasAuthenticatedUser()) {
             User user = authenticationService.getCurrentUser();
-            return searchService.getUserFavouritesForUser(username,user.getDomain());
+            return searchService.getUserFavouritesForUser(username,user.getDomain()).stream()
+                    .map(id -> id.replace("_",":"))
+                    .collect(Collectors.toList());
         }
         return new ArrayList<>();
     }

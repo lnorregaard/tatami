@@ -890,7 +890,7 @@ public class ElasticsearchSearchService implements SearchService {
             return Collections.emptyList();
 
         SearchHit[] hits = searchHits.hits();
-        List<String> ids = getLoginsFromHits(hits);
+        List<String> ids = getLoginsFromHits(hits, "login");
 
         log.debug("search favourites " + " by search(\"" + id + "\", \"" + logins + "\") = result : " + ids);
         return ids;
@@ -941,14 +941,14 @@ public class ElasticsearchSearchService implements SearchService {
             return Collections.emptyList();
 
         SearchHit[] hits = searchHits.hits();
-        List<String> ids = getLoginsFromHits(hits);
+        List<String> ids = getLoginsFromHits(hits, "favourite");
         log.debug("search favourites " + " for user(\"" + username.getLogin() + "\") = result : " + ids);
         return ids;
     }
 
-    private List<String> getLoginsFromHits(SearchHit[] hits) {
+    private List<String> getLoginsFromHits(SearchHit[] hits, String type) {
         return Arrays.stream(hits)
-                    .map(hit -> hit.getFields().get("login").getValue().toString())
+                    .map(hit -> hit.getFields().get(type).getValue().toString())
                     .collect(Collectors.toList());
     }
 

@@ -1,6 +1,5 @@
 package fr.ippon.tatami.service;
 
-import com.sun.tools.internal.jxc.ap.Const;
 import fr.ippon.tatami.config.Constants;
 import fr.ippon.tatami.domain.DigestType;
 import fr.ippon.tatami.domain.User;

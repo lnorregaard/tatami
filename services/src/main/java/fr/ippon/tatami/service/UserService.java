@@ -1,5 +1,6 @@
 package fr.ippon.tatami.service;
 
+import com.sun.tools.internal.jxc.ap.Const;
 import fr.ippon.tatami.config.Constants;
 import fr.ippon.tatami.domain.DigestType;
 import fr.ippon.tatami.domain.User;
@@ -46,6 +47,9 @@ public class UserService {
 
     @Inject
     private FriendRepository friendRepository;
+
+    @Inject
+    private FriendRequestRepository friendRequestRepository;
 
     @Inject
     private FollowerRepository followerRepository;
@@ -449,6 +453,10 @@ public class UserService {
 
     public Collection<UserDTO> buildUserDTOList(Collection<User> users) {
         User currentUser = authenticationService.getCurrentUser();
+        Collection<String> friendRequests = new ArrayList<>();
+        if (Constants.USER_AND_FRIENDS) {
+            friendRequests = friendRequestRepository.findLoginsFriendRequests(currentUser.getLogin());
+        }
         Collection<String> currentFriendLogins = friendRepository.findFriendsForUser(currentUser.getLogin());
         Collection<String> currentFollowersLogins = followerRepository.findFollowersForUser(currentUser.getLogin());
         Collection<UserDTO> userDTOs = new ArrayList<UserDTO>();
@@ -458,6 +466,13 @@ public class UserService {
             if (!userDTO.isYou()) {
                 userDTO.setFriend(currentFriendLogins.contains(user.getLogin()));
                 userDTO.setFollower(currentFollowersLogins.contains(user.getLogin()));
+            }
+            if (Constants.USER_AND_FRIENDS) {
+                if (friendRequests.contains(user.getLogin())) {
+                    userDTO.setFriendRequest(true);
+                } else {
+                    userDTO.setFriendRequest(false);
+                }
             }
             userDTOs.add(userDTO);
         }

@@ -30,6 +30,8 @@ public class UserDTO implements Serializable {
 
     private long followersCount;
 
+    private Boolean friendRequest = null;
+
     private boolean isFriend = false;
 
     private boolean isFollower = false;
@@ -158,6 +160,14 @@ public class UserDTO implements Serializable {
 
     public void setProperties(Map<String, String> properties) {
         this.properties = properties;
+    }
+
+    public Boolean getFriendRequest() {
+        return friendRequest;
+    }
+
+    public void setFriendRequest(Boolean friendRequest) {
+        this.friendRequest = friendRequest;
     }
 
     @Override

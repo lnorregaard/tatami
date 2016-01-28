@@ -75,4 +75,19 @@ public class CassandraFriendRequestRepository implements FriendRequestRepository
                 .map(e -> e.getString("login"))
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public Collection<String> findLoginsFriendRequests(String login) {
+        Statement statement = QueryBuilder.select()
+                .column("friendLogin")
+                .from("friendRequests")
+                .where(eq("login", login));
+        ResultSet results = session.execute(statement);
+        return results
+                .all()
+                .stream()
+                .map(e -> e.getString("friendLogin"))
+                .collect(Collectors.toList());
+    }
+
 }

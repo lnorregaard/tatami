@@ -17,4 +17,6 @@ public interface FriendRequestRepository {
     boolean addFriendRequest(String currentUserLogin, String followedUserLogin);
 
     Collection<String> findFriendRequests(String username);
+
+    Collection<String> findLoginsFriendRequests(String login);
 }

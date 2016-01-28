@@ -14,6 +14,7 @@ import fr.ippon.tatami.repository.UsernameRepository;
 import fr.ippon.tatami.service.SearchService;
 import fr.ippon.tatami.service.dto.UserFavouriteCountDTO;
 import org.apache.commons.lang.StringUtils;
+import org.apache.lucene.queryparser.classic.QueryParser;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
 import org.elasticsearch.action.bulk.BulkItemResponse;
@@ -796,7 +797,9 @@ public class ElasticsearchSearchService implements SearchService {
         BoolQueryBuilder boolQuery = new BoolQueryBuilder();
         boolQuery.must(termsQuery("favourite",favourites));
         if (logins != null) {
-            boolQuery.must(termsQuery("login", logins));
+            boolQuery.must(termsQuery("login", logins.stream()
+            .map(QueryParser::escape)
+            .collect(Collectors.toList())));
         }
 
         SearchResponse sr = client().prepareSearch()
@@ -933,7 +936,7 @@ public class ElasticsearchSearchService implements SearchService {
         SearchRequestBuilder searchRequestBuilder = client().prepareSearch(indexName("favourite"));
 
         //Query 1. Search on all books that have the term 'book' in the title and return the 'authors'.
-        HasChildQueryBuilder favouriteHasChildQuery = QueryBuilders.hasChildQuery("user", QueryBuilders.matchQuery("login", username.getLogin()));
+        HasChildQueryBuilder favouriteHasChildQuery = QueryBuilders.hasChildQuery("user", QueryBuilders.matchQuery("login", QueryParser.escape(username.getLogin())));
         SearchResponse searchResponse = searchRequestBuilder.setQuery(favouriteHasChildQuery).execute().actionGet();
 
         SearchHits searchHits = searchResponse.getHits();

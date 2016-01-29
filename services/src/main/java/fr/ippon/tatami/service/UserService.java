@@ -18,6 +18,7 @@ import org.springframework.security.crypto.password.StandardPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.cache.annotation.CacheEvict;
 
+import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.validation.ConstraintViolationException;
 import java.util.*;
@@ -83,8 +84,27 @@ public class UserService {
     @Inject
     private MailDigestRepository mailDigestRepository;
 
+    private List<String> adminUsers = new ArrayList<>();
+
     @Inject
     Environment env;
+
+    @PostConstruct
+    public void init() {
+        String adminUsersList = env.getProperty("tatami.admin.users");
+        String[] adminUsersArray = adminUsersList.split(",");
+        adminUsers = Arrays.asList(adminUsersArray);
+        if (log.isDebugEnabled()) {
+            for (String admin : adminUsers) {
+                log.debug("Initialization : user \"{}\" is an administrator", admin);
+            }
+        }
+
+    }
+
+    public boolean isAdmin(String login) {
+        return adminUsers.contains(login);
+    }
 
     public User getUserByLogin(String login) {
         User user = userRepository.findUserByLogin(login);

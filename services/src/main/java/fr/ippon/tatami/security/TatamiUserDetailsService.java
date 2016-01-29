@@ -33,7 +33,6 @@ public class TatamiUserDetailsService implements UserDetailsService {
 
     private final Collection<GrantedAuthority> adminGrantedAuthorities = new ArrayList<GrantedAuthority>();
 
-    private Collection<String> adminUsers = null;
 
     @Inject
     private UserService userService;
@@ -53,14 +52,6 @@ public class TatamiUserDetailsService implements UserDetailsService {
             adminGrantedAuthorities.add(roleUser);
             adminGrantedAuthorities.add(roleAdmin);
 
-            String adminUsersList = env.getProperty("tatami.admin.users");
-            String[] adminUsersArray = adminUsersList.split(",");
-            adminUsers = new ArrayList<String>(Arrays.asList(adminUsersArray));
-            if (log.isDebugEnabled()) {
-                for (String admin : adminUsers) {
-                    log.debug("Initialization : user \"{}\" is an administrator", admin);
-                }
-            }
         }
     }
 
@@ -80,9 +71,8 @@ public class TatamiUserDetailsService implements UserDetailsService {
 
     protected org.springframework.security.core.userdetails.User getTatamiUserDetails(String login, String password) {
         Collection<GrantedAuthority> grantedAuthorities;
-        if (adminUsers.contains(login)) {
+        if (userService.isAdmin(login)) {
             log.debug("User \"{}\" is an administrator", login);
-
             grantedAuthorities = adminGrantedAuthorities;
         } else {
             grantedAuthorities = userGrantedAuthorities;

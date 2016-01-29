@@ -4,6 +4,7 @@ import com.yammer.metrics.annotation.Timed;
 import fr.ippon.tatami.config.Constants;
 import fr.ippon.tatami.domain.Group;
 import fr.ippon.tatami.domain.User;
+import fr.ippon.tatami.domain.status.Status;
 import fr.ippon.tatami.domain.status.StatusDetails;
 import fr.ippon.tatami.security.AuthenticationService;
 import fr.ippon.tatami.service.GroupService;
@@ -248,12 +249,12 @@ public class TimelineController {
             method = RequestMethod.POST,
             produces = "application/json")
     @Timed
-    public String postStatus(@RequestBody StatusDTO status, HttpServletResponse response) throws ArchivedGroupException, ReplyStatusException {
+    public Status postStatus(@RequestBody StatusDTO status, HttpServletResponse response) throws ArchivedGroupException, ReplyStatusException {
         try {
             authenticationService.validateStatus();
         } catch (UsernameNotFoundException e) {
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-            return "{}";
+            return null;
         }
         log.debug("REST request to add status : {}", status.getContent());
         String escapedContent = StringEscapeUtils.escapeHtml(status.getContent());
@@ -264,7 +265,7 @@ public class TimelineController {
             statusUpdateService.replyToStatus(escapedContent, status.getReplyTo(), attachmentIds);
         } else if (status.isStatusPrivate() || status.getGroupId() == null || status.getGroupId().equals("")) {
             log.debug("Private status");
-            statusUpdateService.postStatus(escapedContent, status.isStatusPrivate(), attachmentIds, status.getGeoLocalization());
+            return statusUpdateService.postStatus(escapedContent, status.isStatusPrivate(), attachmentIds, status.getGeoLocalization());
         } else {
             User currentUser = authenticationService.getCurrentUser();
             Collection<Group> groups = groupService.getGroupsForUser(currentUser);
@@ -288,9 +289,9 @@ public class TimelineController {
                         "group ID = {}", currentUser.getLogin(), status.getGroupId());
                 response.setStatus(HttpServletResponse.SC_FORBIDDEN);
             } else {
-                statusUpdateService.postStatusToGroup(escapedContent, group, attachmentIds, status.getGeoLocalization());
+                return statusUpdateService.postStatusToGroup(escapedContent, group, attachmentIds, status.getGeoLocalization());
             }
         }
-        return "{}";
+        return null;
     }
 }

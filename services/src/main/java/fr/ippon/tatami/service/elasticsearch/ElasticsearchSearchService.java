@@ -801,11 +801,14 @@ public class ElasticsearchSearchService implements SearchService {
             .map(QueryParser::escape)
             .collect(Collectors.toList())));
         }
-
-        SearchResponse sr = client().prepareSearch()
+        SearchRequestBuilder searchRequest = client().prepareSearch()
                 .setQuery(boolQuery)
-                .addAggregation(aggregation)
-                .execute().actionGet();
+                .addAggregation(aggregation);
+        if (log.isTraceEnabled()) {
+            log.trace("elasticsearch query : " + searchRequest);
+        }
+        SearchResponse sr = searchRequest.execute().actionGet();
+
         sr.getAggregations().get("aggregated");
 
         Terms result = sr.getAggregations().get("aggregated");
@@ -920,9 +923,6 @@ public class ElasticsearchSearchService implements SearchService {
                 .setFrom(0)
                 .setSize(1);
 
-        if (log.isTraceEnabled()) {
-            log.trace("elasticsearch query : " + searchRequest);
-        }
         SearchResponse searchResponse = searchRequest
                 .execute()
                 .actionGet();
@@ -937,7 +937,11 @@ public class ElasticsearchSearchService implements SearchService {
 
         //Query 1. Search on all books that have the term 'book' in the title and return the 'authors'.
         HasChildQueryBuilder favouriteHasChildQuery = QueryBuilders.hasChildQuery("user", QueryBuilders.matchQuery("login", QueryParser.escape(username.getLogin())));
-        SearchResponse searchResponse = searchRequestBuilder.setQuery(favouriteHasChildQuery).execute().actionGet();
+        SearchRequestBuilder searchRequest = searchRequestBuilder.setQuery(favouriteHasChildQuery)
+        if (log.isTraceEnabled()) {
+            log.trace("elasticsearch query : " + searchRequest);
+        }
+        SearchResponse searchResponse = searchRequest.execute().actionGet();
 
         SearchHits searchHits = searchResponse.getHits();
         if (searchHits.totalHits() == 0)
@@ -950,6 +954,9 @@ public class ElasticsearchSearchService implements SearchService {
     }
 
     private List<String> getLoginsFromHits(SearchHit[] hits, String type) {
+        if (hits == null || hits.length == 0) {
+            return new ArrayList<>();
+        }
         return Arrays.stream(hits)
                     .map(hit -> hit.getFields().get(type).getValue().toString())
                     .collect(Collectors.toList());

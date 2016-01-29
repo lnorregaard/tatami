@@ -870,7 +870,7 @@ public class ElasticsearchSearchService implements SearchService {
         }
 
         BoolQueryBuilder boolQuery = new BoolQueryBuilder();
-        boolQuery.must(termsQuery("login",logins));
+        boolQuery.must(termsQuery("login",logins.stream().map(QueryParser::escape).collect(Collectors.toList())));
         boolQuery.must(termQuery("favourite",id));
 
         SearchRequestBuilder searchRequest = client().prepareSearch(indexName("favourite"))

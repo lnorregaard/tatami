@@ -937,7 +937,7 @@ public class ElasticsearchSearchService implements SearchService {
 
         //Query 1. Search on all books that have the term 'book' in the title and return the 'authors'.
         HasChildQueryBuilder favouriteHasChildQuery = QueryBuilders.hasChildQuery("user", QueryBuilders.matchQuery("login", QueryParser.escape(username.getLogin())));
-        SearchRequestBuilder searchRequest = searchRequestBuilder.setQuery(favouriteHasChildQuery)
+        SearchRequestBuilder searchRequest = searchRequestBuilder.setQuery(favouriteHasChildQuery);
         if (log.isTraceEnabled()) {
             log.trace("elasticsearch query : " + searchRequest);
         }

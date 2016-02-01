@@ -107,6 +107,7 @@ public abstract class AbstractCassandraLineRepository {
                     .value("key", login)
                     .value("status", share.getStatusId());
             session.execute(statement);
+
         } else {
             log.debug("Shared status {} is already present in {}", share.getOriginalStatusId(), columnFamily);
 

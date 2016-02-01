@@ -202,7 +202,7 @@ public class FriendshipService {
             HashSet<String> friends = new HashSet<>(friendLogins);
             log.debug("Found {} friends", friends.size());
             List<String> collected = followersLogins.stream()
-                    .filter(e -> friends.contains(e))
+                    .filter(e -> !friends.contains(e))
                     .collect(Collectors.toList());
             followersLogins = collected;
         }

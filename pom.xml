@@ -408,7 +408,7 @@
         <!-- Default project properties -->
         <jetty.port>8080</jetty.port>
         <jetty.scanIntervalSeconds>1</jetty.scanIntervalSeconds>
-        <logback.loglevel>DEBUG</logback.loglevel>
+        <logback.loglevel>INFO</logback.loglevel>
         <logback.appender>CONSOLE</logback.appender>
         <logback.syslogHost>localhost</logback.syslogHost>
         <ehcache.maxBytesLocalHeap>64M</ehcache.maxBytesLocalHeap>
@@ -556,17 +556,17 @@
             <version>1.0.0.Final</version>
         </dependency>
 
-        <!--<dependency>-->
-            <!--<groupId>ch.qos.logback</groupId>-->
-            <!--<artifactId>logback-core</artifactId>-->
-            <!--<version>${logback.version}</version>-->
-        <!--</dependency>-->
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-core</artifactId>
+            <version>${logback.version}</version>
+        </dependency>
 
-        <!--<dependency>-->
-            <!--<groupId>ch.qos.logback</groupId>-->
-            <!--<artifactId>logback-classic</artifactId>-->
-            <!--<version>${logback.version}</version>-->
-        <!--</dependency>-->
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>${logback.version}</version>
+        </dependency>
 
         <dependency>
             <groupId>javax.validation</groupId>

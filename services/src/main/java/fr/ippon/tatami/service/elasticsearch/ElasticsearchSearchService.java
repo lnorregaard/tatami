@@ -33,6 +33,7 @@ import org.elasticsearch.index.query.HasChildQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.indices.IndexAlreadyExistsException;
 import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.SearchHitField;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.aggregations.AggregationBuilder;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
@@ -896,7 +897,7 @@ public class ElasticsearchSearchService implements SearchService {
             return Collections.emptyList();
 
         SearchHit[] hits = searchHits.hits();
-        List<String> ids = getLoginsFromHits(hits, "login");
+        List<String> ids = getTypesFromHits(hits, "login");
 
         log.debug("search favourites " + " by search(\"" + id + "\", \"" + logins + "\") = result : " + ids);
         return ids;
@@ -948,18 +949,28 @@ public class ElasticsearchSearchService implements SearchService {
             return Collections.emptyList();
 
         SearchHit[] hits = searchHits.hits();
-        List<String> ids = getLoginsFromHits(hits, "favourite");
+        List<String> ids = getTypesFromHits(hits, "id");
         log.debug("search favourites " + " for user(\"" + username.getLogin() + "\") = result : " + ids);
         return ids;
     }
 
-    private List<String> getLoginsFromHits(SearchHit[] hits, String type) {
+    private List<String> getTypesFromHits(SearchHit[] hits, String type) {
         if (hits == null || hits.length == 0) {
             return new ArrayList<>();
         }
         return Arrays.stream(hits)
-                    .map(hit -> hit.getFields().get(type).getValue().toString())
+                    .map(hit -> getStringValueFromHit(type, hit))
+                    .filter(s -> s != null)
                     .collect(Collectors.toList());
+    }
+
+    private String getStringValueFromHit(String type, SearchHit hit) {
+        SearchHitField hitField = hit.getFields().get(type);
+        if (hitField != null) {
+            return hitField.getValue().toString();
+        } else {
+            return null;
+        }
     }
 
 

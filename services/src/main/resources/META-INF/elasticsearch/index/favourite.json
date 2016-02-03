@@ -3,7 +3,8 @@
         "favourite": {
             "properties": {
                 "id": {
-                    "type": "string"
+                    "type": "string",
+                    "index": "not_analyzed"
                 }
             }
         },
@@ -16,13 +17,16 @@
             },
             "properties": {
                 "favourite": {
-                    "type": "string"
+                    "type": "string",
+                    "index": "not_analyzed"
                 },
                 "id": {
-                    "type": "string"
+                    "type": "string",
+                    "index": "not_analyzed"
                 },
                 "login": {
-                    "type": "string"
+                    "type": "string",
+                    "index": "not_analyzed"
                 }
             }
         }

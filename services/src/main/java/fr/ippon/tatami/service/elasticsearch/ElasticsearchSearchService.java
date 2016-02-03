@@ -798,9 +798,7 @@ public class ElasticsearchSearchService implements SearchService {
         BoolQueryBuilder boolQuery = new BoolQueryBuilder();
         boolQuery.must(termsQuery("favourite",favourites));
         if (logins != null) {
-            boolQuery.must(termsQuery("login", logins.stream()
-            .map(QueryParser::escape)
-            .collect(Collectors.toList())));
+            boolQuery.must(termsQuery("login", logins));
         }
         SearchRequestBuilder searchRequest = client().prepareSearch()
                 .setQuery(boolQuery)
@@ -871,7 +869,7 @@ public class ElasticsearchSearchService implements SearchService {
         }
 
         BoolQueryBuilder boolQuery = new BoolQueryBuilder();
-        boolQuery.must(termsQuery("login",logins.stream().map(QueryParser::escape).collect(Collectors.toList())));
+        boolQuery.must(termsQuery("login",logins));
         boolQuery.must(termQuery("favourite",id));
 
         SearchRequestBuilder searchRequest = client().prepareSearch(indexName("favourite"))
@@ -937,7 +935,7 @@ public class ElasticsearchSearchService implements SearchService {
         SearchRequestBuilder searchRequestBuilder = client().prepareSearch(indexName("favourite"));
 
         //Query 1. Search on all books that have the term 'book' in the title and return the 'authors'.
-        HasChildQueryBuilder favouriteHasChildQuery = QueryBuilders.hasChildQuery("user", QueryBuilders.matchQuery("login", QueryParser.escape(username.getLogin())));
+        HasChildQueryBuilder favouriteHasChildQuery = QueryBuilders.hasChildQuery("user", QueryBuilders.matchQuery("login", username.getLogin());
         SearchRequestBuilder searchRequest = searchRequestBuilder.setQuery(favouriteHasChildQuery);
         if (log.isTraceEnabled()) {
             log.trace("elasticsearch query : " + searchRequest);

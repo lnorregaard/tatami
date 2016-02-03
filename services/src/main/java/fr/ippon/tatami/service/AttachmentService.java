@@ -10,6 +10,7 @@ import java.util.Collection;
 import javax.imageio.ImageIO;
 import javax.inject.Inject;
 
+import net.coobird.thumbnailator.Thumbnails;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
@@ -146,14 +147,19 @@ public class AttachmentService {
     		}
     	}
     	if(attachment.getHasThumbnail()) {
-    		try {
-    			BufferedImage thumbnail = new BufferedImage(100, 100, BufferedImage.TYPE_INT_ARGB);
-				thumbnail.createGraphics()
-						.drawImage(ImageIO
-								.read(new ByteArrayInputStream(attachment.getContent()))
-    							.getScaledInstance(100, 100, BufferedImage.SCALE_SMOOTH), 0, 0, null);
-				ByteArrayOutputStream baos = new ByteArrayOutputStream();
-				ImageIO.write(thumbnail, "png", baos);
+            try {
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                Thumbnails.of(new ByteArrayInputStream(attachment.getContent()))
+                        .size(100,100)
+                        .outputFormat("png")
+                        .toOutputStream(baos);
+//    			BufferedImage thumbnail = new BufferedImage(100, 100, BufferedImage.TYPE_INT_ARGB);
+//				thumbnail.createGraphics()
+//						.drawImage(ImageIO
+//								.read(new ByteArrayInputStream(attachment.getContent()))
+//    							.getScaledInstance(100, 100, BufferedImage.SCALE_SMOOTH), 0, 0, null);
+//				ByteArrayOutputStream baos = new ByteArrayOutputStream();
+//				ImageIO.write(thumbnail, "png", baos);
 				baos.flush();
 				result = baos.toByteArray();
     		} catch(IOException e) {

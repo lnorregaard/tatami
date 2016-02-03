@@ -10,6 +10,7 @@ import java.util.Collection;
 import javax.imageio.ImageIO;
 import javax.inject.Inject;
 
+import fr.ippon.tatami.config.Constants;
 import net.coobird.thumbnailator.Thumbnails;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,9 +67,7 @@ public class AttachmentService {
 
             throw new StorageSizeException("User storage exceeded for user " + currentUser.getLogin());
         }
-        
         attachment.setThumbnail(computeThumbnail(attachment));
-        
         attachmentRepository.createAttachment(attachment);
         userAttachmentRepository.addAttachmentId(authenticationService.getCurrentUser().getLogin(),
                 attachment.getAttachmentId());
@@ -79,6 +78,7 @@ public class AttachmentService {
         userRepository.updateUser(currentUser);
         return attachment.getAttachmentId();
     }
+
 
     public Attachment getAttachmentById(String attachmentId) {
         Attachment attachment =  attachmentRepository.findAttachmentById(attachmentId);
@@ -151,7 +151,6 @@ public class AttachmentService {
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 Thumbnails.of(new ByteArrayInputStream(attachment.getContent()))
                         .size(100,100)
-                        .outputFormat("png")
                         .toOutputStream(baos);
 //    			BufferedImage thumbnail = new BufferedImage(100, 100, BufferedImage.TYPE_INT_ARGB);
 //				thumbnail.createGraphics()

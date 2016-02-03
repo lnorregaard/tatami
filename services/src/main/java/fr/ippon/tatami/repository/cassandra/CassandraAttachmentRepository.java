@@ -7,6 +7,7 @@ import com.datastax.driver.core.Statement;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.utils.UUIDs;
 import fr.ippon.tatami.config.ColumnFamilyKeys;
+import fr.ippon.tatami.config.Constants;
 import fr.ippon.tatami.domain.Attachment;
 import fr.ippon.tatami.domain.Avatar;
 import fr.ippon.tatami.repository.AttachmentRepository;
@@ -19,13 +20,20 @@ import org.springframework.stereotype.Repository;
 
 import javax.inject.Inject;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Date;
 import java.util.UUID;
 
 import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.set;
 import static fr.ippon.tatami.config.ColumnFamilyKeys.ATTACHMENT_CF;
+import static java.nio.file.Files.createDirectories;
+import static java.nio.file.Files.write;
+import static java.nio.file.Paths.get;
 
 @Repository
 public class CassandraAttachmentRepository implements AttachmentRepository {
@@ -56,6 +64,9 @@ public class CassandraAttachmentRepository implements AttachmentRepository {
         UUID attachmentId = UUIDs.timeBased();
         log.debug("Creating attachment : {}", attachment);
         attachment.setAttachmentId(attachmentId.toString());
+        if (Constants.LOCAL_ATTACHMENT_STORAGE) {
+            saveAttachmentLocal(attachment);
+        }
         Statement statement = QueryBuilder.insertInto(ATTACHMENT_CF)
                 .value("id", UUID.fromString(attachment.getAttachmentId()))
                 .value(FILENAME, attachment.getFilename())
@@ -64,6 +75,40 @@ public class CassandraAttachmentRepository implements AttachmentRepository {
                 .value(SIZE,attachment.getSize())
                 .value(CREATION_DATE,attachment.getCreationDate());
         session.execute(statement);
+    }
+
+    private void saveAttachmentLocal(Attachment attachment) {
+        String suffix = attachment.getFilename().substring(attachment.getFilename().lastIndexOf("."),attachment.getFilename().length());
+        String subDirectory = getSubDirectory(attachment.getAttachmentId());
+        String startPathString = getPathWithSlash(Constants.ATTACHMENT_FILE_PATH);
+        Path startPath = get(startPathString + subDirectory);
+        Path filename = Paths.get(startPathString + subDirectory, attachment.getAttachmentId() + suffix);
+        try {
+            createDirectories(startPath);
+            attachment.setFilename(filename.toString());
+            write(filename,attachment.getContent());
+            if (attachment.getThumbnail() != null) {
+                Path filenameThumb = Paths.get(startPathString + subDirectory, attachment.getAttachmentId() + Constants.ATTACHMENT_THUMBNAIL_NAME + suffix);
+                write(filenameThumb,attachment.getThumbnail());
+            }
+        } catch (IOException e) {
+            log.warn("Could not create file", e);
+        }
+        attachment.setFilename(getPathWithSlash(Constants.ATTACHMENT_WEB_PREFIX) + subDirectory + attachment.getAttachmentId() + suffix);
+        byte[] small = new byte[1];
+        small[0] = 'T';
+        attachment.setThumbnail(small);
+        attachment.setContent(null);
+    }
+
+    private String getPathWithSlash(String startPathString) {
+        if (!startPathString.endsWith("/")) {
+            return startPathString + "/";
+        }
+        return startPathString;
+    }
+    private String getSubDirectory(String attachmentId) {
+        return attachmentId.substring(0,Constants.ATTACHMENT_DIR_PREFIX) + "/";
     }
 
     @Override
@@ -104,7 +149,7 @@ public class CassandraAttachmentRepository implements AttachmentRepository {
 
         results = session.execute(statement);
         attachment.setThumbnail(results.one().getBytes(THUMBNAIL).array());
-        if (attachment.getThumbnail() != null && attachment.getThumbnail().length > 0) {
+        if (Constants.LOCAL_ATTACHMENT_STORAGE || (attachment.getThumbnail() != null && attachment.getThumbnail().length > 0)) {
             attachment.setHasThumbnail(true);
         } else {
             attachment.setHasThumbnail(false);

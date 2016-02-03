@@ -2,6 +2,7 @@ package fr.ippon.tatami.web.fileupload;
 
 import com.yammer.metrics.annotation.Timed;
 
+import fr.ippon.tatami.config.Constants;
 import fr.ippon.tatami.domain.Attachment;
 import fr.ippon.tatami.domain.Avatar;
 import fr.ippon.tatami.domain.User;
@@ -309,13 +310,21 @@ public class FileController {
                 attachment.getAttachmentId(),
                 file.getOriginalFilename(),
                 Long.valueOf(file.getSize()).intValue(),
-                tatamiUrl + "/tatami/file/" + attachment.getAttachmentId() + "/" + file.getOriginalFilename());
+                getAttachmentUrl(file, attachment));
 
         uploadedFiles.add(uploadedFile);
         return uploadedFiles;
     }
-	
-	@RequestMapping(value = "/rest/fileuploadIE", headers = "content-type=multipart/*",
+
+    private String getAttachmentUrl(@RequestParam("uploadFile") MultipartFile file, Attachment attachment) {
+        if (Constants.LOCAL_ATTACHMENT_STORAGE) {
+            return attachment.getFilename();
+        } else {
+            return tatamiUrl + "/tatami/file/" + attachment.getAttachmentId() + "/" + file.getOriginalFilename();
+        }
+    }
+
+    @RequestMapping(value = "/rest/fileuploadIE", headers = "content-type=multipart/*",
     		method = RequestMethod.POST, produces = "text/html")
     @ResponseBody
     @Timed

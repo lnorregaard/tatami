@@ -102,6 +102,11 @@ public class ApplicationConfiguration {
         Constants.ANONYMOUS_SHOW_GROUP_TIMELINE = Boolean.valueOf(env.getProperty("tatami.anonymous.show.group.timeline","false"));
         Constants.NON_GROUP_MEMBER_POST_TIMELINE = Boolean.valueOf(env.getProperty("tatami.non.group.member.post.timeline","false"));
         Constants.USER_AND_FRIENDS = Boolean.valueOf(env.getProperty("tatami.user.rename.and.friends.request","false"));
+        Constants.LOCAL_ATTACHMENT_STORAGE = Boolean.valueOf(env.getProperty("attachment.storage.local","false"));
+        Constants.ATTACHMENT_WEB_PREFIX = env.getProperty("attachment.web.prefix","");
+        Constants.ATTACHMENT_FILE_PATH = env.getProperty("attachment.file.path","");
+        Constants.ATTACHMENT_DIR_PREFIX = Integer.parseInt(env.getProperty("attachment.directory.prefix.number","2"));
+        Constants.ATTACHMENT_THUMBNAIL_NAME = env.getProperty("attachment.thumbnail.name","_thumb");
 
         log.info("Tatami v. {} started!", Constants.VERSION);
         log.debug("Google Analytics key : {}", Constants.GOOGLE_ANALYTICS_KEY);

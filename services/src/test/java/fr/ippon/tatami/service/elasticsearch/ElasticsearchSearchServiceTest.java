@@ -107,10 +107,24 @@ public class ElasticsearchSearchServiceTest extends AbstractCassandraTatamiTest 
         List<String> favourites = Arrays.asList(favourite);
         searchService.indexUserFavourite(favourite,login);
         searchService.indexUserFavourite(favourite,friend);
-        Map<String, Long> countUserFavourites = searchService.getCountUserFavourites(favourites, friends);
+        Map<String, Long> countUserFavourites = searchForCount(favourites,friends);
+        assertEquals(1,countUserFavourites.size());
         assertEquals(1, countUserFavourites.values().iterator().next().intValue());
-        countUserFavourites = searchService.getCountUserFavourites(favourites, null);
+        countUserFavourites = searchForCount(favourites, null);
+        assertEquals(1,countUserFavourites.size());
         assertEquals(2, countUserFavourites.values().iterator().next().intValue());
+    }
+
+    private Map<String, Long> searchForCount(List<String> favourites, List<String> friends) throws InterruptedException {
+        Map<String, Long> countUserFavourites = new HashMap<>();
+        for (int i = 0; i < 100; i++) {
+            Thread.sleep(300 * i);
+            countUserFavourites = searchService.getCountUserFavourites(favourites,friends);
+            if (countUserFavourites.size() > 0) {
+                break;
+            }
+        }
+        return countUserFavourites;
     }
 
 }

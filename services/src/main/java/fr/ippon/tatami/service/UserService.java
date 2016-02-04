@@ -532,6 +532,7 @@ public class UserService {
         friend.setFriendsCount(user.getFriendsCount());
         friend.setFollowersCount(user.getFollowersCount());
         friend.setActivated(user.getActivated());
+        friend.setPrivate(user.getPri());
         if (user.getProperties() == null) {
             friend.setProperties(new HashMap<>());
         } else {

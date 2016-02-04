@@ -40,7 +40,18 @@ public class UserDTO implements Serializable {
 
     private boolean isActivated=true;
 
+    private boolean isPrivate = false;
+
     private Map<String,String> properties;
+
+
+    public boolean isPrivate() {
+        return isPrivate;
+    }
+
+    public void setPrivate(boolean aPrivate) {
+        isPrivate = aPrivate;
+    }
 
     public boolean isActivated() {
         return isActivated;

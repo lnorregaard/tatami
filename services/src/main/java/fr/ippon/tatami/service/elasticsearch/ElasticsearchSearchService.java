@@ -10,6 +10,7 @@ import fr.ippon.tatami.domain.Username;
 import fr.ippon.tatami.domain.status.Status;
 import fr.ippon.tatami.repository.FriendRepository;
 import fr.ippon.tatami.repository.GroupRepository;
+import fr.ippon.tatami.repository.UserRepository;
 import fr.ippon.tatami.repository.UsernameRepository;
 import fr.ippon.tatami.service.SearchService;
 import fr.ippon.tatami.service.dto.UserFavouriteCountDTO;
@@ -78,6 +79,9 @@ public class ElasticsearchSearchService implements SearchService {
 
     @Inject
     private UsernameRepository usernameRepository;
+
+    @Inject
+    private UserRepository userRepository;
 
     private Client client() {
         return engine.client();
@@ -911,7 +915,12 @@ public class ElasticsearchSearchService implements SearchService {
     public Collection<String> getUserFavouritesForUser(String username, String domain) {
         List<Username> usernames = usernameRepository.findUsernamesByDomainAndUsername(domain,username);
         if (usernames != null && !usernames.isEmpty()) {
-            return getUserFavourites(usernames.get(0).getLogin());
+            String login = usernames.get(0).getLogin();
+            User user = userRepository.findUserByLogin(login);
+            if (user.getPri() != null && user.getPri()) {
+                return new ArrayList<>();
+            }
+            return getUserFavourites(login);
         }
         return new ArrayList<>();
     }

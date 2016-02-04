@@ -791,7 +791,8 @@ public class ElasticsearchSearchService implements SearchService {
         return friendTotal;
     }
 
-    private Map<String, Long> getCountUserFavourites(List<String> favourites, List<String> logins) {
+    @Override
+    public Map<String, Long> getCountUserFavourites(List<String> favourites, List<String> logins) {
         AggregationBuilder aggregation =
                 AggregationBuilders
                         .terms("aggregated").field("_parent");
@@ -868,6 +869,11 @@ public class ElasticsearchSearchService implements SearchService {
             logins = friendRepository.findFriendsForUser(user.getLogin());
         }
 
+        return findFriendsForUserFavourite(id, from, size, logins);
+    }
+
+    @Override
+    public List<String> findFriendsForUserFavourite(String id, int from, int size, List<String> logins) {
         BoolQueryBuilder boolQuery = new BoolQueryBuilder();
         boolQuery.must(termsQuery("login",logins));
         boolQuery.must(termQuery("favourite",id));
@@ -875,7 +881,7 @@ public class ElasticsearchSearchService implements SearchService {
         SearchRequestBuilder searchRequest = client().prepareSearch(indexName("favourite"))
                 .setTypes("user")
                 .setQuery(boolQuery)
-                .addFields()
+                .addFields("login")
                 .setFrom(from);
         if (size > 0 && size < logins.size()) {
             searchRequest.setSize(size+1);
@@ -905,7 +911,7 @@ public class ElasticsearchSearchService implements SearchService {
     public Collection<String> getUserFavouritesForUser(String username, String domain) {
         List<Username> usernames = usernameRepository.findUsernamesByDomainAndUsername(domain,username);
         if (usernames != null && !usernames.isEmpty()) {
-            return getUserFavourites(usernames.get(0));
+            return getUserFavourites(usernames.get(0).getLogin());
         }
         return new ArrayList<>();
     }
@@ -931,11 +937,12 @@ public class ElasticsearchSearchService implements SearchService {
         return ping;
     }
 
-    private Collection<String> getUserFavourites(Username username) {
+    @Override
+    public Collection<String> getUserFavourites(String login) {
         SearchRequestBuilder searchRequestBuilder = client().prepareSearch(indexName("favourite"));
 
         //Query 1. Search on all books that have the term 'book' in the title and return the 'authors'.
-        HasChildQueryBuilder favouriteHasChildQuery = QueryBuilders.hasChildQuery("user", QueryBuilders.matchQuery("login", username.getLogin()));
+        HasChildQueryBuilder favouriteHasChildQuery = QueryBuilders.hasChildQuery("user", QueryBuilders.matchQuery("login", login));
         SearchRequestBuilder searchRequest = searchRequestBuilder.setQuery(favouriteHasChildQuery);
         if (log.isTraceEnabled()) {
             log.trace("elasticsearch query : " + searchRequest);
@@ -948,7 +955,7 @@ public class ElasticsearchSearchService implements SearchService {
 
         SearchHit[] hits = searchHits.hits();
         List<String> ids = getTypesFromHits(hits, "id");
-        log.debug("search favourites " + " for user(\"" + username.getLogin() + "\") = result : " + ids);
+        log.debug("search favourites " + " for user(\"" + login + "\") = result : " + ids);
         return ids;
     }
 
@@ -963,6 +970,9 @@ public class ElasticsearchSearchService implements SearchService {
     }
 
     private String getStringValueFromHit(String type, SearchHit hit) {
+        if (type.equals("id")) {
+            return hit.getId();
+        }
         SearchHitField hitField = hit.getFields().get(type);
         if (hitField != null) {
             return hitField.getValue().toString();

@@ -9,6 +9,7 @@ import org.springframework.scheduling.annotation.Async;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Service used to search statuses and users.
@@ -92,6 +93,8 @@ public interface SearchService {
 
     List<UserFavouriteCountDTO> countUsersForUserFavourites(List<String> favourites, User user);
 
+    Map<String, Long> getCountUserFavourites(List<String> favourites, List<String> logins);
+
     @Async
     void indexUserFavourite(String favourite, String login);
 
@@ -99,7 +102,11 @@ public interface SearchService {
 
     List<String> getFriendsForUserFavourite(String id, User user, int from, int size);
 
+    List<String> findFriendsForUserFavourite(String id, int from, int size, List<String> logins);
+
     Collection<String> getUserFavouritesForUser(String username, String domain);
 
     Ping createElasticSearchPing(Ping ping);
+
+    Collection<String> getUserFavourites(String login);
 }

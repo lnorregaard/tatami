@@ -80,7 +80,7 @@
                             "type": "string",
                             "analyzer" : "default"
                         },
-                        "prefix" : {
+                        "firstPrefix" : {
                             "type" : "string",
                             "analyzer" : "prefixIndex",
                             "search_analyzer" : "prefixSearch"
@@ -94,7 +94,7 @@
                             "type": "string",
                             "analyzer" : "default"
                         },
-                        "prefix" : {
+                        "lastPrefix" : {
                             "type" : "string",
                             "analyzer" : "prefixIndex",
                             "search_analyzer" : "prefixSearch"

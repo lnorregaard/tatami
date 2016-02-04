@@ -262,11 +262,11 @@ public class User implements Serializable {
         this.dailyDigestSubscription = dailyDigestSubscription;
     }
 
-    public Boolean getPrivate() {
+    public Boolean getPri() {
         return pri;
     }
 
-    public void setPrivate(Boolean pri) {
+    public void setPri(Boolean pri) {
         this.pri = pri;
     }
 

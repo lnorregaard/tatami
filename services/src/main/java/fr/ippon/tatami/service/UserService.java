@@ -162,6 +162,9 @@ public class UserService {
         if (user.getActivated() == null) {
             user.setActivated(currentUser.getActivated());
         }
+        if (user.getPrivate() == null) {
+            user.setPrivate(currentUser.getPrivate());
+        }
         if (user.getDailyDigestSubscription() == null) {
             user.setDailyDigestSubscription(currentUser.getDailyDigestSubscription());
         }

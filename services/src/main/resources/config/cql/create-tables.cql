@@ -299,4 +299,4 @@ CREATE TABLE IF NOT EXISTS friendrequests (
     PRIMARY KEY(login,friendLogin)
 );
 CREATE INDEX IF NOT EXISTS friendlogin_friendrequests ON friendrequests (friendLogin);
-
+ALTER TABLE user ADD private boolean;

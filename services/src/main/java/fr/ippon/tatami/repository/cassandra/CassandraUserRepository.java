@@ -116,6 +116,9 @@ public class CassandraUserRepository implements UserRepository {
             user.setStatusCount(counterRepository.getStatusCounter(login));
             user.setFollowersCount(counterRepository.getFollowersCounter(login));
             user.setFriendsCount(counterRepository.getFriendsCounter(login));
+            if (user.getPrivate() == null) {
+                user.setPrivate(false);
+            }
             if (user.getProperties() == null) {
                 user.setProperties(new HashMap<>());
             }

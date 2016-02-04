@@ -85,6 +85,9 @@ public class User implements Serializable {
     @Column(name="activated")
     private Boolean activated=true;
 
+    @Column(name="private")
+    private Boolean pri=false;
+
     @Column
     private Map<String,String> properties;
 
@@ -96,6 +99,7 @@ public class User implements Serializable {
 
     @Transient
     private long followersCount;
+
 
 
     public Map<String, String> getProperties() {
@@ -258,6 +262,13 @@ public class User implements Serializable {
         this.dailyDigestSubscription = dailyDigestSubscription;
     }
 
+    public Boolean getPrivate() {
+        return pri;
+    }
+
+    public void setPrivate(Boolean pri) {
+        this.pri = pri;
+    }
 
     @Override
     public boolean equals(Object o) {

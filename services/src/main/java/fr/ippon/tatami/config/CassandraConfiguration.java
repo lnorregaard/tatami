@@ -495,6 +495,7 @@ public class CassandraConfiguration {
                 "    lastname varchar,\n" +
                 "    domain varchar,\n" +
                 "    activated boolean,\n" +
+                "    private boolean,\n" +
                 "    avatar varchar,\n" +
                 "    jobTitle varchar,\n" +
                 "    activation_key varchar,\n" +

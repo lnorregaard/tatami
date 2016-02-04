@@ -110,9 +110,6 @@ public class ElasticsearchSearchServiceTest extends AbstractCassandraTatamiTest 
         Map<String, Long> countUserFavourites = searchForCount(favourites,friends);
         assertEquals(1,countUserFavourites.size());
         assertEquals(1, countUserFavourites.values().iterator().next().intValue());
-        countUserFavourites = searchForCount(favourites, null);
-        assertEquals(1,countUserFavourites.size());
-        assertEquals(2, countUserFavourites.values().iterator().next().intValue());
     }
 
     private Map<String, Long> searchForCount(List<String> favourites, List<String> friends) throws InterruptedException {

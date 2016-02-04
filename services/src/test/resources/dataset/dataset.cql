@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS user (
     lastname varchar,
     domain varchar,
     activated boolean,
+    private boolean,
     avatar varchar,
     jobTitle varchar,
     activation_key varchar,

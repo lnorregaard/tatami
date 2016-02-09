@@ -38,6 +38,8 @@ import java.util.UUID;
 @Controller
 public class TimelineController {
 
+    public static final String APPROVED = "APPROVED";
+    public static final String BLOCKED = "BLOCKED";
     private final Logger log = LoggerFactory.getLogger(TimelineController.class);
 
     @Inject
@@ -154,7 +156,7 @@ public class TimelineController {
         try {
             StatusDTO status = timelineService.getPendingStatus(statusId);
             if (action != null) {
-                if (action.getState() != null && action.getState().equals("APPROVED")) {
+                if (action.getState() != null && action.getState().equals(APPROVED)) {
                     log.info("Approve status: {} with message: {} for username : {} by moderator: {}",
                             statusId,
                             status.getContent(),
@@ -162,7 +164,7 @@ public class TimelineController {
                             authenticationService.getCurrentUser().getLogin());
                     timelineService.approveStatus(statusId);
                     status.setState(action.getState());
-                } else if (action.getState() != null && action.getState().equals("BLOCKED") && action.getComment() != null && !action.getComment().isEmpty()) {
+                } else if (action.getState() != null && action.getState().equals(BLOCKED) && action.getComment() != null && !action.getComment().isEmpty()) {
                     log.info("Block status: {} with message: {} for username : {} by moderator: {}",
                             statusId,
                             status.getContent(),

@@ -315,7 +315,9 @@ public class UserService {
             // Desactivate/Activate User
             if ( user.getActivated() ) {
                 userRepository.desactivateUser(user);
-                favoritelineRepository.deleteFavoriteline(user.getLogin());
+                if (!Constants.MODERATOR_STATUS) {
+                    favoritelineRepository.deleteFavoriteline(user.getLogin());
+                }
                 log.debug("User " + user.getLogin() + " has been successfully desactivated !");
             }
 

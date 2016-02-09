@@ -90,6 +90,9 @@ public class TimelineService {
     private StatusUpdateService statusUpdateService;
 
     @Inject
+    private StatusStateGroupRepository statusStateGroupRepository;
+
+    @Inject
     private UsernameService usernameService;
 
     public StatusDTO getStatus(String statusId) {
@@ -662,11 +665,19 @@ public class TimelineService {
         atmosphereService.notifyUser(timelineLogin, share);
     }
 
-    public Collection<StatusDTO> getStatusForStates(String types, Integer count) {
-        List<String> lines = statusRepository.findStatusByStates(types,count);
+    public Collection<StatusDTO> getStatusForStates(String types, String groupId, String start, String finish, Integer count) {
+        UUID startUUID = null;
+        UUID finishUUID = null;
+        if (start != null) {
+            startUUID = UUID.fromString(start);
+        }
+        if (finish != null) {
+            finishUUID = UUID.fromString(finish);
+        }
+        List<UUID> lines = statusStateGroupRepository.findStatuses(types,groupId,startUUID,finishUUID,count);
         Collection<StatusDTO> statuses = new ArrayList<>(lines.size());
-        for (String statusId : lines) {
-            AbstractStatus abstractStatus = statusRepository.findStatusById(statusId,false);
+        for (UUID statusId : lines) {
+            AbstractStatus abstractStatus = statusRepository.findStatusById(statusId.toString(),false);
             if (abstractStatus != null) {
                 User statusUser = userService.getUserByLogin(abstractStatus.getLogin());
                 if (statusUser != null) {
@@ -675,7 +686,6 @@ public class TimelineService {
                     // => for non-authenticated rss access
                     StatusDTO statusDTO = new StatusDTO();
                     statusDTO.setStatusId(abstractStatus.getStatusId().toString());
-
                     statusDTO.setStatusDate(abstractStatus.getStatusDate());
                     statusDTO.setGeoLocalization(abstractStatus.getGeoLocalization());
                     statusDTO.setActivated(statusUser.getActivated());
@@ -688,9 +698,13 @@ public class TimelineService {
                         statusDTO.setType(abstractStatus.getType());
                     }
                     if (type == StatusType.STATUS) {
-                        statusDTO.setContent(((Status)abstractStatus).getContent());
-                        statusDTO.setGroupId(((Status)abstractStatus).getGroupId());
-                        Group group = groupService.getGroupById(statusUser.getDomain(), UUID.fromString(statusDTO.getGroupId()));
+                        Status status = (Status)abstractStatus;
+                        statusDTO.setContent(status.getContent());
+                        statusDTO.setGroupId(status.getGroupId());
+                        if (status.getHasAttachments() != null && status.getHasAttachments()) {
+                            statusDTO.setAttachments(status.getAttachments());
+                        }
+                        Group group = groupService.getGroupById(statusUser.getDomain(), UUID.fromString(status.getGroupId()));
                         // if this is a private group and the user is not part of it, he cannot see the status
                         if (group != null) {
                             statusDTO.setPublicGroup(group.isPublicGroup());
@@ -715,6 +729,7 @@ public class TimelineService {
         AbstractStatus abstractStatus = statusRepository.findStatusById(statusId,false);
         Status status = (Status) abstractStatus;
         if (status.getState() != null) {
+            statusStateGroupRepository.updateState(status.getGroupId(),status.getStatusId(),"APPROVED");
             statusRepository.updateState(statusId, null);
             Group group = null;
             if (status.getGroupId() != null) {
@@ -727,8 +742,13 @@ public class TimelineService {
 
     @Secured("ROLE_ADMIN")
     public void blockStatus(String moderator, String statusId, String comment,String username) {
-        statusRepository.updateState(statusId,"BLOCKED");
-        auditRepository.blockStatus(moderator,statusId,username,comment);
+        AbstractStatus abstractStatus = statusRepository.findStatusById(statusId,false);
+        if (abstractStatus instanceof Status) {
+            Status status = (Status) abstractStatus;
+            statusStateGroupRepository.updateState(status.getGroupId(),status.getStatusId(),"BLOCKED");
+            statusRepository.updateState(statusId,"BLOCKED");
+            auditRepository.blockStatus(moderator,statusId,username,comment);
+        }
     }
 
     public StatusDTO getPendingStatus(String statusId) {

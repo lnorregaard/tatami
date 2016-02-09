@@ -753,6 +753,17 @@ public class CassandraConfiguration {
                 "    login varchar,\n" +
                 "    friendLogin varchar,\n" +
                 "    PRIMARY KEY(login,friendLogin)");
+        session.execute("CREATE INDEX IF NOT EXISTS friendlogin_friendrequests ON friendrequests (friendLogin);\n");
+
+        session.execute("CREATE TABLE IF NOT EXISTS statusstategroupline (\n" +
+                "    groupId varchar,\n" +
+                "    state varchar,\n" +
+                "    statusId timeuuid,\n" +
+                "    PRIMARY KEY((groupId,state),statusId)\n" +
+                ")\n" +
+                "WITH CLUSTERING ORDER BY (statusId ASC);\n");
+
+
 
 
     }

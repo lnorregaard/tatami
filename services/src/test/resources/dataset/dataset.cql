@@ -299,6 +299,16 @@ CREATE TABLE IF NOT EXISTS friendrequests (
     friendLogin varchar,
     PRIMARY KEY(login,friendLogin)
 );
+CREATE INDEX IF NOT EXISTS friendlogin_friendrequests ON friendrequests (friendLogin);
+
+CREATE TABLE IF NOT EXISTS statusstategroupline (
+    groupId varchar,
+    state varchar,
+    statusId timeuuid,
+    PRIMARY KEY((groupId,state),statusId)
+)
+WITH CLUSTERING ORDER BY (statusId ASC);
+
 
 
 INSERT INTO user (login , avatar , firstname , lastname , username , domain ) VALUES('jdubois@ippon.fr', 'avatar', 'Julien','Dubois','jdubois','ippon.fr');

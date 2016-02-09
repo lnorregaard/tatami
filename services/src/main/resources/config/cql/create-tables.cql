@@ -299,4 +299,13 @@ CREATE TABLE IF NOT EXISTS friendrequests (
     PRIMARY KEY(login,friendLogin)
 );
 CREATE INDEX IF NOT EXISTS friendlogin_friendrequests ON friendrequests (friendLogin);
+
 ALTER TABLE user ADD private boolean;
+
+CREATE TABLE IF NOT EXISTS statusstategroupline (
+    groupId varchar,
+    state varchar,
+    statusId timeuuid,
+    PRIMARY KEY((groupId,state),statusId)
+)
+WITH CLUSTERING ORDER BY (statusId ASC);

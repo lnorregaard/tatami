@@ -665,6 +665,10 @@ public class TimelineService {
         atmosphereService.notifyUser(timelineLogin, share);
     }
 
+    public Long getStatusForStatesCount(String types, String groupId) {
+        return statusStateGroupRepository.findStatusesCount(types,groupId);
+    }
+
     public Collection<StatusDTO> getStatusForStates(String types, String groupId, String start, String finish, Integer count) {
         UUID startUUID = null;
         UUID finishUUID = null;
@@ -773,4 +777,5 @@ public class TimelineService {
         }
         return null;
     }
+
 }

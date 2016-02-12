@@ -123,6 +123,24 @@ public class TimelineController {
     /**
      * GET  /statuses/user_timeline?screen_name=jdubois -> get the latest statuses from user "jdubois"
      */
+    @RequestMapping(value = "/rest/statuses/moderator/count",
+            method = RequestMethod.GET,
+            produces = "application/json")
+    @ResponseBody
+    public Long listStatusForModeratorCount(@RequestParam(required = false) String states,
+                                                        @RequestParam(required = false) String groupId) {
+
+        try {
+            return timelineService.getStatusForStatesCount(states, groupId);
+        } catch (Exception e) {
+            log.warn("No status found: ",e);
+            return -2L;
+        }
+    }
+
+    /**
+     * GET  /statuses/user_timeline?screen_name=jdubois -> get the latest statuses from user "jdubois"
+     */
     @RequestMapping(value = "/rest/statuses/moderator",
             method = RequestMethod.GET,
             produces = "application/json")

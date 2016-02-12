@@ -22,4 +22,6 @@ public interface StatusStateGroupRepository {
     void updateState(String groupId, UUID statusId, String newState);
 
     List<UUID> findStatuses(String state, String groupId, UUID from, UUID to, int count);
+
+    Long findStatusesCount(String types, String groupId);
 }

@@ -107,6 +107,31 @@ public class CassandraStatusStateGroupRepository implements StatusStateGroupRepo
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public Long findStatusesCount(String types, String groupId) {
+        List<String> states = new ArrayList<>();
+        if (types != null && types.contains(",")) {
+            states = Arrays.asList(types.split(","));
+        } else if (types != null) {
+            states.add(types);
+        } else {
+            states = STATES;
+        }
+        Select select = QueryBuilder.select().countAll()
+                .from(STATUS_STATE_GROUP_LINE);
+        Select.Where where = null;
+        if (groupId != null) {
+            where = addWhere(select,where,eq(GROUP_ID,groupId));
+        } else {
+            where = addWhere(select,where,eq(GROUP_ID,GROUP_NULL));
+        }
+        where = addWhere(select,where,in(STATE,states));
+        ResultSet results = session.execute(where);
+        return results
+                .one()
+                .getLong(0);
+    }
+
     private Select.Where addWhere(Select select, Select.Where where, Clause clause) {
         if (where == null) {
             return select.where(clause);

@@ -27,6 +27,7 @@ public class Constants {
 
     public static final int AVATAR_SIZE = 200;
 
+
     /**
      * Cassandra : number of columns to return when not doing a name-based template
      */
@@ -48,5 +49,6 @@ public class Constants {
     public static String ATTACHMENT_WEB_PREFIX = "";
     public static String ATTACHMENT_FILE_PATH = "";
     public static String ATTACHMENT_THUMBNAIL_NAME = "_thumb";
+    public static int ATTACHMENT_IMAGE_WIDTH = -1;
 
 }

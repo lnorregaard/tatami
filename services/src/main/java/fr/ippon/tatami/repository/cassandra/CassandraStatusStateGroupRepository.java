@@ -62,12 +62,16 @@ public class CassandraStatusStateGroupRepository implements StatusStateGroupRepo
         }
         Statement statement = QueryBuilder.delete().from(STATUS_STATE_GROUP_LINE)
                 .where(eq(GROUP_ID,groupId))
-                .and(in(STATE,STATES))
+                .and(in(STATE,withoutState(STATES,newState)))
                 .and(eq(STATUS_ID, statusId));
         session.execute(statement);
-        if (newState != null) {
-            createStatusStateGroup(statusId,newState,groupId);
-        }
+        createStatusStateGroup(statusId,newState,groupId);
+    }
+
+    private List<String> withoutState(List<String> states, String newState) {
+        return states.stream()
+                .filter(s -> !s.equals(newState))
+                .collect(Collectors.toList());
     }
 
     @Override

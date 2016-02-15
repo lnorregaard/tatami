@@ -148,7 +148,7 @@ public class GroupController {
 
 
 
-    @RequestMapping(value = "/rest/groups/{groupId}/timeline",
+    @RequestMapping(value = {"/rest/groups/{groupId}/timeline","/groups/{groupId}/timeline"},
             method = RequestMethod.GET,
             produces = "application/json")
     @ResponseBody

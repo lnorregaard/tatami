@@ -45,6 +45,7 @@ public class CacheConfiguration {
 
             Cache userCache = cacheManager.getCache("user-cache");
             Ehcache decoratedUserCache = InstrumentedEhcache.instrument(userCache);
+
             cacheManager.replaceCacheWithDecoratedCache(userCache, decoratedUserCache);
 
             Cache attachmentCache = cacheManager.getCache("attachment-cache");

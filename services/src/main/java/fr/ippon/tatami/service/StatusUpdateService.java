@@ -97,16 +97,23 @@ public class StatusUpdateService {
     @Inject
     private AtmosphereService atmosphereService;
 
-    public void postStatus(String content, boolean statusPrivate, Collection<String> attachmentIds, String geoLocalization) {
-        createStatus(content, statusPrivate, null, "", "", "", attachmentIds, null, geoLocalization);
+    @Inject
+    private UsernameService usernameService;
+
+    @Inject
+    private UserService userService;
+
+
+    public Status postStatus(String content, boolean statusPrivate, Collection<String> attachmentIds, String geoLocalization) {
+        return createStatus(content, statusPrivate, null, "", "", "", attachmentIds, null, geoLocalization);
     }
 
     public void postStatus(String content, boolean statusPrivate, Collection<String> attachmentIds) {
         createStatus(content, statusPrivate, null, "", "", "", attachmentIds);
     }
 
-    public void postStatusToGroup(String content, Group group, Collection<String> attachmentIds, String geoLocalization) {
-        createStatus(content, false, group, "", "", "", attachmentIds, null, geoLocalization);
+    public Status postStatusToGroup(String content, Group group, Collection<String> attachmentIds, String geoLocalization) {
+        return createStatus(content, false, group, "", "", "", attachmentIds, null, geoLocalization);
     }
 
     public void postStatusAsUser(String content, User user) {
@@ -248,13 +255,14 @@ public class StatusUpdateService {
 
         // add status to the timeline
         addStatusToTimelineAndNotify(currentLogin, status);
-
+        if (Constants.MODERATOR_STATUS && (userService.isAdmin(currentLogin) || status.getStatusPrivate())) {
+            statusRepository.updateState(status.getStatusId().toString(),null);
+        }
         if (status.getStatusPrivate()) { // Private status
             // add status to the mentioned users' timeline
             manageMentions(status, null, currentLogin, domain, new ArrayList<String>());
-
         } else { // Public status
-            if (!Constants.MODERATOR_STATUS) {
+            if (!Constants.MODERATOR_STATUS || userService.isAdmin(currentLogin)) {
                 postPublicStatus(group, status);
             }
         }
@@ -360,7 +368,7 @@ public class StatusUpdateService {
 
                 log.debug("Mentionning : {}", mentionedUsername);
                 String mentionedLogin =
-                        DomainUtil.getLoginFromUsernameAndDomain(mentionedUsername, domain);
+                        usernameService.getLoginFromUsernameAndDomain(mentionedUsername, domain);
 
                 // If this is a private group, and if the mentioned user is not in the group, he will not see the status
                 if (!isPublicGroup(group)) {

@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Repository;
-import org.springframework.util.StringUtils;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
@@ -110,9 +109,15 @@ public class CassandraUserRepository implements UserRepository {
         Optional<User> optionalUser = findOneFromIndex(stmt);
         if (optionalUser.isPresent()) {
             user = optionalUser.get();
+            if (user.getLogin() == null || !user.getLogin().equals(login)){
+                user.setLogin(login);
+            }
             user.setStatusCount(counterRepository.getStatusCounter(login));
             user.setFollowersCount(counterRepository.getFollowersCounter(login));
             user.setFriendsCount(counterRepository.getFriendsCounter(login));
+            if (user.getPri() == null) {
+                user.setPri(false);
+            }
             if (user.getProperties() == null) {
                 user.setProperties(new HashMap<>());
             }

@@ -84,6 +84,7 @@ public class FriendRequestServiceTest extends AbstractCassandraTatamiTest {
 
     @Test
     public void shouldNotSendFriendRequestAgain() throws Exception {
+        Constants.USER_AND_FRIENDS = false;
 
         mockAuthentication("userWhoWantToFollow@ippon.fr");
 
@@ -93,7 +94,7 @@ public class FriendRequestServiceTest extends AbstractCassandraTatamiTest {
         userWhoWillBeFollowed.setDailyDigestSubscription(false);
         userWhoWillBeFollowed.setWeeklyDigestSubscription(false);
         userService.updateUser(userWhoWillBeFollowed);
-
+        Constants.USER_AND_FRIENDS = true;
         User userWhoFollow = userService.getUserByUsername("userWhoWantToFollow");
         assertThat(userWhoFollow.getFriendsCount(), is(0L));
 

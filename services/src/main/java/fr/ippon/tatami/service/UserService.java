@@ -18,12 +18,10 @@ import org.springframework.security.crypto.password.StandardPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.cache.annotation.CacheEvict;
 
+import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.validation.ConstraintViolationException;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 /**
  * Manages the application's users.
@@ -39,6 +37,9 @@ public class UserService {
     private UserRepository userRepository;
 
     @Inject
+    private UsernameService usernameService;
+
+    @Inject
     private DomainRepository domainRepository;
 
     @Inject
@@ -46,6 +47,9 @@ public class UserService {
 
     @Inject
     private FriendRepository friendRepository;
+
+    @Inject
+    private FriendRequestRepository friendRequestRepository;
 
     @Inject
     private FollowerRepository followerRepository;
@@ -80,8 +84,27 @@ public class UserService {
     @Inject
     private MailDigestRepository mailDigestRepository;
 
+    private List<String> adminUsers = new ArrayList<>();
+
     @Inject
     Environment env;
+
+    @PostConstruct
+    public void init() {
+        String adminUsersList = env.getProperty("tatami.admin.users");
+        String[] adminUsersArray = adminUsersList.split(",");
+        adminUsers = Arrays.asList(adminUsersArray);
+        if (log.isDebugEnabled()) {
+            for (String admin : adminUsers) {
+                log.debug("Initialization : user \"{}\" is an administrator", admin);
+            }
+        }
+
+    }
+
+    public boolean isAdmin(String login) {
+        return adminUsers.contains(login);
+    }
 
     public User getUserByLogin(String login) {
         User user = userRepository.findUserByLogin(login);
@@ -95,7 +118,7 @@ public class UserService {
     public User getUserByUsername(String username) {
         User currentUser = authenticationService.getCurrentUser();
         String domain = DomainUtil.getDomainFromLogin(currentUser.getLogin());
-        String login = DomainUtil.getLoginFromUsernameAndDomain(username, domain);
+        String login = usernameService.getLoginFromUsernameAndDomain(username, domain);
         return getUserByLogin(login);
     }
 
@@ -132,17 +155,38 @@ public class UserService {
     public void updateUser(User user) {
         User currentUser = authenticationService.getCurrentUser();
         user.setLogin(currentUser.getLogin());
-        user.setUsername(currentUser.getUsername());
         user.setDomain(currentUser.getDomain());
         user.setAvatar(currentUser.getAvatar());
         user.setAttachmentsSize(currentUser.getAttachmentsSize());
+        user.setPassword(currentUser.getPassword());
+        if (user.getActivated() == null) {
+            user.setActivated(currentUser.getActivated());
+        }
+        if (user.getPri() == null) {
+            user.setPri(currentUser.getPri());
+        }
+        if (user.getDailyDigestSubscription() == null) {
+            user.setDailyDigestSubscription(currentUser.getDailyDigestSubscription());
+        }
+        if (user.getPreferencesMentionEmail() == null) {
+            user.setPreferencesMentionEmail(currentUser.getPreferencesMentionEmail());
+        }
+        if (user.getWeeklyDigestSubscription() == null) {
+            user.setWeeklyDigestSubscription(currentUser.getWeeklyDigestSubscription());
+        }
         try {
+            if (Constants.USER_AND_FRIENDS) {
+                usernameService.updateUsername(user, currentUser);
+            }
             userRepository.updateUser(user);
             searchService.removeUser(user);
             searchService.addUser(user);
         } catch (ConstraintViolationException cve) {
             log.info("Constraint violated while updating user " + user + " : " + cve);
             throw cve;
+        } catch (UsernameExistException e) {
+            log.info("username not unique while updating user " + user + " : " + e);
+            throw e;
         }
     }
 
@@ -187,7 +231,9 @@ public class UserService {
         user.setPhoneNumber("");
         user.setPreferencesMentionEmail(true);
         user.setWeeklyDigestSubscription(true);
-
+        if (Constants.USER_AND_FRIENDS) {
+            usernameService.createUsername(user);
+        }
         counterRepository.createStatusCounter(user.getLogin());
         counterRepository.createFriendsCounter(user.getLogin());
         counterRepository.createFollowersCounter(user.getLogin());
@@ -200,7 +246,7 @@ public class UserService {
     }
 
     public void createTatamibot(String domain) {
-        String login = DomainUtil.getLoginFromUsernameAndDomain(Constants.TATAMIBOT_NAME, domain);
+        String login = usernameService.getLoginFromUsernameAndDomain(Constants.TATAMIBOT_NAME, domain);
         User tatamiBotUser = new User();
         tatamiBotUser.setLogin(login);
         this.createUser(tatamiBotUser);
@@ -243,9 +289,14 @@ public class UserService {
         counterRepository.deleteCounters(user.getLogin());
         log.debug("Delete user step 5 : user " + user.getLogin() + " has no counter.");
 
+        if (Constants.USER_AND_FRIENDS) {
+            usernameService.deleteUsernameForUser(user);
+            log.debug("Delete user step 6 : username " + user.getUsername() + " is deleted.");
+        }
         // Delete user
         userRepository.deleteUser(user);
-        log.debug("Delete user step 6 : user " + user.getLogin() + " is deleted.");
+        log.debug("Delete user step 7 : user " + user.getLogin() + " is deleted.");
+
 
         // Tweets are not deleted, but are not available to users anymore (unless the same user is created again)
 
@@ -264,7 +315,9 @@ public class UserService {
             // Desactivate/Activate User
             if ( user.getActivated() ) {
                 userRepository.desactivateUser(user);
-                favoritelineRepository.deleteFavoriteline(user.getLogin());
+                if (!Constants.MODERATOR_STATUS) {
+                    favoritelineRepository.deleteFavoriteline(user.getLogin());
+                }
                 log.debug("User " + user.getLogin() + " has been successfully desactivated !");
             }
 
@@ -424,6 +477,10 @@ public class UserService {
 
     public Collection<UserDTO> buildUserDTOList(Collection<User> users) {
         User currentUser = authenticationService.getCurrentUser();
+        Collection<String> friendRequests = new ArrayList<>();
+        if (Constants.USER_AND_FRIENDS) {
+            friendRequests = friendRequestRepository.findLoginsFriendRequests(currentUser.getLogin());
+        }
         Collection<String> currentFriendLogins = friendRepository.findFriendsForUser(currentUser.getLogin());
         Collection<String> currentFollowersLogins = followerRepository.findFollowersForUser(currentUser.getLogin());
         Collection<UserDTO> userDTOs = new ArrayList<UserDTO>();
@@ -433,6 +490,13 @@ public class UserService {
             if (!userDTO.isYou()) {
                 userDTO.setFriend(currentFriendLogins.contains(user.getLogin()));
                 userDTO.setFollower(currentFollowersLogins.contains(user.getLogin()));
+            }
+            if (Constants.USER_AND_FRIENDS) {
+                if (friendRequests.contains(user.getLogin())) {
+                    userDTO.setFriendRequest(true);
+                } else {
+                    userDTO.setFriendRequest(false);
+                }
             }
             userDTOs.add(userDTO);
         }
@@ -456,7 +520,9 @@ public class UserService {
 
     private UserDTO getUserDTOFromUser(User user) {
         UserDTO friend = new UserDTO();
-        friend.setLogin(user.getLogin());
+        if (!Constants.ANONYMOUS_SHOW_GROUP_TIMELINE) {
+            friend.setLogin(user.getLogin());
+        }
         friend.setUsername(user.getUsername());
         friend.setAvatar(user.getAvatar());
         friend.setFirstName(user.getFirstName());
@@ -468,6 +534,13 @@ public class UserService {
         friend.setFriendsCount(user.getFriendsCount());
         friend.setFollowersCount(user.getFollowersCount());
         friend.setActivated(user.getActivated());
+        friend.setPrivate(user.getPri());
+        if (user.getProperties() == null) {
+            friend.setProperties(new HashMap<>());
+        } else {
+            friend.setProperties(user.getProperties());
+        }
+
         return friend;
     }
 }

@@ -10,6 +10,8 @@ import java.util.Collection;
 import javax.imageio.ImageIO;
 import javax.inject.Inject;
 
+import fr.ippon.tatami.config.Constants;
+import net.coobird.thumbnailator.Thumbnails;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
@@ -54,7 +56,9 @@ public class AttachmentService {
         User currentUser = authenticationService.getCurrentUser();
         DomainConfiguration domainConfiguration =
                 domainConfigurationRepository.findDomainConfigurationByDomain(currentUser.getDomain());
-
+        if (Constants.ATTACHMENT_IMAGE_WIDTH > 0) {
+            resizeAttachment(attachment,Constants.ATTACHMENT_IMAGE_WIDTH);
+        }
         long newAttachmentsSize = currentUser.getAttachmentsSize() + attachment.getSize();
         if (newAttachmentsSize > domainConfiguration.getStorageSizeAsLong()) {
             log.info("User " + currentUser.getLogin() +
@@ -65,9 +69,7 @@ public class AttachmentService {
 
             throw new StorageSizeException("User storage exceeded for user " + currentUser.getLogin());
         }
-        
         attachment.setThumbnail(computeThumbnail(attachment));
-        
         attachmentRepository.createAttachment(attachment);
         userAttachmentRepository.addAttachmentId(authenticationService.getCurrentUser().getLogin(),
                 attachment.getAttachmentId());
@@ -78,6 +80,56 @@ public class AttachmentService {
         userRepository.updateUser(currentUser);
         return attachment.getAttachmentId();
     }
+
+    private void resizeAttachment(Attachment attachment, int attachmentImageSize) {
+        byte[] result = new byte[0];
+        boolean isImage = false;
+
+        String[] imagesExtensions = env.getProperty("tatami.attachment.thumbnail.extensions").split(",");
+        String lowercaseFilename = attachment.getFilename().toLowerCase();
+        for(String ext : imagesExtensions) {
+            if(lowercaseFilename.endsWith(ext)) {
+                isImage = true;
+                break;
+            }
+        }
+        if(isImage) {
+            boolean shouldResize = isOriginalLargerThanMaxWidth(attachment,attachmentImageSize);
+            if (shouldResize) {
+                try {
+                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                    Thumbnails.of(new ByteArrayInputStream(attachment.getContent()))
+                            .width(attachmentImageSize)
+                            .toOutputStream(baos);
+                    baos.flush();
+                    result = baos.toByteArray();
+                } catch (IOException e) {
+                    log.error("Error creating thumbnail for attachment " + attachment.getAttachmentId());
+                }
+            } else {
+                result = attachment.getContent();
+            }
+        }
+        if (result.length > 0) {
+            attachment.setSize(result.length);
+            attachment.setContent(result);
+        }
+    }
+
+    private boolean isOriginalLargerThanMaxWidth(Attachment attachment, int attachmentImageSize) {
+        if (attachmentImageSize > 0) {
+            BufferedImage originalImage = null;
+            try {
+                originalImage = ImageIO.read(new ByteArrayInputStream(attachment.getContent()));
+                int width = originalImage.getWidth();
+                return width > attachmentImageSize;
+            } catch (IOException e) {
+                log.warn("Width could not be found", e);
+            }
+        }
+        return false;
+    }
+
 
     public Attachment getAttachmentById(String attachmentId) {
         Attachment attachment =  attachmentRepository.findAttachmentById(attachmentId);
@@ -139,21 +191,19 @@ public class AttachmentService {
     	byte[] result = new byte[0];
     	
     	String[] imagesExtensions = env.getProperty("tatami.attachment.thumbnail.extensions").split(",");
-    	for(String ext : imagesExtensions) {
-    		if(attachment.getFilename().endsWith(ext)) {
+        String lowercaseFilename = attachment.getFilename().toLowerCase();
+        for(String ext : imagesExtensions) {
+            if(lowercaseFilename.endsWith(ext)) {
     			attachment.setHasThumbnail(true);
     			break;
     		}
     	}
     	if(attachment.getHasThumbnail()) {
-    		try {
-    			BufferedImage thumbnail = new BufferedImage(100, 100, BufferedImage.TYPE_INT_ARGB);
-				thumbnail.createGraphics()
-						.drawImage(ImageIO
-								.read(new ByteArrayInputStream(attachment.getContent()))
-    							.getScaledInstance(100, 100, BufferedImage.SCALE_SMOOTH), 0, 0, null);
-				ByteArrayOutputStream baos = new ByteArrayOutputStream();
-				ImageIO.write(thumbnail, "png", baos);
+            try {
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                Thumbnails.of(new ByteArrayInputStream(attachment.getContent()))
+                        .size(100,100)
+                        .toOutputStream(baos);
 				baos.flush();
 				result = baos.toByteArray();
     		} catch(IOException e) {

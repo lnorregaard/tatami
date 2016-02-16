@@ -88,6 +88,9 @@ public class CassandraStatusRepository implements StatusRepository {
     @Inject
     private AttachmentRepository attachmentRepository;
 
+    @Inject
+    private StatusStateGroupRepository statusStateGroupRepository;
+
     private PreparedStatement findOneByIdStmt;
 
 
@@ -132,10 +135,15 @@ public class CassandraStatusRepository implements StatusRepository {
         String domain = DomainUtil.getDomainFromLogin(login);
         status.setDomain(domain);
         status.setStatusPrivate(statusPrivate);
+        if (group != null) {
+            UUID groupId = group.getGroupId();
+            status.setGroupId(groupId.toString());
+        }
 
         status.setContent(content);
         if (Constants.MODERATOR_STATUS) {
             status.setState("PENDING");
+            statusStateGroupRepository.createStatusStateGroup(status.getStatusId(),"PENDING",status.getGroupId());
         }
 
         Set<ConstraintViolation<Status>> constraintViolations = validator.validate(status);
@@ -144,10 +152,6 @@ public class CassandraStatusRepository implements StatusRepository {
                 constraintViolations.forEach(e -> log.debug("Constraint violation: {}", e.getMessage()));
             }
             throw new ConstraintViolationException(new HashSet<>(constraintViolations));
-        }
-        if (group != null) {
-            UUID groupId = group.getGroupId();
-            status.setGroupId(groupId.toString());
         }
 
         if (attachmentIds != null && attachmentIds.size() > 0) {
@@ -279,9 +283,8 @@ public class CassandraStatusRepository implements StatusRepository {
     }
 
     @Override
-    public List<String> findStatusByStates(String types, Integer count) {
+    public List<String> findStatusByStates(String types, String groupId,Integer count) {
         List<String> states = new ArrayList<>();
-
         if (types != null && types.contains(",")) {
             states = Arrays.asList(types.split(","));
         } else if (types != null) {
@@ -290,17 +293,21 @@ public class CassandraStatusRepository implements StatusRepository {
         Select select = QueryBuilder.select()
                 .column("statusId")
                 .from("status");
+        select = select.allowFiltering();
         Select.Where where = null;
         if (states.isEmpty()) {
             where = select.where(eq("type", "STATUS"));
         } else {
             where = select.where(in("state",states));
         }
+        if (groupId != null) {
+            where.and(eq("groupId",groupId));
+        }
         if (count > 0) {
             where.limit(count);
         }
 
-//        where.orderBy(desc("statusId"));
+        where.orderBy(asc("statusId"));
         Statement statement = where;
         ResultSet results = session.execute(statement);
         return results

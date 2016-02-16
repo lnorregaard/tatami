@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS user (
     lastname varchar,
     domain varchar,
     activated boolean,
+    private boolean,
     avatar varchar,
     jobTitle varchar,
     activation_key varchar,
@@ -20,6 +21,14 @@ CREATE TABLE IF NOT EXISTS user (
     attachmentsSize bigint,
     properties map<text,text>,
     PRIMARY KEY(login)
+);
+
+CREATE TABLE IF NOT EXISTS username (
+    username varchar,
+    domain varchar,
+    created timeuuid,
+    login varchar,
+    PRIMARY KEY ((username,domain),created)
 );
 
 CREATE TABLE IF NOT EXISTS status (
@@ -44,7 +53,8 @@ CREATE TABLE IF NOT EXISTS status (
     state varchar,
     PRIMARY KEY(statusId)
 );
-
+CREATE INDEX IF NOT EXISTS status_state ON status (state);
+CREATE INDEX IF NOT EXISTS status_type ON status (type);
 
 CREATE TABLE IF NOT EXISTS timeline (
     key varchar,
@@ -289,6 +299,16 @@ CREATE TABLE IF NOT EXISTS friendrequests (
     friendLogin varchar,
     PRIMARY KEY(login,friendLogin)
 );
+CREATE INDEX IF NOT EXISTS friendlogin_friendrequests ON friendrequests (friendLogin);
+
+CREATE TABLE IF NOT EXISTS statusstategroupline (
+    groupId varchar,
+    state varchar,
+    statusId timeuuid,
+    PRIMARY KEY((groupId,state),statusId)
+)
+WITH CLUSTERING ORDER BY (statusId ASC);
+
 
 
 INSERT INTO user (login , avatar , firstname , lastname , username , domain ) VALUES('jdubois@ippon.fr', 'avatar', 'Julien','Dubois','jdubois','ippon.fr');

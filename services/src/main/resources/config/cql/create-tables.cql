@@ -44,7 +44,8 @@ CREATE TABLE IF NOT EXISTS status (
     PRIMARY KEY(statusId)
 );
 
-
+CREATE INDEX IF NOT EXISTS status_state ON tatami.status (state);
+CREATE INDEX IF NOT EXISTS status_type ON tatami.status (type);
 
 CREATE TABLE IF NOT EXISTS timeline (
     key varchar,
@@ -57,6 +58,14 @@ CREATE TABLE IF NOT EXISTS domain (
     login varchar,
     created timeuuid,
     PRIMARY KEY(domainId, login)
+);
+
+CREATE TABLE IF NOT EXISTS username (
+    username varchar,
+    domain varchar,
+    created timeuuid,
+    login varchar,
+    PRIMARY KEY ((username,domain),created)
 );
 
 CREATE TABLE IF NOT EXISTS counter (
@@ -187,6 +196,8 @@ CREATE TABLE IF NOT EXISTS avatar (
     PRIMARY KEY(id)
 );
 
+CREATE INDEX IF NOT EXISTS avatar_filename_idx ON tatami.avatar (filename);
+
 CREATE TABLE IF NOT EXISTS mailDigest (
     digestId varchar,
     login varchar,
@@ -287,4 +298,14 @@ CREATE TABLE IF NOT EXISTS friendrequests (
     friendLogin varchar,
     PRIMARY KEY(login,friendLogin)
 );
+CREATE INDEX IF NOT EXISTS friendlogin_friendrequests ON friendrequests (friendLogin);
 
+ALTER TABLE user ADD private boolean;
+
+CREATE TABLE IF NOT EXISTS statusstategroupline (
+    groupId varchar,
+    state varchar,
+    statusId timeuuid,
+    PRIMARY KEY((groupId,state),statusId)
+)
+WITH CLUSTERING ORDER BY (statusId ASC);

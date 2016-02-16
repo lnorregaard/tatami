@@ -4,6 +4,7 @@ import com.yammer.metrics.annotation.Timed;
 import fr.ippon.tatami.config.Constants;
 import fr.ippon.tatami.domain.Group;
 import fr.ippon.tatami.domain.User;
+import fr.ippon.tatami.domain.status.Status;
 import fr.ippon.tatami.domain.status.StatusDetails;
 import fr.ippon.tatami.security.AuthenticationService;
 import fr.ippon.tatami.service.GroupService;
@@ -37,6 +38,8 @@ import java.util.UUID;
 @Controller
 public class TimelineController {
 
+    public static final String APPROVED = "APPROVED";
+    public static final String BLOCKED = "BLOCKED";
     private final Logger log = LoggerFactory.getLogger(TimelineController.class);
 
     @Inject
@@ -120,23 +123,42 @@ public class TimelineController {
     /**
      * GET  /statuses/user_timeline?screen_name=jdubois -> get the latest statuses from user "jdubois"
      */
+    @RequestMapping(value = "/rest/statuses/moderator/count",
+            method = RequestMethod.GET,
+            produces = "application/json")
+    @ResponseBody
+    public Long listStatusForModeratorCount(@RequestParam(required = false) String states,
+                                                        @RequestParam(required = false) String groupId) {
+
+        try {
+            return timelineService.getStatusForStatesCount(states, groupId);
+        } catch (Exception e) {
+            log.warn("No status found: ",e);
+            return -2L;
+        }
+    }
+
+    /**
+     * GET  /statuses/user_timeline?screen_name=jdubois -> get the latest statuses from user "jdubois"
+     */
     @RequestMapping(value = "/rest/statuses/moderator",
             method = RequestMethod.GET,
             produces = "application/json")
     @ResponseBody
     public Collection<StatusDTO> listStatusForModerator(@RequestParam(required = false) String states,
-                                                   @RequestParam(required = false) Integer count) {
+                                                        @RequestParam(required = false) String groupId,
+                                                        @RequestParam(required = false) String start,
+                                                        @RequestParam(required = false) String finish,
+                                                        @RequestParam(required = false) Integer count) {
 
         if (count == null || count == 0) {
             count = 20; //Default value
         }
         try {
-            return timelineService.getStatusForStates(states, count);
+            return timelineService.getStatusForStates(states, groupId, start,finish, count);
         } catch (Exception e) {
-            if (log.isDebugEnabled()) {                     
-                e.printStackTrace();
-            }
-            return new ArrayList<StatusDTO>();
+            log.warn("No status found: ",e);
+            return new ArrayList<>();
         }
     }
 
@@ -152,7 +174,7 @@ public class TimelineController {
         try {
             StatusDTO status = timelineService.getPendingStatus(statusId);
             if (action != null) {
-                if (action.getState() != null && action.getState().equals("APPROVED")) {
+                if (action.getState() != null && action.getState().equals(APPROVED)) {
                     log.info("Approve status: {} with message: {} for username : {} by moderator: {}",
                             statusId,
                             status.getContent(),
@@ -160,7 +182,7 @@ public class TimelineController {
                             authenticationService.getCurrentUser().getLogin());
                     timelineService.approveStatus(statusId);
                     status.setState(action.getState());
-                } else if (action.getState() != null && action.getState().equals("BLOCKED") && action.getComment() != null && !action.getComment().isEmpty()) {
+                } else if (action.getState() != null && action.getState().equals(BLOCKED) && action.getComment() != null && !action.getComment().isEmpty()) {
                     log.info("Block status: {} with message: {} for username : {} by moderator: {}",
                             statusId,
                             status.getContent(),
@@ -248,12 +270,12 @@ public class TimelineController {
             method = RequestMethod.POST,
             produces = "application/json")
     @Timed
-    public String postStatus(@RequestBody StatusDTO status, HttpServletResponse response) throws ArchivedGroupException, ReplyStatusException {
+    public Status postStatus(@RequestBody StatusDTO status, HttpServletResponse response) throws ArchivedGroupException, ReplyStatusException {
         try {
             authenticationService.validateStatus();
         } catch (UsernameNotFoundException e) {
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-            return "{}";
+            return null;
         }
         log.debug("REST request to add status : {}", status.getContent());
         String escapedContent = StringEscapeUtils.escapeHtml(status.getContent());
@@ -264,7 +286,7 @@ public class TimelineController {
             statusUpdateService.replyToStatus(escapedContent, status.getReplyTo(), attachmentIds);
         } else if (status.isStatusPrivate() || status.getGroupId() == null || status.getGroupId().equals("")) {
             log.debug("Private status");
-            statusUpdateService.postStatus(escapedContent, status.isStatusPrivate(), attachmentIds, status.getGeoLocalization());
+            return statusUpdateService.postStatus(escapedContent, status.isStatusPrivate(), attachmentIds, status.getGeoLocalization());
         } else {
             User currentUser = authenticationService.getCurrentUser();
             Collection<Group> groups = groupService.getGroupsForUser(currentUser);
@@ -288,9 +310,9 @@ public class TimelineController {
                         "group ID = {}", currentUser.getLogin(), status.getGroupId());
                 response.setStatus(HttpServletResponse.SC_FORBIDDEN);
             } else {
-                statusUpdateService.postStatusToGroup(escapedContent, group, attachmentIds, status.getGeoLocalization());
+                return statusUpdateService.postStatusToGroup(escapedContent, group, attachmentIds, status.getGeoLocalization());
             }
         }
-        return "{}";
+        return null;
     }
 }

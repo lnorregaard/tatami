@@ -22,8 +22,12 @@
     <http pattern="/tatami/register/**" security="none"/>
     <http pattern="/tatami/lostpassword/**" security="none"/>
     <http pattern="/tatami/rest/status/**" security="none"/>
+    <http pattern="/tatami/user/favourites/count" security="none"/>
+    <http pattern="/tatami/groups/**" security="none"/>
+    <http pattern="/tatami/ping" security="none"/>
     <http pattern="/swagger-ui/**" security="none"/>
     <http pattern="/tatami/v2/**" security="none"/>
+    <http pattern="/tatami/avatar/**" security="none"/>
 
     <http pattern="/tatami/j_spring_pac4j_security_check" use-expressions="true" entry-point-ref="googleEntryPoint">
         <intercept-url pattern="/tatami/j_spring_pac4j_security_check" access="isAuthenticated()"/>
@@ -33,7 +37,8 @@
     <http auto-config="true" use-expressions="true" create-session="ifRequired">
         <csrf disabled="true"/>
         <custom-filter after="BASIC_AUTH_FILTER" ref="clientFilter" />
-        <remember-me key="tatamiRememberKey" token-validity-seconds="1209599"/>
+        <!--<remember-me key="tatamiRememberKey" token-validity-seconds="1209599"/>-->
+        <intercept-url pattern="/tatami/avatar" access="permitAll()"/>
         <intercept-url pattern="/tatami/presentation" access="permitAll()"/>
         <intercept-url pattern="/tatami/tos" access="permitAll()"/>
         <intercept-url pattern="/tatami/license" access="permitAll()"/>
@@ -41,6 +46,7 @@
         <intercept-url pattern="/tatami/500-error" access="permitAll()"/>
         <intercept-url pattern="/tatami/rest/users" method="POST" access="permitAll()"/>
         <intercept-url pattern="/tatami/rest/groups/**" method="GET" access="permitAll()"/>
+        <intercept-url pattern="/tatami/rest/user/favourites/count" method="GET" access="permitAll()"/>
         <intercept-url pattern="/tatami/rest/domain/**" method="GET" access="permitAll()"/>
         <intercept-url pattern="/metrics/**" access="hasRole('ROLE_ADMIN')"/>
         <intercept-url pattern="/**" access="isAuthenticated()"/>
@@ -85,6 +91,8 @@
         <beans:property name="clients" ref="clients"/>
         <beans:property name="authenticationManager" ref="authenticationManager"/>
     </beans:bean>
+
+
 
     <beans:bean id="googleAuthProvider" class="fr.ippon.tatami.security.GoogleAuthenticationProvider">
         <beans:property name="clients" ref="clients"/>

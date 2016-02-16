@@ -89,6 +89,12 @@ public class TimelineService {
     @Inject
     private StatusUpdateService statusUpdateService;
 
+    @Inject
+    private StatusStateGroupRepository statusStateGroupRepository;
+
+    @Inject
+    private UsernameService usernameService;
+
     public StatusDTO getStatus(String statusId) {
         List<String> line = new ArrayList<String>();
         line.add(statusId);
@@ -503,7 +509,7 @@ public class TimelineService {
             login = currentUser.getLogin();
         } else {  // another user, in the same domain
             String domain = DomainUtil.getDomainFromLogin(currentUser.getLogin());
-            login = DomainUtil.getLoginFromUsernameAndDomain(username, domain);
+            login = usernameService.getLoginFromUsernameAndDomain(username, domain);
         }
         List<String> statuses = userlineRepository.getUserline(login, nbStatus, start, finish);
         Collection<StatusDTO> dtos = buildStatusList(statuses);
@@ -659,11 +665,23 @@ public class TimelineService {
         atmosphereService.notifyUser(timelineLogin, share);
     }
 
-    public Collection<StatusDTO> getStatusForStates(String types, Integer count) {
-        List<String> lines = statusRepository.findStatusByStates(types,count);
+    public Long getStatusForStatesCount(String types, String groupId) {
+        return statusStateGroupRepository.findStatusesCount(types,groupId);
+    }
+
+    public Collection<StatusDTO> getStatusForStates(String types, String groupId, String start, String finish, Integer count) {
+        UUID startUUID = null;
+        UUID finishUUID = null;
+        if (start != null) {
+            startUUID = UUID.fromString(start);
+        }
+        if (finish != null) {
+            finishUUID = UUID.fromString(finish);
+        }
+        List<UUID> lines = statusStateGroupRepository.findStatuses(types,groupId,startUUID,finishUUID,count);
         Collection<StatusDTO> statuses = new ArrayList<>(lines.size());
-        for (String statusId : lines) {
-            AbstractStatus abstractStatus = statusRepository.findStatusById(statusId,false);
+        for (UUID statusId : lines) {
+            AbstractStatus abstractStatus = statusRepository.findStatusById(statusId.toString(),false);
             if (abstractStatus != null) {
                 User statusUser = userService.getUserByLogin(abstractStatus.getLogin());
                 if (statusUser != null) {
@@ -676,13 +694,28 @@ public class TimelineService {
                     statusDTO.setGeoLocalization(abstractStatus.getGeoLocalization());
                     statusDTO.setActivated(statusUser.getActivated());
                     statusDTO.setState(abstractStatus.getState());
+                    statusDTO.setUsername(abstractStatus.getUsername());
                     StatusType type = abstractStatus.getType();
                     if (type == null) {
                         statusDTO.setType(StatusType.STATUS);
                     } else {
                         statusDTO.setType(abstractStatus.getType());
                     }
+                    if (type == StatusType.STATUS) {
+                        Status status = (Status)abstractStatus;
+                        statusDTO.setContent(status.getContent());
+                        statusDTO.setGroupId(status.getGroupId());
+                        if (status.getHasAttachments() != null && status.getHasAttachments()) {
+                            statusDTO.setAttachments(status.getAttachments());
+                        }
+                        Group group = groupService.getGroupById(statusUser.getDomain(), UUID.fromString(status.getGroupId()));
+                        // if this is a private group and the user is not part of it, he cannot see the status
+                        if (group != null) {
+                            statusDTO.setPublicGroup(group.isPublicGroup());
+                            statusDTO.setGroupName(group.getName());
+                        }
 
+                    }
                     statusDTO.setTimelineId(abstractStatus.getStatusId().toString());
                     statuses.add(statusDTO);
                 } else {
@@ -699,7 +732,8 @@ public class TimelineService {
     public void approveStatus(String statusId) {
         AbstractStatus abstractStatus = statusRepository.findStatusById(statusId,false);
         Status status = (Status) abstractStatus;
-        if (status.getState() == null) {
+        if (status.getState() != null) {
+            statusStateGroupRepository.updateState(status.getGroupId(),status.getStatusId(),"APPROVED");
             statusRepository.updateState(statusId, null);
             Group group = null;
             if (status.getGroupId() != null) {
@@ -712,8 +746,13 @@ public class TimelineService {
 
     @Secured("ROLE_ADMIN")
     public void blockStatus(String moderator, String statusId, String comment,String username) {
-        statusRepository.updateState(statusId,"BLOCKED");
-        auditRepository.blockStatus(moderator,statusId,username,comment);
+        AbstractStatus abstractStatus = statusRepository.findStatusById(statusId,false);
+        if (abstractStatus instanceof Status) {
+            Status status = (Status) abstractStatus;
+            statusStateGroupRepository.updateState(status.getGroupId(),status.getStatusId(),"BLOCKED");
+            statusRepository.updateState(statusId,"BLOCKED");
+            auditRepository.blockStatus(moderator,statusId,username,comment);
+        }
     }
 
     public StatusDTO getPendingStatus(String statusId) {
@@ -738,4 +777,5 @@ public class TimelineService {
         }
         return null;
     }
+
 }

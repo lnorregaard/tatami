@@ -1,11 +1,15 @@
 package fr.ippon.tatami.service;
 
 import fr.ippon.tatami.domain.Group;
+import fr.ippon.tatami.domain.Ping;
 import fr.ippon.tatami.domain.User;
 import fr.ippon.tatami.domain.status.Status;
+import fr.ippon.tatami.service.dto.UserFavouriteCountDTO;
+import org.springframework.scheduling.annotation.Async;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Service used to search statuses and users.
@@ -66,10 +70,43 @@ public interface SearchService {
 
     Collection<String> searchUserByPrefix(String domain,
                                           String prefix);
+    Collection<String> searchByUsername(String domain,
+                                          String prefix, int size);
 
     void addGroup(Group group);
 
     void removeGroup(Group group);
 
     Collection<Group> searchGroupByPrefix(String domain, String prefix, int size);
+
+
+    Collection<String> searchUserByUsernameAndFirstnameAndLastname(String domain, String username, String firstname, String lastname, boolean exact, boolean all);
+
+    @Async
+    void addFirstName(String firstname);
+
+    void addFirstnames(Collection<String> firstnames);
+
+    void removeFirstname(String firstname);
+
+    Collection<String> searchFirstName(String firstname, int limit);
+
+    List<UserFavouriteCountDTO> countUsersForUserFavourites(List<String> favourites, User user);
+
+    Map<String, Long> getCountUserFavourites(List<String> favourites, List<String> logins);
+
+    @Async
+    void indexUserFavourite(String favourite, String login);
+
+    void removeUserFavourite(String favourite, String login);
+
+    List<String> getFriendsForUserFavourite(String id, User user, int from, int size);
+
+    List<String> findFriendsForUserFavourite(String id, int from, int size, List<String> logins);
+
+    Collection<String> getUserFavouritesForUser(String username, String domain);
+
+    Ping createElasticSearchPing(Ping ping);
+
+    Collection<String> getUserFavourites(String login);
 }

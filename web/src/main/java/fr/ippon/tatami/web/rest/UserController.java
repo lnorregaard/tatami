@@ -82,13 +82,13 @@ public class UserController {
             produces = "application/json")
     @ResponseBody
     @Timed
-    public Collection<User> searchUsers(@RequestParam("q") String query) {
+    public Collection<UserDTO> searchUsers(@RequestParam("q") String query) {
         String prefix = query.toLowerCase();
         this.log.debug("REST request to find users starting with : {}", prefix);
         User currentUser = authenticationService.getCurrentUser();
         String domain = DomainUtil.getDomainFromLogin(currentUser.getLogin());
         Collection<String> logins = searchService.searchUserByPrefix(domain, prefix);
-        return userService.getUsersByLogin(logins);
+        return userService.buildUserDTOList(userService.getUsersByLogin(logins));
     }
 
     /**
@@ -105,13 +105,16 @@ public class UserController {
             produces = "application/json")
     @ResponseBody
     @Timed
-    public Collection<User> searchUsers(@PathVariable("domain") String domain,
+    public Collection<UserDTO> searchUsers(@PathVariable("domain") String domain,
                                         @RequestParam("q") String query,
-                                        @RequestParam("limit") int limit) {
+                                        @RequestParam(value = "limit",required = false) Integer limit) {
         String prefix = query.toLowerCase();
         this.log.debug("REST request to find users on domain {} starting with : {}", domain, prefix);
-        Collection<String> logins = searchService.searchUserByPrefix(domain, prefix);
-        return userService.getUsersByLogin(logins);
+        if (limit == null || limit <= 0) {
+            limit = 10;
+        }
+        Collection<String> logins = searchService.searchByUsername(domain, prefix, limit);
+        return userService.buildUserDTOList(userService.getUsersByLogin(logins));
     }
 
     /**

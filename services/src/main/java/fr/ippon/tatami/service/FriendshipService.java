@@ -13,7 +13,9 @@ import org.springframework.stereotype.Service;
 import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Manages the user's frienships.
@@ -52,6 +54,9 @@ public class FriendshipService {
     @Inject
     private AuthenticationService authenticationService;
 
+    @Inject
+    private UsernameService usernameService;
+
     /**
      * Follow a user.
      *
@@ -60,21 +65,29 @@ public class FriendshipService {
     public boolean followUser(String usernameToFollow) {
         log.debug("Following user : {}", usernameToFollow);
         User currentUser = authenticationService.getCurrentUser();
-        String domain = DomainUtil.getDomainFromLogin(currentUser.getLogin());
-        String loginToFollow = DomainUtil.getLoginFromUsernameAndDomain(usernameToFollow, domain);
+        String loginToFollow = getLoginFromUsername(usernameToFollow);
+        log.debug("Following login : {}", loginToFollow);
+        if (loginToFollow == null || loginToFollow.equals("")) {
+            log.info("Could not find user "+loginToFollow);
+            return false;
+        }
         User followedUser = userRepository.findUserByLogin(loginToFollow);
         if (followedUser != null && !followedUser.equals(currentUser)) {
             if (Constants.USER_AND_FRIENDS) {
                 String currentUserLogin = currentUser.getLogin();
                 String followedUserLogin = followedUser.getLogin();
+                log.debug("currentUserLogin: {}, followedUserLogin: {}",currentUserLogin,followedUserLogin);
                 boolean alreadySentFriendRequest = friendRequestRepository.getFriendRequest(currentUserLogin, followedUserLogin);
+                log.debug("alreadySentFriendRequest: {}, currentUserLogin: {}, followedUserLogin: {}",alreadySentFriendRequest,currentUserLogin,followedUserLogin);
                 boolean friendSentFriendRequest = friendRequestRepository.getFriendRequest(followedUserLogin, currentUserLogin);
+                log.debug("friendSentFriendRequest: {}, currentUserLogin: {}, followedUserLogin: {}",friendSentFriendRequest,currentUserLogin,followedUserLogin);
                 if (alreadySentFriendRequest) {
                     return false;
                 } else if (friendSentFriendRequest) {
                     followUser(currentUser,followedUser);
                     followUser(followedUser,currentUser);
                     friendRequestRepository.removeFriendRequest(followedUserLogin,currentUserLogin);
+                    friendRequestRepository.removeFriendRequest(currentUserLogin,followedUserLogin);
                     return true;
                 } else {
                     return friendRequestRepository.addFriendRequest(currentUserLogin,followedUserLogin);
@@ -119,7 +132,11 @@ public class FriendshipService {
         String loginToUnfollow = this.getLoginFromUsername(usernameToUnfollow);
         User userToUnfollow = userRepository.findUserByLogin(loginToUnfollow);
         if (Constants.USER_AND_FRIENDS) {
+            friendRequestRepository.removeFriendRequest(loginToUnfollow,currentUser.getLogin());
+            friendRequestRepository.removeFriendRequest(currentUser.getLogin(),loginToUnfollow);
+            unfollowUser(currentUser,userToUnfollow);
             unfollowUser(userToUnfollow,currentUser);
+            return true;
         }
         return unfollowUser(currentUser, userToUnfollow);
     }
@@ -178,6 +195,17 @@ public class FriendshipService {
     public Collection<User> getFollowersForUser(String username) {
         String login = this.getLoginFromUsername(username);
         Collection<String> followersLogins = followerRepository.findFollowersForUser(login);
+        if (Constants.USER_AND_FRIENDS) {
+            followersLogins = friendRequestRepository.findFriendRequests(login);
+            log.debug("Found {} followers", followersLogins.size());
+            Collection<String> friendLogins = friendRepository.findFriendsForUser(login);
+            HashSet<String> friends = new HashSet<>(friendLogins);
+            log.debug("Found {} friends", friends.size());
+            List<String> collected = followersLogins.stream()
+                    .filter(e -> !friends.contains(e))
+                    .collect(Collectors.toList());
+            followersLogins = collected;
+        }
         Collection<User> followers = new ArrayList<User>();
         for (String followerLogin : followersLogins) {
             User follower = userRepository.findUserByLogin(followerLogin);
@@ -231,6 +259,6 @@ public class FriendshipService {
     private String getLoginFromUsername(String username) {
         User currentUser = authenticationService.getCurrentUser();
         String domain = DomainUtil.getDomainFromLogin(currentUser.getLogin());
-        return DomainUtil.getLoginFromUsernameAndDomain(username, domain);
+        return usernameService.getLoginFromUsernameAndDomain(username, domain);
     }
 }

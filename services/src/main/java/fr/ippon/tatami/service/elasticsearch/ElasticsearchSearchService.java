@@ -4,11 +4,18 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import fr.ippon.tatami.domain.Group;
+import fr.ippon.tatami.domain.Ping;
 import fr.ippon.tatami.domain.User;
+import fr.ippon.tatami.domain.Username;
 import fr.ippon.tatami.domain.status.Status;
+import fr.ippon.tatami.repository.FriendRepository;
 import fr.ippon.tatami.repository.GroupRepository;
+import fr.ippon.tatami.repository.UserRepository;
+import fr.ippon.tatami.repository.UsernameRepository;
 import fr.ippon.tatami.service.SearchService;
+import fr.ippon.tatami.service.dto.UserFavouriteCountDTO;
 import org.apache.commons.lang.StringUtils;
+import org.apache.lucene.queryparser.classic.QueryParser;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
 import org.elasticsearch.action.bulk.BulkItemResponse;
@@ -22,9 +29,16 @@ import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
+import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.HasChildQueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.indices.IndexAlreadyExistsException;
 import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.SearchHitField;
 import org.elasticsearch.search.SearchHits;
+import org.elasticsearch.search.aggregations.AggregationBuilder;
+import org.elasticsearch.search.aggregations.AggregationBuilders;
+import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortOrder;
 import org.slf4j.Logger;
@@ -38,10 +52,10 @@ import javax.inject.Inject;
 import java.io.IOException;
 import java.net.URL;
 import java.util.*;
+import java.util.stream.Collectors;
 
-import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
-import static org.elasticsearch.index.query.QueryBuilders.termQuery;
-import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
+import static java.util.stream.Collectors.*;
+import static org.elasticsearch.index.query.QueryBuilders.*;
 
 public class ElasticsearchSearchService implements SearchService {
 
@@ -49,7 +63,7 @@ public class ElasticsearchSearchService implements SearchService {
 
     private static final String ALL_FIELD = "_all";
 
-    private static final List<String> TYPES = Collections.unmodifiableList(Arrays.asList("user", "status", "group"));
+    private static final List<String> TYPES = Collections.unmodifiableList(Arrays.asList("user", "status", "group","firstname", "favourite"));
 
     @Inject
     private ElasticsearchEngine engine;
@@ -59,6 +73,15 @@ public class ElasticsearchSearchService implements SearchService {
 
     @Inject
     private GroupRepository groupRepository;
+
+    @Inject
+    private FriendRepository friendRepository;
+
+    @Inject
+    private UsernameRepository usernameRepository;
+
+    @Inject
+    private UserRepository userRepository;
 
     private Client client() {
         return engine.client();
@@ -125,39 +148,46 @@ public class ElasticsearchSearchService implements SearchService {
      */
     private boolean createIndex() {
         for (String type : TYPES) {
-            try {
-                CreateIndexRequestBuilder createIndex = client().admin().indices().prepareCreate(indexName(type));
-                URL mappingUrl = getClass().getClassLoader().getResource("META-INF/elasticsearch/index/" + type + ".json");
-
-                ObjectMapper jsonMapper = new ObjectMapper();
-                JsonNode indexConfig = jsonMapper.readTree(mappingUrl);
-                JsonNode indexSettings = indexConfig.get("settings");
-                if (indexSettings != null && indexSettings.isObject()) {
-                    createIndex.setSettings(jsonMapper.writeValueAsString(indexSettings));
-                }
-
-                JsonNode mappings = indexConfig.get("mappings");
-                if (mappings != null && mappings.isObject()) {
-                    for (Iterator<Map.Entry<String, JsonNode>> i = mappings.fields(); i.hasNext(); ) {
-                        Map.Entry<String, JsonNode> field = i.next();
-                        ObjectNode mapping = jsonMapper.createObjectNode();
-                        mapping.put(field.getKey(), field.getValue());
-                        createIndex.addMapping(field.getKey(), jsonMapper.writeValueAsString(mapping));
-                    }
-                }
-
-                boolean ack = createIndex.execute().actionGet().isAcknowledged();
-                if (!ack) {
-                    log.error("Cannot create index " + indexName(type));
-                    return false;
-                }
-
-            } catch (IndexAlreadyExistsException e) {
-                log.debug("Index exists" + indexName(type));
-            } catch (IOException e) {
-                log.error("Cannot create index " + indexName(type), e);
+            if (!createSpecificIndex(type)) {
                 return false;
             }
+        }
+        return true;
+    }
+
+    private boolean createSpecificIndex(String type) {
+        try {
+            CreateIndexRequestBuilder createIndex = client().admin().indices().prepareCreate(indexName(type));
+            URL mappingUrl = getClass().getClassLoader().getResource("META-INF/elasticsearch/index/" + type + ".json");
+
+            ObjectMapper jsonMapper = new ObjectMapper();
+            JsonNode indexConfig = jsonMapper.readTree(mappingUrl);
+            JsonNode indexSettings = indexConfig.get("settings");
+            if (indexSettings != null && indexSettings.isObject()) {
+                createIndex.setSettings(jsonMapper.writeValueAsString(indexSettings));
+            }
+
+            JsonNode mappings = indexConfig.get("mappings");
+            if (mappings != null && mappings.isObject()) {
+                for (Iterator<Map.Entry<String, JsonNode>> i = mappings.fields(); i.hasNext(); ) {
+                    Map.Entry<String, JsonNode> field = i.next();
+                    ObjectNode mapping = jsonMapper.createObjectNode();
+                    mapping.put(field.getKey(), field.getValue());
+                    createIndex.addMapping(field.getKey(), jsonMapper.writeValueAsString(mapping));
+                }
+            }
+
+            boolean ack = createIndex.execute().actionGet().isAcknowledged();
+            if (!ack) {
+                log.error("Cannot create index " + indexName(type));
+                return false;
+            }
+
+        } catch (IndexAlreadyExistsException e) {
+            log.debug("Index exists" + indexName(type));
+        } catch (IOException e) {
+            log.error("Cannot create index " + indexName(type), e);
+            return false;
         }
         return true;
     }
@@ -374,6 +404,95 @@ public class ElasticsearchSearchService implements SearchService {
         return groups;
     }
 
+    @Override
+    public Collection<String> searchFirstName(String firstname, int limit) {
+        BoolQueryBuilder boolQuery = new BoolQueryBuilder();
+        int minimumMatch = 0;
+        minimumMatch += addSearchFieldToQuery(boolQuery,"name",firstname,false);
+        boolQuery.minimumShouldMatch(""+minimumMatch);
+
+        SearchRequestBuilder searchRequest = client().prepareSearch(indexName(firstnameMapper.type()))
+                .setTypes(firstnameMapper.type())
+                .setQuery(boolQuery)
+                .addFields()
+                .setFrom(0)
+                .setSize(limit);
+        if (log.isTraceEnabled()) {
+            log.trace("elasticsearch query : " + searchRequest);
+        }
+        SearchResponse searchResponse = searchRequest
+                .execute()
+                .actionGet();
+
+        SearchHits searchHits = searchResponse.getHits();
+        if (searchHits.totalHits() == 0)
+            return Collections.emptyList();
+
+        SearchHit[] hits = searchHits.hits();
+        final List<String> ids = getIdsFromSearch(hits);
+
+        log.debug("search " + firstnameMapper.type() + " by search(\"" + firstname + ") = result : " + ids);
+        return ids;
+    }
+
+
+    @Override
+    public Collection<String> searchUserByUsernameAndFirstnameAndLastname(String domain, String username, String firstname, String lastname, boolean exact, boolean all) {
+        BoolQueryBuilder boolQuery = new BoolQueryBuilder();
+        boolQuery.must(termQuery("domain",domain));
+        int minimumMatch = 1;
+        minimumMatch += addSearchFieldToQuery(boolQuery,"username",username,exact);
+        minimumMatch += addSearchFieldToQuery(boolQuery,"firstName",firstname,exact);
+        minimumMatch += addSearchFieldToQuery(boolQuery,"lastName",lastname,exact);
+        boolQuery.minimumShouldMatch(""+minimumMatch);
+
+        SearchRequestBuilder searchRequest = client().prepareSearch(indexName(userMapper.type()))
+                .setTypes(userMapper.type())
+                .setQuery(boolQuery)
+                .addFields()
+                .setFrom(0);
+        if (!all) {
+            searchRequest.setSize(DEFAULT_TOP_N_SEARCH_USER);
+        }
+        if (exact) {
+            searchRequest.addSort(SortBuilders.fieldSort("username").order(SortOrder.ASC));
+        }
+        if (log.isTraceEnabled()) {
+            log.trace("elasticsearch query : " + searchRequest);
+        }
+        SearchResponse searchResponse = searchRequest
+                .execute()
+                .actionGet();
+
+        SearchHits searchHits = searchResponse.getHits();
+        if (searchHits.totalHits() == 0)
+            return Collections.emptyList();
+
+        SearchHit[] hits = searchHits.hits();
+        final List<String> ids = getIdsFromSearch(hits);
+
+        log.debug("search " + userMapper.type() + " by search(\"" + domain + "\", \"" + username + ", \"" + firstname + ", \"" + lastname + ", \") = result : " + ids);
+        return ids;
+    }
+
+    private List<String> getIdsFromSearch(SearchHit[] hits) {
+        return Arrays.stream(hits)
+                .map(hit -> hit.getId())
+                .collect(Collectors.toList());
+    }
+
+    private int addSearchFieldToQuery(BoolQueryBuilder boolQuery, String field, String value, boolean exact) {
+        if (value != null) {
+            if (exact) {
+                boolQuery.should(matchPhraseQuery(field,value));
+            } else {
+                boolQuery.should(matchPhrasePrefixQuery(field,value).cutoffFrequency(0.001F));
+            }
+            return 1;
+        }
+        return 0;
+    }
+
     /**
      * Indexes an object to elasticsearch.
      * This method is asynchronous.
@@ -391,18 +510,10 @@ public class ElasticsearchSearchService implements SearchService {
             final XContentBuilder source = mapper.toJson(object);
 
             log.debug("Ready to index the {} id {} into Elasticsearch: {}", type, id, stringify(source));
-            client().prepareIndex(indexName(type), type, id).setSource(source).execute(new ActionListener<IndexResponse>() {
-                @Override
-                public void onResponse(IndexResponse response) {
-                    log.debug(type + " id " + id + " was " + (response.getVersion() == 1 ? "indexed" : "updated") + " into Elasticsearch");
-                }
-
-                @Override
-                public void onFailure(Throwable e) {
-                    log.error("The " + type + " id " + id + " wasn't indexed : " + stringify(source), e);
-                }
-            });
-
+            client()
+                    .prepareIndex(indexName(type), type, id)
+                    .setSource(source)
+                    .execute(getESActionListener(type, id, source));
         } catch (IOException e) {
             log.error("The " + type + " id " + id + " wasn't indexed", e);
         }
@@ -471,7 +582,11 @@ public class ElasticsearchSearchService implements SearchService {
 
         log.debug("Ready to delete the {} of id {} from Elasticsearch: ", type, id);
 
-        client().prepareDelete(indexName(type), type, id).execute(new ActionListener<DeleteResponse>() {
+        client().prepareDelete(indexName(type), type, id).execute(getDeleteListener(id, type));
+    }
+
+    private ActionListener<DeleteResponse> getDeleteListener(final String id, final String type) {
+        return new ActionListener<DeleteResponse>() {
             @Override
             public void onResponse(DeleteResponse deleteResponse) {
                 if (log.isDebugEnabled()) {
@@ -487,9 +602,42 @@ public class ElasticsearchSearchService implements SearchService {
             public void onFailure(Throwable e) {
                 log.error("The " + type + " of id " + id + " wasn't deleted from Elasticsearch.", e);
             }
-        });
+        };
     }
 
+    public Collection<String> searchByUsername(String domain, String prefix, int size) {
+
+        BoolQueryBuilder boolQuery = new BoolQueryBuilder();
+        boolQuery.must(termQuery("domain",domain));
+        boolQuery.should(matchQuery("username",prefix));
+        boolQuery.minimumShouldMatch("2");
+
+        SearchRequestBuilder searchRequest = client().prepareSearch(indexName(userMapper.type()))
+                .setTypes(userMapper.type())
+                .setQuery(boolQuery)
+                .addFields()
+                .setFrom(0)
+                .setSize(size);
+
+        if (log.isTraceEnabled()) {
+            log.trace("elasticsearch query : " + searchRequest);
+        }
+        SearchResponse searchResponse = searchRequest
+                .execute()
+                .actionGet();
+
+        SearchHits searchHits = searchResponse.getHits();
+        if (searchHits.totalHits() == 0)
+            return Collections.emptyList();
+
+        SearchHit[] hits = searchHits.hits();
+        final List<String> ids = getIdsFromSearch(hits);
+
+        log.debug("search " + userMapper.type() + " by prefix(\"" + domain + "\", \"" + prefix + "\") = result : " + ids);
+        return ids;
+
+
+    }
     private Collection<String> searchByPrefix(String domain, String prefix, int size, ElasticsearchMapper<?> mapper) {
 
             SearchRequestBuilder searchRequest = client().prepareSearch(indexName(mapper.type()))
@@ -513,10 +661,7 @@ public class ElasticsearchSearchService implements SearchService {
                 return Collections.emptyList();
 
             SearchHit[] hits = searchHits.hits();
-            final List<String> ids = new ArrayList<String>(hits.length);
-            for (SearchHit hit : hits) {
-                ids.add(hit.getId());
-            }
+            final List<String> ids = getIdsFromSearch(hits);
 
             log.debug("search " + mapper.type() + " by prefix(\"" + domain + "\", \"" + prefix + "\") = result : " + ids);
             return ids;
@@ -571,4 +716,318 @@ public class ElasticsearchSearchService implements SearchService {
          */
         XContentBuilder toJson(T o) throws IOException;
     }
+
+    private final ElasticsearchMapper<String> firstnameMapper = new ElasticsearchMapper<String>() {
+        @Override
+        public String id(String firstname) {
+            return firstname;
+        }
+
+        @Override
+        public String type() {
+            return "firstname";
+        }
+
+        @Override
+        public String prefixSearchSortField() {
+            return "name";
+        }
+
+        @Override
+        public XContentBuilder toJson(String firstname) throws IOException {
+            return XContentFactory.jsonBuilder()
+                    .startObject()
+                    .field("name", firstname)
+                    .endObject();
+        }
+    };
+    @Override
+    @Async
+    public void addFirstName(final String firstname) {
+        Assert.notNull(firstname, "user cannot be null");
+        index(firstname, firstnameMapper);
+    }
+
+    @Override
+    @Async
+    public void addFirstnames(Collection<String> firstnames) {
+        if (!client().admin().indices().prepareExists(indexName("firstname")).execute().actionGet().isExists()) {
+            log.info("Index {} does not exists in Elasticsearch, creating it!", indexName("firstname"));
+            createSpecificIndex("firstname");
+        } else {
+            boolean ack = client().admin().indices().prepareDelete(indexName("firstname")).execute().actionGet().isAcknowledged();
+            if (!ack) {
+                log.error("Elasticsearch Index wasn't deleted !");
+                return;
+            } else {
+                createSpecificIndex("firstname");
+            }
+        }
+        indexAll(firstnames, firstnameMapper);
+    }
+
+    @Override
+    public void removeFirstname(String firstname) {
+        delete(firstname, firstnameMapper);
+    }
+
+
+    @Override
+    public List<UserFavouriteCountDTO> countUsersForUserFavourites(List<String> favourites, User user) {
+        List<String> logins = new ArrayList<>();
+        if (user != null) {
+            logins = friendRepository.findFriendsForUser(user.getLogin());
+        }
+
+        final Map<String,Long> total = getCountUserFavourites(favourites, null);
+        final Map<String, Long> friendTotal = getFriendTotal(favourites, logins);
+        return total.keySet()
+                .stream()
+                .map(id -> new UserFavouriteCountDTO(id,total.get(id),friendTotal.get(id)))
+                .collect(toList());
+    }
+
+    private Map<String, Long> getFriendTotal(List<String> favourites, List<String> logins) {
+        Map<String, Long> friendTotal = new HashMap<>();
+        if (logins != null && !logins.isEmpty()) {
+            friendTotal = getCountUserFavourites(favourites, logins);
+        }
+        return friendTotal;
+    }
+
+    @Override
+    public Map<String, Long> getCountUserFavourites(List<String> favourites, List<String> logins) {
+        AggregationBuilder aggregation =
+                AggregationBuilders
+                        .terms("aggregated").field("_parent");
+        BoolQueryBuilder boolQuery = new BoolQueryBuilder();
+        boolQuery.must(termsQuery("favourite",favourites));
+        if (logins != null) {
+            boolQuery.must(termsQuery("login", logins));
+        }
+        SearchRequestBuilder searchRequest = client().prepareSearch()
+                .setQuery(boolQuery)
+                .addAggregation(aggregation);
+        if (log.isTraceEnabled()) {
+            log.trace("elasticsearch query : " + searchRequest);
+        }
+        SearchResponse sr = searchRequest.execute().actionGet();
+
+        sr.getAggregations().get("aggregated");
+
+        Terms result = sr.getAggregations().get("aggregated");
+        Map<String,Long> favouriteCount = new HashMap<>();
+        if (result != null) {
+            favourites.stream().forEach(favourite ->
+                    addCountForFavouriteConsumer(favourite, result, favouriteCount));
+        }
+        return favouriteCount;
+    }
+
+    private void addCountForFavouriteConsumer(String favourite, Terms result, Map<String, Long> favouriteCount) {
+        if (result.getBucketByKey(favourite) != null) {
+            favouriteCount.put(favourite,result.getBucketByKey(favourite).getDocCount());
+        }
+    }
+
+    /**
+     * Indexes a user to favourite.
+     * This method is asynchronous.
+     *
+     * @param favourite that needs to be indexed.
+     * @param login that needs to be indexed.
+     */
+    @Override
+    @Async
+    public void indexUserFavourite(String favourite, String login) {
+        Assert.notNull(favourite);
+        Assert.notNull(login);
+
+        String type = "favourite";
+        String index = indexName(type);
+        String id = favourite;
+        try {
+            addFavouriteToIndex(favourite, type, index, id);
+            addUserFavouriteToIndex(favourite, login, index);
+        } catch (IOException e) {
+            log.error("The " + type + " id " + id + " wasn't indexed", e);
+        }
+    }
+
+    @Override
+    public void removeUserFavourite(String favourite, String login) {
+        String type = "user";
+        String index = indexName("favourite");
+        String id = login+"-"+favourite;
+
+        log.debug("Ready to delete the {} of id {} and parent {} from Elasticsearch: ", type, id, favourite);
+
+        client().prepareDelete(index, type, id).setParent(favourite).execute(getDeleteListener(id, type));
+
+    }
+
+    @Override
+    public List<String> getFriendsForUserFavourite(String id, User user, int from, int size) {
+        List<String> logins = new ArrayList<>();
+        if (user != null) {
+            logins = friendRepository.findFriendsForUser(user.getLogin());
+        }
+
+        return findFriendsForUserFavourite(id, from, size, logins);
+    }
+
+    @Override
+    public List<String> findFriendsForUserFavourite(String id, int from, int size, List<String> logins) {
+        BoolQueryBuilder boolQuery = new BoolQueryBuilder();
+        boolQuery.must(termsQuery("login",logins));
+        boolQuery.must(termQuery("favourite",id));
+
+        SearchRequestBuilder searchRequest = client().prepareSearch(indexName("favourite"))
+                .setTypes("user")
+                .setQuery(boolQuery)
+                .addFields("login")
+                .setFrom(from);
+        if (size > 0 && size < logins.size()) {
+            searchRequest.setSize(size+1);
+        } else {
+            searchRequest.setSize(logins.size());
+        }
+        searchRequest.addSort(SortBuilders.fieldSort("login").order(SortOrder.DESC));
+        if (log.isTraceEnabled()) {
+            log.trace("elasticsearch query : " + searchRequest);
+        }
+        SearchResponse searchResponse = searchRequest
+                .execute()
+                .actionGet();
+
+        SearchHits searchHits = searchResponse.getHits();
+        if (searchHits.totalHits() == 0)
+            return Collections.emptyList();
+
+        SearchHit[] hits = searchHits.hits();
+        List<String> ids = getTypesFromHits(hits, "login");
+
+        log.debug("search favourites " + " by search(\"" + id + "\", \"" + logins + "\") = result : " + ids);
+        return ids;
+    }
+
+    @Override
+    public Collection<String> getUserFavouritesForUser(String username, String domain) {
+        List<Username> usernames = usernameRepository.findUsernamesByDomainAndUsername(domain,username);
+        if (usernames != null && !usernames.isEmpty()) {
+            String login = usernames.get(0).getLogin();
+            User user = userRepository.findUserByLogin(login);
+            if (user.getPri() != null && user.getPri()) {
+                return new ArrayList<>();
+            }
+            return getUserFavourites(login);
+        }
+        return new ArrayList<>();
+    }
+
+    @Override
+    public Ping createElasticSearchPing(Ping ping) {
+        long start = System.currentTimeMillis();
+        if (ping == null) {
+            ping = new Ping();
+        }
+        SearchRequestBuilder searchRequest = client().prepareSearch(indexName(userMapper.type()))
+                .setTypes(userMapper.type())
+                .addFields()
+                .setFrom(0)
+                .setSize(1);
+
+        SearchResponse searchResponse = searchRequest
+                .execute()
+                .actionGet();
+
+        SearchHits searchHits = searchResponse.getHits();
+        ping.setElasticSearch(System.currentTimeMillis()-start);
+        return ping;
+    }
+
+    @Override
+    public Collection<String> getUserFavourites(String login) {
+        SearchRequestBuilder searchRequestBuilder = client().prepareSearch(indexName("favourite"));
+
+        //Query 1. Search on all books that have the term 'book' in the title and return the 'authors'.
+        HasChildQueryBuilder favouriteHasChildQuery = QueryBuilders.hasChildQuery("user", QueryBuilders.matchQuery("login", login));
+        SearchRequestBuilder searchRequest = searchRequestBuilder.setQuery(favouriteHasChildQuery);
+        if (log.isTraceEnabled()) {
+            log.trace("elasticsearch query : " + searchRequest);
+        }
+        SearchResponse searchResponse = searchRequest.execute().actionGet();
+
+        SearchHits searchHits = searchResponse.getHits();
+        if (searchHits.totalHits() == 0)
+            return Collections.emptyList();
+
+        SearchHit[] hits = searchHits.hits();
+        List<String> ids = getTypesFromHits(hits, "id");
+        log.debug("search favourites " + " for user(\"" + login + "\") = result : " + ids);
+        return ids;
+    }
+
+    private List<String> getTypesFromHits(SearchHit[] hits, String type) {
+        if (hits == null || hits.length == 0) {
+            return new ArrayList<>();
+        }
+        return Arrays.stream(hits)
+                    .map(hit -> getStringValueFromHit(type, hit))
+                    .filter(s -> s != null)
+                    .collect(Collectors.toList());
+    }
+
+    private String getStringValueFromHit(String type, SearchHit hit) {
+        if (type.equals("id")) {
+            return hit.getId();
+        }
+        SearchHitField hitField = hit.getFields().get(type);
+        if (hitField != null) {
+            return hitField.getValue().toString();
+        } else {
+            return null;
+        }
+    }
+
+
+    private void addUserFavouriteToIndex(String favourite, String login, String index) throws IOException {
+        String id = login+"-"+favourite;
+        final String type = "user";
+        XContentBuilder userFavouriteJson = XContentFactory.jsonBuilder()
+                .startObject()
+                .field("id", id)
+                .field("login", login)
+                .field("favourite", favourite)
+                .endObject();
+
+        log.debug("Ready to index the {} id {} into Elasticsearch: {}", type, id, stringify(userFavouriteJson));
+        client().prepareIndex(index, type, id).setSource(userFavouriteJson).setParent(favourite).execute(getESActionListener(type, id, userFavouriteJson));
+    }
+
+    private void addFavouriteToIndex(final String favourite, final String type, final String index, final String id) throws IOException {
+        final XContentBuilder favouriteJson = XContentFactory.jsonBuilder()
+                .startObject()
+                .field("id", favourite)
+                .endObject();
+
+        log.debug("Ready to index the {} id {} into Elasticsearch: {}", type, id, stringify(favouriteJson));
+        client().prepareIndex(index, type, id).setSource(favouriteJson).execute(getESActionListener(type, id, favouriteJson));
+    }
+
+
+    private ActionListener<IndexResponse> getESActionListener(final String type, final String id, final XContentBuilder favouriteJson) {
+        return new ActionListener<IndexResponse>() {
+            @Override
+            public void onResponse(IndexResponse response) {
+                log.debug(type + " id " + id + " was " + (response.getVersion() == 1 ? "indexed" : "updated") + " into Elasticsearch");
+            }
+
+            @Override
+            public void onFailure(Throwable e) {
+                log.error("The " + type + " id " + id + " wasn't indexed : " + stringify(favouriteJson), e);
+            }
+        };
+    }
+
 }

@@ -3,6 +3,7 @@ package fr.ippon.tatami.web.rest;
 import com.yammer.metrics.annotation.Timed;
 import fr.ippon.tatami.security.AuthenticationService;
 import fr.ippon.tatami.service.TrendService;
+import fr.ippon.tatami.service.UsernameService;
 import fr.ippon.tatami.service.util.DomainUtil;
 import fr.ippon.tatami.web.rest.dto.Trend;
 import org.slf4j.Logger;
@@ -32,6 +33,9 @@ public class TrendController {
     @Inject
     private TrendService trendService;
 
+    @Inject
+    private UsernameService usernameService;
+
     /**
      * GET  /trends -> get the tag trends
      */
@@ -58,6 +62,6 @@ public class TrendController {
     public List<Trend> getUserTrends(@RequestParam("screen_name") String username) {
         String currentLogin = authenticationService.getCurrentUser().getLogin();
         String domain = DomainUtil.getDomainFromLogin(currentLogin);
-        return trendService.getTrendsForUser(DomainUtil.getLoginFromUsernameAndDomain(username, domain));
+        return trendService.getTrendsForUser(usernameService.getLoginFromUsernameAndDomain(username, domain));
     }
 }

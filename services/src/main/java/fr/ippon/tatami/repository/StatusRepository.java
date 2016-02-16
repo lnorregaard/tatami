@@ -45,7 +45,7 @@ public interface StatusRepository {
      */
     AbstractStatus findStatusById(String statusId);
 
-    List<String> findStatusByStates(String types, Integer count);
+    List<String> findStatusByStates(String types, String groupId, Integer count);
 
     AbstractStatus findStatusById(String statusId, boolean excludeStates);
 

@@ -148,7 +148,7 @@ public class GroupController {
 
 
 
-    @RequestMapping(value = "/rest/groups/{groupId}/timeline",
+    @RequestMapping(value = {"/rest/groups/{groupId}/timeline","/groups/{groupId}/timeline"},
             method = RequestMethod.GET,
             produces = "application/json")
     @ResponseBody
@@ -214,7 +214,8 @@ public class GroupController {
     @Timed
     public Group createGroup(HttpServletResponse response, @RequestBody Group group) {
         if (group.getName() != null && !group.getName().equals("")) {
-            groupService.createGroup(group.getName(), group.getDescription(), group.isPublicGroup());
+            UUID groupId = groupService.createGroup(group.getName(), group.getDescription(), group.isPublicGroup());
+            group.setGroupId(groupId);
         } else {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }

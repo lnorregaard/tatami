@@ -495,6 +495,7 @@ public class CassandraConfiguration {
                 "    lastname varchar,\n" +
                 "    domain varchar,\n" +
                 "    activated boolean,\n" +
+                "    private boolean,\n" +
                 "    avatar varchar,\n" +
                 "    jobTitle varchar,\n" +
                 "    activation_key varchar,\n" +
@@ -508,6 +509,13 @@ public class CassandraConfiguration {
                 "    attachmentsSize bigint,\n" +
                 "    properties map<text,text>,\n" +
                 "    PRIMARY KEY(login)\n" +
+                ");");
+        session.execute("CREATE TABLE IF NOT EXISTS "+keyspace+".username (\n" +
+                "    username varchar,\n" +
+                "    domain varchar,\n" +
+                "    created timeuuid,\n" +
+                "    login varchar,\n" +
+                "    PRIMARY KEY ((username,domain),created)\n" +
                 ");");
         session.execute("CREATE TABLE IF NOT EXISTS "+keyspace+".status (\n" +
                 "    statusId timeuuid,\n" +
@@ -531,6 +539,8 @@ public class CassandraConfiguration {
                 "    state varchar,\n" +
                 "    PRIMARY KEY(statusId)\n" +
                 ");\n");
+        session.execute("CREATE INDEX IF NOT EXISTS status_state ON "+keyspace+".status (state);\n");
+        session.execute("CREATE INDEX IF NOT EXISTS status_type ON "+keyspace+".status (type);\n");
         session.execute("CREATE TABLE IF NOT EXISTS "+keyspace+".timeline (\n" +
                 "    key varchar,\n" +
                 "    status timeuuid,\n" +
@@ -743,6 +753,17 @@ public class CassandraConfiguration {
                 "    login varchar,\n" +
                 "    friendLogin varchar,\n" +
                 "    PRIMARY KEY(login,friendLogin)");
+        session.execute("CREATE INDEX IF NOT EXISTS friendlogin_friendrequests ON friendrequests (friendLogin);\n");
+
+        session.execute("CREATE TABLE IF NOT EXISTS statusstategroupline (\n" +
+                "    groupId varchar,\n" +
+                "    state varchar,\n" +
+                "    statusId timeuuid,\n" +
+                "    PRIMARY KEY((groupId,state),statusId)\n" +
+                ")\n" +
+                "WITH CLUSTERING ORDER BY (statusId ASC);\n");
+
+
 
 
     }

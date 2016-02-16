@@ -1,0 +1,54 @@
+{
+    "settings": {
+        "analysis": {
+            "analyzer": {
+                "default": {
+                    "type": "custom",
+                    "tokenizer": "standard",
+                    "filter": [ "lowercase", "stop_danish", "dk_stemmer", "asciifolding"]
+                },
+                "lowercase": {
+                    "type": "custom",
+                    "tokenizer": "keyword",
+                    "filter": [ "lowercase" ]
+                },
+                "prefixIndex" : {
+                    "type" : "custom",
+                    "tokenizer" : "standard",
+                    "filter" : [ "standard", "lowercase", "asciifolding", "edgeNGram" ]
+                },
+                "prefixSearch" : {
+                    "type" : "custom",
+                    "tokenizer" : "standard",
+                    "filter" : [ "standard", "lowercase", "asciifolding"]
+                }
+            },
+            "filter": {
+                "stop_danish": {
+                    "type": "stop",
+                    "stopwords": [ "_danish_" ]
+                },
+                "dk_stemmer": {
+                    "type": "stemmer",
+                    "name": "danish"
+                },
+                "edgeNGram" : {
+                    "type" : "edgeNGram",
+                    "min_gram" : 1,
+                    "max_gram" : 30
+                }
+            }
+        }
+    },
+    "mappings": {
+        "firstname": {
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "analyzer": "lowercase",
+                    "include_in_all": false
+                }
+            }
+        }
+    }
+}

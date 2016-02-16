@@ -42,7 +42,7 @@ public class FriendshipController {
     @ResponseBody
     public Collection<UserDTO> getFriends(@PathVariable String username, HttpServletResponse response) {
         User user = userService.getUserByUsername(username);
-        if (user == null) {
+        if (user == null || (user.getPri() != null && user.getPri())) {
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
             return null;
         }

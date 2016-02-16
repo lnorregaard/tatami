@@ -1,5 +1,6 @@
 package fr.ippon.tatami.repository;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -14,4 +15,8 @@ public interface FriendRequestRepository {
     void removeFriendRequest(String login, String friendLogin);
 
     boolean addFriendRequest(String currentUserLogin, String followedUserLogin);
+
+    Collection<String> findFriendRequests(String username);
+
+    Collection<String> findLoginsFriendRequests(String login);
 }

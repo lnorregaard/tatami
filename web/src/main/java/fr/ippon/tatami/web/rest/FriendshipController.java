@@ -42,13 +42,21 @@ public class FriendshipController {
     @ResponseBody
     public Collection<UserDTO> getFriends(@PathVariable String username, HttpServletResponse response) {
         User user = userService.getUserByUsername(username);
-        if (user == null || (user.getPri() != null && user.getPri())) {
+
+        if (user == null || isUserPrivate(user,authenticationService.getCurrentUser())) {
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
             return null;
         }
         Collection<User> friends = friendshipService.getFriendsForUser(username);
 
         return userService.buildUserDTOList(friends);
+    }
+
+    private boolean isUserPrivate(User user, User currentUser) {
+        if (currentUser != null && currentUser.getLogin().equals(user.getLogin())) {
+            return false;
+        }
+        return user.getPri() != null && user.getPri();
     }
 
     @RequestMapping(value = "/rest/users/{username}/followers",

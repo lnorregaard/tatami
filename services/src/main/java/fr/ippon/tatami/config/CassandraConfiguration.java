@@ -763,9 +763,11 @@ public class CassandraConfiguration {
                 ")\n" +
                 "WITH CLUSTERING ORDER BY (statusId ASC);\n");
 
-
-
-
+        session.execute("CREATE TABLE IF NOT EXISTS statuscounter (\n" +
+                "    statusId timeuuid,\n" +
+                "    LIKE_COUNTER counter,\n" +
+                "    PRIMARY KEY(statusId)\n" +
+                ");\n");
     }
 
     @Bean

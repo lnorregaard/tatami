@@ -309,3 +309,9 @@ CREATE TABLE IF NOT EXISTS statusstategroupline (
     PRIMARY KEY((groupId,state),statusId)
 )
 WITH CLUSTERING ORDER BY (statusId ASC);
+
+CREATE TABLE IF NOT EXISTS statuscounter (
+    statusId timeuuid,
+    LIKE_COUNTER counter,
+    PRIMARY KEY(statusId)
+);

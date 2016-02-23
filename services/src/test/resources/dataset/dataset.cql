@@ -309,6 +309,12 @@ CREATE TABLE IF NOT EXISTS statusstategroupline (
 )
 WITH CLUSTERING ORDER BY (statusId ASC);
 
+CREATE TABLE IF NOT EXISTS statuscounter (
+    statusId timeuuid,
+    LIKE_COUNTER counter,
+    PRIMARY KEY(statusId)
+);
+
 
 
 INSERT INTO user (login , avatar , firstname , lastname , username , domain ) VALUES('jdubois@ippon.fr', 'avatar', 'Julien','Dubois','jdubois','ippon.fr');

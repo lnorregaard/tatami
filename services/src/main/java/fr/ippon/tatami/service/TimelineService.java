@@ -44,6 +44,9 @@ public class TimelineService {
     private CounterRepository counterRepository;
 
     @Inject
+    private StatusCounterRepository statusCounterRepository;
+
+    @Inject
     private TimelineRepository timelineRepository;
 
     @Inject
@@ -222,6 +225,7 @@ public class TimelineService {
                     statusDTO.setStatusDate(abstractStatus.getStatusDate());
                     statusDTO.setGeoLocalization(abstractStatus.getGeoLocalization());
                     statusDTO.setActivated(statusUser.getActivated());
+                    statusDTO.setFavoriteCount(statusCounterRepository.getLikeCounter(abstractStatus.getStatusId()));
                     StatusType type = abstractStatus.getType();
                     if (type == null) {
                         statusDTO.setType(StatusType.STATUS);
@@ -532,6 +536,7 @@ public class TimelineService {
                 counterRepository.decrementStatusCounter(currentUser.getLogin());
                 searchService.removeStatus(status);
             }
+            statusCounterRepository.deleteCounters(status.getStatusId());
         } else if (abstractStatus.getType().equals(StatusType.ANNOUNCEMENT)) {
             User currentUser = authenticationService.getCurrentUser();
             if (abstractStatus.getLogin().equals(currentUser.getLogin())) {
@@ -587,6 +592,7 @@ public class TimelineService {
         AbstractStatus abstractStatus = statusRepository.findStatusById(statusId);
         if (abstractStatus.getType().equals(StatusType.STATUS)) {
             String login = authenticationService.getCurrentUser().getLogin();
+            statusCounterRepository.incrementLikeCounter(abstractStatus.getStatusId());
             favoritelineRepository.addStatusToFavoriteline(login, statusId);
         } else {
             log.warn("Cannot favorite this type of status: " + abstractStatus);
@@ -598,6 +604,7 @@ public class TimelineService {
         AbstractStatus abstractStatus = statusRepository.findStatusById(statusId);
         if (abstractStatus.getType().equals(StatusType.STATUS)) {
             User currentUser = authenticationService.getCurrentUser();
+            statusCounterRepository.decrementLikeCounter(abstractStatus.getStatusId());
             favoritelineRepository.removeStatusFromFavoriteline(currentUser.getLogin(), statusId);
         } else {
             log.warn("Cannot un-favorite this type of status: " + abstractStatus);
@@ -740,6 +747,7 @@ public class TimelineService {
                 group = groupService.getGroupById(status.getDomain(), UUID.fromString(status.getGroupId()));
             }
             statusUpdateService.postPublicStatus(group, status);
+            statusCounterRepository.createLikeCounter(status.getStatusId());
             timelineRepository.addStatusToTimeline(status.getLogin(),statusId);
         }
     }

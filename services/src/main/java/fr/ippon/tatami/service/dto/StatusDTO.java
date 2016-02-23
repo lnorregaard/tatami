@@ -36,6 +36,7 @@ public class StatusDTO implements Serializable {
 
     private String statusId;
 
+
     /**
      * The timelineId is used on the client side :
      * - When this is an original status, timelineId = statusId
@@ -88,6 +89,7 @@ public class StatusDTO implements Serializable {
     private String avatar;
 
     private boolean favorite;
+    private long favoriteCount;
 
     private boolean detailsAvailable;
 
@@ -311,6 +313,14 @@ public class StatusDTO implements Serializable {
 
     public void setGeoLocalization(String geoLocalization) {
         this.geoLocalization = geoLocalization;
+    }
+
+    public long getFavoriteCount() {
+        return favoriteCount;
+    }
+
+    public void setFavoriteCount(long favoriteCount) {
+        this.favoriteCount = favoriteCount;
     }
 
     @Override

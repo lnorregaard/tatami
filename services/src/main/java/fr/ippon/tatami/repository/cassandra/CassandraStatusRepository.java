@@ -12,6 +12,7 @@ import fr.ippon.tatami.config.Constants;
 import fr.ippon.tatami.domain.Attachment;
 import fr.ippon.tatami.domain.Group;
 import fr.ippon.tatami.repository.*;
+import fr.ippon.tatami.service.UserService;
 import fr.ippon.tatami.service.util.DomainUtil;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -77,6 +78,9 @@ public class CassandraStatusRepository implements StatusRepository {
     //Cassandra Template
 
     @Inject
+    private UserService userService;
+
+    @Inject
     private DiscussionRepository discussionRepository;
 
     @Inject
@@ -123,7 +127,8 @@ public class CassandraStatusRepository implements StatusRepository {
                                String discussionId,
                                String replyTo,
                                String replyToUsername,
-                               String geoLocalization)
+                               String geoLocalization,
+                               boolean admin)
             throws ConstraintViolationException {
 
         Status status = new Status();
@@ -141,7 +146,7 @@ public class CassandraStatusRepository implements StatusRepository {
         }
 
         status.setContent(content);
-        if (Constants.MODERATOR_STATUS) {
+        if (!admin && Constants.MODERATOR_STATUS) {
             status.setState("PENDING");
             statusStateGroupRepository.createStatusStateGroup(status.getStatusId(),"PENDING",status.getGroupId());
         }

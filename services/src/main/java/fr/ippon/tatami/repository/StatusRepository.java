@@ -22,7 +22,7 @@ public interface StatusRepository {
                         String discussionId,
                         String replyTo,
                         String replyToUsername,
-                        String geoLocalization) throws ConstraintViolationException;
+                        String geoLocalization, boolean admin) throws ConstraintViolationException;
 
     Share createShare(String login,
                       String originalStatusId);

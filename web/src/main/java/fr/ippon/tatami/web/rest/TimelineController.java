@@ -310,7 +310,7 @@ public class TimelineController {
                         "group ID = {}", currentUser.getLogin(), status.getGroupId());
                 response.setStatus(HttpServletResponse.SC_FORBIDDEN);
             } else {
-                return statusUpdateService.postStatusToGroup(escapedContent, group, attachmentIds, status.getGeoLocalization());
+                return statusUpdateService.postStatusToGroup(escapedContent, group, attachmentIds, status.getUsername(),status.getGeoLocalization());
             }
         }
         return null;

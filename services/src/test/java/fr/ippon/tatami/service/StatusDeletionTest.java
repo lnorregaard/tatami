@@ -140,7 +140,7 @@ public class StatusDeletionTest extends AbstractCassandraTatamiTest {
 
         for (int i = 0; i < 12; i++) {
             String content = "temporary status " + i;
-            statusUpdateService.postStatusToGroup(content, group, new ArrayList<String>(), "1,2");
+            statusUpdateService.postStatusToGroup(content, group, new ArrayList<String>(), null, "1,2");
         }
 
         groupStatuses = timelineService.getGroupline(group.getGroupId().toString(), 10, null, null);

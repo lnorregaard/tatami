@@ -3,22 +3,15 @@ package fr.ippon.tatami.service;
 import fr.ippon.tatami.AbstractCassandraTatamiTest;
 import fr.ippon.tatami.config.Constants;
 import fr.ippon.tatami.domain.Group;
-import fr.ippon.tatami.domain.User;
 import fr.ippon.tatami.domain.status.AbstractStatus;
 import fr.ippon.tatami.domain.status.Status;
 import fr.ippon.tatami.repository.GroupRepository;
 import fr.ippon.tatami.repository.StatusRepository;
 import fr.ippon.tatami.repository.StatusStateGroupRepository;
-import fr.ippon.tatami.security.AuthenticationService;
-import fr.ippon.tatami.service.dto.StatusDTO;
-import org.hamcrest.Matchers;
 import org.junit.*;
-import org.springframework.test.util.ReflectionTestUtils;
 
-import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
@@ -27,7 +20,6 @@ import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 public class ModeratorTimelineServiceTest extends AbstractCassandraTatamiTest {
 
@@ -59,7 +51,7 @@ public class ModeratorTimelineServiceTest extends AbstractCassandraTatamiTest {
         String content = "content";
 
         status = statusRepository.createStatus(login, false, group, new ArrayList<>(),
-                content, "", "", "", "48.54654, 3.87987987");
+                content, "", "", "", "48.54654, 3.87987987", false);
         log.info(status.getStatusId().toString());
         assertThat(status.getState(), is("PENDING"));
     }

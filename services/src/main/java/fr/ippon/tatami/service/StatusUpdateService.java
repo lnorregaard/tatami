@@ -112,8 +112,12 @@ public class StatusUpdateService {
         createStatus(content, statusPrivate, null, "", "", "", attachmentIds);
     }
 
-    public Status postStatusToGroup(String content, Group group, Collection<String> attachmentIds, String geoLocalization) {
-        return createStatus(content, false, group, "", "", "", attachmentIds, null, geoLocalization);
+    public Status postStatusToGroup(String content, Group group, Collection<String> attachmentIds, String username, String geoLocalization) {
+        User user = null;
+        if (username != null && userService.isAdmin(authenticationService.getCurrentUser().getLogin())) {
+            user = userService.getUserByUsername(username);
+        }
+        return createStatus(content, false, group, "", "", "", attachmentIds, user, geoLocalization);
     }
 
     public void postStatusAsUser(String content, User user) {
@@ -227,6 +231,7 @@ public class StatusUpdateService {
             startTime = Calendar.getInstance().getTimeInMillis();
             log.debug("Creating new status : {}", content);
         }
+
         String currentLogin;
         if (user == null) {
             currentLogin = authenticationService.getCurrentUser().getLogin();
@@ -244,7 +249,7 @@ public class StatusUpdateService {
                         discussionId,
                         replyTo,
                         replyToUsername,
-                        geoLocalization);
+                        geoLocalization, userService.isAdmin(currentLogin));
 
         if (attachmentIds != null && attachmentIds.size() > 0) {
             for (String attachmentId : attachmentIds) {

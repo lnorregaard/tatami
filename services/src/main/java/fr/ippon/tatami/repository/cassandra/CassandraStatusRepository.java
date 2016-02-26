@@ -149,6 +149,8 @@ public class CassandraStatusRepository implements StatusRepository {
         if (!admin && Constants.MODERATOR_STATUS) {
             status.setState("PENDING");
             statusStateGroupRepository.createStatusStateGroup(status.getStatusId(),"PENDING",status.getGroupId());
+        } else if (admin && Constants.MODERATOR_STATUS) {
+            statusStateGroupRepository.createStatusStateGroup(status.getStatusId(),"APPROVED",status.getGroupId());
         }
 
         Set<ConstraintViolation<Status>> constraintViolations = validator.validate(status);

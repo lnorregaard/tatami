@@ -51,7 +51,7 @@ public class TimelineServiceTest extends AbstractCassandraTatamiTest {
         String login = "userWithStatus@ippon.fr";
         String username = "userWithStatus";
         mockAuthenticationOnTimelineServiceWithACurrentUser(login);
-        Collection<StatusDTO> status = timelineService.getTimeline(10, null, null);
+        Collection<StatusDTO> status = timelineService.getTimeline(10, null, null, "STATUS");
         assertThatLineForUserWithStatusIsOk(username, status);
     }
 

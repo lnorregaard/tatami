@@ -3,7 +3,6 @@ package fr.ippon.tatami.repository.cassandra;
 import com.datastax.driver.core.*;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.querybuilder.Select;
-import com.datastax.driver.core.querybuilder.Select.Where;
 import com.datastax.driver.core.utils.UUIDs;
 import com.datastax.driver.mapping.Mapper;
 import com.datastax.driver.mapping.MappingManager;
@@ -93,8 +92,8 @@ public class CassandraTimelineRepository extends AbstractCassandraLineRepository
     }
 
     @Override
-    public List<String> getTimeline(String login, int size, String start, String finish) {
-        return getLineFromTable(TIMELINE_CF,login,size,start,finish);
+    public List<String> getTimeline(String login, int size, String start, String finish, String statusType) {
+        return getLineFromTable(TIMELINE_CF, login, size, start, finish);
     }
 
     @Override

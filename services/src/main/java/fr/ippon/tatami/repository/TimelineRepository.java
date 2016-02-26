@@ -35,5 +35,6 @@ public interface TimelineRepository {
      * - The key is the statusId of the statuses
      * - The value is always null
      */
-    List<String> getTimeline(String login, int size, String start, String finish);
+    List<String> getTimeline(String login, int size, String start, String finish, String statusType);
+
 }

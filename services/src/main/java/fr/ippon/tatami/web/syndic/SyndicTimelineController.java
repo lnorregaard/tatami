@@ -57,7 +57,7 @@ public class SyndicTimelineController {
         int count = 20; //Default value
 
         log.debug("RSS request to get someone's status (login={}).", login);
-        Collection<StatusDTO> statuses = timelineService.getUserTimeline(login, count, null, null);
+        Collection<StatusDTO> statuses = timelineService.getUserTimeline(login, count, null, null, null);
 
         ModelAndView mav = new ModelAndView("syndicView");
 

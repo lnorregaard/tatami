@@ -48,7 +48,7 @@ public class StatusUpdateServiceTest extends AbstractCassandraTatamiTest {
         Collection<StatusDTO> statusFromUserline = timelineService.getUserline("userWhoPostStatus", 10, null, null);
         assertThatNewTestIsPosted(username, content, statusFromUserline);
 
-        Collection<StatusDTO> statusFromTimeline = timelineService.getTimeline(10, null, null);
+        Collection<StatusDTO> statusFromTimeline = timelineService.getTimeline(10, null, null, "STATUS");
         assertThatNewTestIsPosted(username, content, statusFromTimeline);
 
         Collection<StatusDTO> statusFromUserlineOfAFollower = timelineService.getUserline("userWhoReadStatus", 10, null, null);

@@ -311,22 +311,22 @@ public class StatusUpdateService {
     private void manageGroups(Status status, Group group, Collection<String> followersForUser) {
         if (group != null) {
             grouplineRepository.addStatusToGroupline(group.getGroupId(), status.getStatusId().toString());
-            Collection<String> groupMemberLogins = groupMembersRepository.findMembers(group.getGroupId()).keySet();
-            // For all people following the group
-            for (String groupMemberLogin : groupMemberLogins) {
-                addStatusToTimelineAndNotify(groupMemberLogin, status);
-            }
-            if (isPublicGroup(group)) { // for people not following the group but following the user
-                for (String followerLogin : followersForUser) {
-                    if (!groupMemberLogins.contains(followerLogin)) {
-                        addStatusToTimelineAndNotify(followerLogin, status);
-                    }
-                }
-            }
+//            Collection<String> groupMemberLogins = groupMembersRepository.findMembers(group.getGroupId()).keySet();
+//            // For all people following the group
+//            for (String groupMemberLogin : groupMemberLogins) {
+//                addStatusToTimelineAndNotify(groupMemberLogin, status);
+//            }
+//            if (isPublicGroup(group)) { // for people not following the group but following the user
+//                for (String followerLogin : followersForUser) {
+//                    if (!groupMemberLogins.contains(followerLogin)) {
+//                        addStatusToTimelineAndNotify(followerLogin, status);
+//                    }
+//                }
+//            }
         } else { // only people following the user
-            for (String followerLogin : followersForUser) {
-                addStatusToTimelineAndNotify(followerLogin, status);
-            }
+//            for (String followerLogin : followersForUser) {
+//                addStatusToTimelineAndNotify(followerLogin, status);
+//            }
         }
     }
 

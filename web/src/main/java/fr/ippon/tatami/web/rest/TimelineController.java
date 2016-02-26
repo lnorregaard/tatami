@@ -81,7 +81,7 @@ public class TimelineController {
             count = 20; //Default value
         }
         try {
-            return timelineService.getTimeline(count, start, finish);
+            return timelineService.getTimeline(count, start, finish, null);
         } catch (Exception e) {
             StringWriter stack = new StringWriter();
             PrintWriter pw = new PrintWriter(stack);
@@ -90,6 +90,54 @@ public class TimelineController {
             return null;
         }
     }
+
+    /**
+     * GET  /statuses/home_timeline -> get the latest messages from the current user
+     */
+    @RequestMapping(value = "/rest/statuses/home_messages",
+            method = RequestMethod.GET,
+            produces = "application/json")
+    @ResponseBody
+    @Timed
+    public Collection<StatusDTO> listStatusMessages(@RequestParam(required = false) Integer count,
+                                            @RequestParam(required = false) String start,
+                                            @RequestParam(required = false) String finish) {
+        if (count == null || count == 0) {
+            count = 20; //Default value
+        }
+        try {
+            return timelineService.getTimeline(count, start, finish,"STATUS");
+        } catch (Exception e) {
+            StringWriter stack = new StringWriter();
+            PrintWriter pw = new PrintWriter(stack);
+            e.printStackTrace(pw);
+            log.debug("{}", stack.toString());
+            return null;
+        }
+    }
+
+    /**
+     * GET  /statuses/home_messages/count -> get the message count from the current user
+     */
+    @RequestMapping(value = "/rest/statuses/home_messages/count",
+            method = RequestMethod.GET,
+            produces = "application/json")
+    @ResponseBody
+    @Timed
+    public Long listStatusMessagesCount(@RequestParam(required = false) Integer count,
+                                                    @RequestParam(required = false) String start,
+                                                    @RequestParam(required = false) String finish) {
+        try {
+            return timelineService.getTimelineCount();
+        } catch (Exception e) {
+            StringWriter stack = new StringWriter();
+            PrintWriter pw = new PrintWriter(stack);
+            e.printStackTrace(pw);
+            log.debug("{}", stack.toString());
+            return null;
+        }
+    }
+
 
     /**
      * GET  /statuses/user_timeline?screen_name=jdubois -> get the latest statuses from user "jdubois"

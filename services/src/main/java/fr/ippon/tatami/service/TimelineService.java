@@ -15,6 +15,7 @@ import fr.ippon.tatami.domain.status.*;
 
 import javax.inject.Inject;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Manages the timeline.
@@ -444,11 +445,12 @@ public class TimelineService {
      * The timeline contains the user's status merged with his friends status
      *
      * @param nbStatus the number of status to retrieve, starting from most recent ones
+     * @param status
      * @return a status list
      */
-    public Collection<StatusDTO> getTimeline(int nbStatus, String start, String finish) {
+    public Collection<StatusDTO> getTimeline(int nbStatus, String start, String finish, String statusType) {
         String login = authenticationService.getCurrentUser().getLogin();
-        return getUserTimeline(login, nbStatus, start, finish);
+        return getUserTimeline(login, nbStatus, start, finish, statusType);
     }
 
     /**
@@ -461,17 +463,21 @@ public class TimelineService {
      *
      * @param login    of the user we want the timeline of
      * @param nbStatus the number of status to retrieve, starting from most recent ones
+     * @param statusType
      * @return a status list
      */
-    public Collection<StatusDTO> getUserTimeline(String login, int nbStatus, String start, String finish) {
+    public Collection<StatusDTO> getUserTimeline(String login, int nbStatus, String start, String finish, String statusType) {
         List<String> statuses =
-                timelineRepository.getTimeline(login, nbStatus, start, finish);
+                timelineRepository.getTimeline(login, nbStatus, start, finish, statusType);
 
         Collection<StatusDTO> dtos = buildStatusList(statuses);
+        if (statusType != null) {
+            dtos = dtos.stream().filter(status -> status.getType() == StatusType.valueOf(statusType)).collect(Collectors.toList());
+        }
         if (statuses.size() != dtos.size()) {
             Collection<String> statusIdsToDelete = findStatusesToCleanUp(statuses, dtos);
             timelineRepository.removeStatusesFromTimeline(login, statusIdsToDelete);
-            return getTimeline(nbStatus, start, finish);
+            return getTimeline(nbStatus, start, finish, statusType);
         }
         return dtos;
     }
@@ -786,4 +792,11 @@ public class TimelineService {
         return null;
     }
 
+    public Long getTimelineCount() {
+        if (authenticationService.getCurrentUser() != null) {
+            return counterRepository.getStatusCounter(authenticationService.getCurrentUser().getLogin());
+        } else {
+            return 0L;
+        }
+    }
 }

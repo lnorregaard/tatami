@@ -40,7 +40,7 @@ public class StatusDeletionTest extends AbstractCassandraTatamiTest {
         String login = "userWithStatus@ippon.fr";
         String username = "userWithStatus";
         mockAuthenticationOnTimelineServiceWithACurrentUser(login);
-        Collection<StatusDTO> timelineStatuses = timelineService.getTimeline(10, null, null);
+        Collection<StatusDTO> timelineStatuses = timelineService.getTimeline(10, null, null, "STATUS");
         assertEquals(2, timelineStatuses.size());
         Collection<StatusDTO> userlineStatuses = timelineService.getUserline(username, 10, null, null);
         assertEquals(2, userlineStatuses.size());
@@ -48,7 +48,7 @@ public class StatusDeletionTest extends AbstractCassandraTatamiTest {
         String content = "temporary status";
         statusUpdateService.postStatus(content, false, new ArrayList<String>(), null);
 
-        timelineStatuses = timelineService.getTimeline(10, null, null);
+        timelineStatuses = timelineService.getTimeline(10, null, null, "STATUS");
         assertEquals(3, timelineStatuses.size());
         StatusDTO temporaryStatus = timelineStatuses.iterator().next();
         assertEquals("temporary status", temporaryStatus.getContent());
@@ -56,7 +56,7 @@ public class StatusDeletionTest extends AbstractCassandraTatamiTest {
         assertEquals(3, userlineStatuses.size());
 
         timelineService.removeStatus(temporaryStatus.getStatusId());
-        timelineStatuses = timelineService.getTimeline(10, null, null);
+        timelineStatuses = timelineService.getTimeline(10, null, null, "STATUS");
         assertEquals(2, timelineStatuses.size());
         userlineStatuses = timelineService.getUserline(username, 10, null, null);
         assertEquals(2, userlineStatuses.size());
@@ -67,7 +67,7 @@ public class StatusDeletionTest extends AbstractCassandraTatamiTest {
         String login = "userWithStatus@ippon.fr";
         String username = "userWithStatus";
         mockAuthenticationOnTimelineServiceWithACurrentUser(login);
-        Collection<StatusDTO> timelineStatuses = timelineService.getTimeline(10, null, null);
+        Collection<StatusDTO> timelineStatuses = timelineService.getTimeline(10, null, null, "STATUS");
         assertEquals(2, timelineStatuses.size());
         Collection<StatusDTO> userlineStatuses = timelineService.getUserline(username, 10, null, null);
         assertEquals(2, userlineStatuses.size());
@@ -77,7 +77,7 @@ public class StatusDeletionTest extends AbstractCassandraTatamiTest {
             statusUpdateService.postStatus(content, false, new ArrayList<String>(),null);
         }
 
-        timelineStatuses = timelineService.getTimeline(10, null, null);
+        timelineStatuses = timelineService.getTimeline(10, null, null, "STATUS");
         assertEquals(10, timelineStatuses.size());
         userlineStatuses = timelineService.getUserline(username, 10, null, null);
         assertEquals(10, userlineStatuses.size());
@@ -88,7 +88,7 @@ public class StatusDeletionTest extends AbstractCassandraTatamiTest {
             timelineService.removeStatus(temporaryStatus.getStatusId());
         }
 
-        timelineStatuses = timelineService.getTimeline(10, null, null);
+        timelineStatuses = timelineService.getTimeline(10, null, null, "STATUS");
         assertEquals(2, timelineStatuses.size());
         userlineStatuses = timelineService.getUserline(username, 10, null, null);
         assertEquals(2, userlineStatuses.size());
@@ -164,7 +164,7 @@ public class StatusDeletionTest extends AbstractCassandraTatamiTest {
     public void deleteFavoriteStatuses() throws Exception {
         String login = "userWithStatus@ippon.fr";
         mockAuthenticationOnTimelineServiceWithACurrentUser(login);
-        Collection<StatusDTO> timelineStatuses = timelineService.getTimeline(10, null, null);
+        Collection<StatusDTO> timelineStatuses = timelineService.getTimeline(10, null, null, "STATUS");
         assertEquals(2, timelineStatuses.size());
         Collection<StatusDTO> favoriteStatuses = timelineService.getFavoritesline();
         assertEquals(0, favoriteStatuses.size());
@@ -174,7 +174,7 @@ public class StatusDeletionTest extends AbstractCassandraTatamiTest {
             statusUpdateService.postStatus(content, false, new ArrayList<>(),null);
         }
 
-        timelineStatuses = timelineService.getTimeline(10, null, null);
+        timelineStatuses = timelineService.getTimeline(10, null, null, "STATUS");
         assertEquals("Timeline statuses", 10, timelineStatuses.size());
         favoriteStatuses = timelineService.getFavoritesline();
         assertEquals("Favorite statuses", 0, favoriteStatuses.size());
@@ -194,7 +194,7 @@ public class StatusDeletionTest extends AbstractCassandraTatamiTest {
             timelineService.removeStatus(temporaryStatus.getStatusId());
         }
 
-        timelineStatuses = timelineService.getTimeline(10, null, null);
+        timelineStatuses = timelineService.getTimeline(10, null, null, "STATUS");
         assertEquals("timeline statuses",2, timelineStatuses.size());
         favoriteStatuses = timelineService.getFavoritesline();
         assertEquals("favorite statuses", 0, favoriteStatuses.size());
@@ -204,7 +204,7 @@ public class StatusDeletionTest extends AbstractCassandraTatamiTest {
     public void deleteMentionnedStatuses() throws Exception {
         String userWhoMentions = "userWithStatus@ippon.fr";
         mockAuthenticationOnTimelineServiceWithACurrentUser(userWhoMentions);
-        Collection<StatusDTO> timelineStatuses = timelineService.getTimeline(10, null, null);
+        Collection<StatusDTO> timelineStatuses = timelineService.getTimeline(10, null, null, "STATUS");
         assertEquals(2, timelineStatuses.size());
 
         String userWhoIsMentionned = "uuser@ippon.fr";
@@ -218,7 +218,7 @@ public class StatusDeletionTest extends AbstractCassandraTatamiTest {
             statusUpdateService.postStatus(content, false, new ArrayList<String>(),null);
         }
 
-        timelineStatuses = timelineService.getTimeline(10, null, null);
+        timelineStatuses = timelineService.getTimeline(10, null, null, "STATUS");
         assertEquals(10, timelineStatuses.size());
 
         mockAuthenticationOnTimelineServiceWithACurrentUser(userWhoIsMentionned);
@@ -233,7 +233,7 @@ public class StatusDeletionTest extends AbstractCassandraTatamiTest {
             timelineService.removeStatus(temporaryStatus.getStatusId());
         }
 
-        timelineStatuses = timelineService.getTimeline(10, null, null);
+        timelineStatuses = timelineService.getTimeline(10, null, null, "STATUS");
         assertEquals(2, timelineStatuses.size());
 
         mockAuthenticationOnTimelineServiceWithACurrentUser(userWhoIsMentionned);

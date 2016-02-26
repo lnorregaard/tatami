@@ -198,7 +198,7 @@ public class MailDigestService {
 
         // collect all statuses since 'since_date' from the timeline
         while (!dateReached) {
-            Collection<StatusDTO> statuses = timelineService.getUserTimeline(user.getLogin(), 200, null, finish);
+            Collection<StatusDTO> statuses = timelineService.getUserTimeline(user.getLogin(), 200, null, finish, null);
             statuses.size();
             int count = 0;
             if (statuses.isEmpty()) {

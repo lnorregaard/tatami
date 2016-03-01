@@ -108,7 +108,6 @@ public class MailDigestServiceTest extends AbstractCassandraTatamiTest {
     }
 
 
-    @Test
     public void order_04_shouldGenerateDailyDigestOneMessage() {
         log.debug("In shouldGenerateDailyDigestOneMessage");
 
@@ -133,7 +132,6 @@ public class MailDigestServiceTest extends AbstractCassandraTatamiTest {
     }
 
 
-    @Test
     public void order_04_shouldGenerateDailyDigestWithTwoMessages() {
         log.debug("In shouldGenerateDailyDigestWithTwoMessages");
 
@@ -157,7 +155,6 @@ public class MailDigestServiceTest extends AbstractCassandraTatamiTest {
         assertThat(statuses.getValue().size() == 2, is(true));
     }
 
-    @Test
     public void order_05_shouldGenerateDailyDigestWithManyMessages() {
         log.debug("In shouldGenerateDailyDigestWithManyMessages");
 
@@ -214,7 +211,6 @@ public class MailDigestServiceTest extends AbstractCassandraTatamiTest {
     }
 
 
-    @Test
     public void order_08_shouldGenerateWeeklyDigestOneMessage() {
         log.debug("In shouldGenerateWeeklyDigestOneMessage");
 
@@ -239,7 +235,6 @@ public class MailDigestServiceTest extends AbstractCassandraTatamiTest {
     }
 
 
-    @Test
     public void order_09_shouldGenerateWeeklyDigestWithTwoMessages() {
         log.debug("In shouldGenerateWeeklyDigestWithTwoMessages");
 
@@ -263,7 +258,6 @@ public class MailDigestServiceTest extends AbstractCassandraTatamiTest {
         assertThat(statuses.getValue().size() == 2, is(true));
     }
 
-    @Test
     public void order_10_shouldGenerateWeeklyDigestWithManyMessages() {
         log.debug("In shouldGenerateWeeklyDigestWithManyMessages");
 

@@ -260,7 +260,7 @@ public class StatusUpdateService {
 
         // add status to the timeline
         addStatusToTimelineAndNotify(currentLogin, status);
-        if (Constants.MODERATOR_STATUS && (userService.isAdmin(currentLogin) || status.getStatusPrivate())) {
+        if (status.getStatusPrivate() || (Constants.MODERATOR_STATUS && userService.isAdmin(currentLogin))) {
             statusRepository.updateState(status.getStatusId().toString(),null);
         }
         if (status.getStatusPrivate()) { // Private status

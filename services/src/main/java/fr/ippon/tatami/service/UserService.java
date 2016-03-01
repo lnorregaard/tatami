@@ -300,7 +300,7 @@ public class UserService {
 
         // Tweets are not deleted, but are not available to users anymore (unless the same user is created again)
 
-        log.debug("User " + user.getLogin() + "has been successfully deleted !");
+        log.info("User " + user.getLogin() + "has been successfully deleted !");
     }
 
     /**

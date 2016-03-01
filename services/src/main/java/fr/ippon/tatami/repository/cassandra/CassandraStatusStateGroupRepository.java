@@ -3,6 +3,8 @@ package fr.ippon.tatami.repository.cassandra;
 import com.datastax.driver.core.*;
 import com.datastax.driver.core.querybuilder.*;
 import fr.ippon.tatami.repository.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
 
 import javax.inject.Inject;
@@ -20,6 +22,7 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.*;
  */
 @Repository
 public class CassandraStatusStateGroupRepository implements StatusStateGroupRepository {
+    private static final Logger log = LoggerFactory.getLogger(CassandraStatusStateGroupRepository.class);
 
     public static final String STATUS_STATE_GROUP_LINE = "statusstategroupline";
     public static final String STATUS_ID = "statusId";
@@ -52,11 +55,13 @@ public class CassandraStatusStateGroupRepository implements StatusStateGroupRepo
                 } else {
                     insert.value(GROUP_ID, GROUP_NULL);
                 }
+        log.debug("Insert state statusId: {}, state: {}, groupId: {}, statement: {} ", statusId,state,groupId,insert.toString());
         session.execute(insert.using(ttl(COLUMN_TTL)));
     }
 
     @Override
     public void updateState(String groupId, UUID statusId, String newState) {
+        log.debug("update state for groupId : {}, statusId: {} to state: {}",groupId,statusId,newState);
         if (groupId == null) {
             groupId = GROUP_NULL;
         }
@@ -64,6 +69,7 @@ public class CassandraStatusStateGroupRepository implements StatusStateGroupRepo
                 .where(eq(GROUP_ID,groupId))
                 .and(in(STATE,withoutState(STATES,newState)))
                 .and(eq(STATUS_ID, statusId));
+        log.debug("execute statement : {}", statement.toString());
         session.execute(statement);
         createStatusStateGroup(statusId,newState,groupId);
     }

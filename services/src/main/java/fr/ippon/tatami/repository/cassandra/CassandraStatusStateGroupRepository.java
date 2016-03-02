@@ -71,13 +71,19 @@ public class CassandraStatusStateGroupRepository implements StatusStateGroupRepo
                 .and(eq(STATUS_ID, statusId));
         log.debug("execute statement : {}", statement.toString());
         session.execute(statement);
-        createStatusStateGroup(statusId,newState,groupId);
+        if (newState != null) {
+            createStatusStateGroup(statusId, newState, groupId);
+        }
     }
 
     private List<String> withoutState(List<String> states, String newState) {
-        return states.stream()
-                .filter(s -> !s.equals(newState))
-                .collect(Collectors.toList());
+        if (newState == null) {
+            return states;
+        } else {
+            return states.stream()
+                    .filter(s -> !s.equals(newState))
+                    .collect(Collectors.toList());
+        }
     }
 
     @Override

@@ -539,6 +539,7 @@ public class TimelineService {
             User currentUser = authenticationService.getCurrentUser();
             if (status.getLogin().equals(currentUser.getLogin())) {
                 statusRepository.removeStatus(status);
+                statusStateGroupRepository.updateState(status.getGroupId(),status.getStatusId(),null);
                 counterRepository.decrementStatusCounter(currentUser.getLogin());
                 searchService.removeStatus(status);
             }

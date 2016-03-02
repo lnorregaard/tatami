@@ -768,6 +768,8 @@ public class CassandraConfiguration {
                 "    LIKE_COUNTER counter,\n" +
                 "    PRIMARY KEY(statusId)\n" +
                 ");\n");
+        session.execute("ALTER TABLE friendrequests ADD statusId timeuuid;");
+
     }
 
     @Bean

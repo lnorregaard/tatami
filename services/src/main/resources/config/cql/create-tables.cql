@@ -315,3 +315,5 @@ CREATE TABLE IF NOT EXISTS statuscounter (
     LIKE_COUNTER counter,
     PRIMARY KEY(statusId)
 );
+
+ALTER TABLE friendrequests ADD statusId timeuuid;

@@ -315,7 +315,7 @@ CREATE TABLE IF NOT EXISTS statuscounter (
     PRIMARY KEY(statusId)
 );
 
-
+ALTER TABLE friendrequests ADD statusId timeuuid;
 
 INSERT INTO user (login , avatar , firstname , lastname , username , domain ) VALUES('jdubois@ippon.fr', 'avatar', 'Julien','Dubois','jdubois','ippon.fr');
 INSERT INTO user (login , avatar , firstname , lastname , username , domain ) VALUES('uuser@ippon.fr', 'avatar', 'Update','User','uuser','ippon.fr');

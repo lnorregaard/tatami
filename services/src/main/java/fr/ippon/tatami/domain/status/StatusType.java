@@ -5,5 +5,7 @@ public enum StatusType {
     SHARE,
     ANNOUNCEMENT,
     MENTION_FRIEND,
-    MENTION_SHARE
+    MENTION_SHARE,
+    FAVORITE_SHARE,
+    FRIEND_REQUEST
 }

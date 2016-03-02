@@ -472,7 +472,10 @@ public class TimelineService {
 
         Collection<StatusDTO> dtos = buildStatusList(statuses);
         if (statusType != null) {
-            dtos = dtos.stream().filter(status -> status.getType() == StatusType.valueOf(statusType)).collect(Collectors.toList());
+            dtos = dtos.stream()
+                    .filter(status -> status.getType() == StatusType.valueOf(statusType))
+                    .filter(status -> !status.isStatusPrivate())
+                    .collect(Collectors.toList());
         }
         if (statuses.size() != dtos.size()) {
             Collection<String> statusIdsToDelete = findStatusesToCleanUp(statuses, dtos);

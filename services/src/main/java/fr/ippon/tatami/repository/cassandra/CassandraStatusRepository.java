@@ -273,6 +273,7 @@ public class CassandraStatusRepository implements StatusRepository {
         favoriteShare.setUsername(username);
         String domain = DomainUtil.getDomainFromLogin(login);
         favoriteShare.setDomain(domain);
+        favoriteShare.setLogin(login);
 
         Insert inserter = this.createBaseStatus(favoriteShare);
         favoriteShare.setFollowerLogin(followerLogin);
@@ -288,7 +289,7 @@ public class CassandraStatusRepository implements StatusRepository {
     public FriendRequest createFriendRequest(String login, String followerLogin) {
         FriendRequest friendRequest = new FriendRequest();
         friendRequest.setLogin(login);
-        friendRequest.setType(StatusType.MENTION_FRIEND);
+        friendRequest.setType(StatusType.FRIEND_REQUEST);
         String username = DomainUtil.getUsernameFromLogin(login);
         friendRequest.setUsername(username);
         String domain = DomainUtil.getDomainFromLogin(login);
@@ -415,6 +416,11 @@ public class CassandraStatusRepository implements StatusRepository {
             status = findMentionFriend(row);
         } else if (type.equals(StatusType.MENTION_SHARE.name())) {
             status = findMentionShare(row);
+        } else if (type.equals(StatusType.FAVORITE_SHARE.name())) {
+            status = findFavoriteShare(row);
+        } else if (type.equals(StatusType.FRIEND_REQUEST.name())) {
+            status = findFriendRequest(row);
+
         } else {
             throw new IllegalStateException("Status has an unknown type: " + type);
         }
@@ -462,6 +468,24 @@ public class CassandraStatusRepository implements StatusRepository {
         mentionShare.setType(StatusType.MENTION_SHARE);
         mentionShare.setOriginalStatusId(result.getUUID(ORIGINAL_STATUS_ID).toString());
         return mentionShare;
+    }
+
+    private AbstractStatus findFavoriteShare(Row result) {
+        FavoriteShare favoriteShare = new FavoriteShare();
+        favoriteShare.setType(StatusType.FAVORITE_SHARE);
+        favoriteShare.setOriginalStatusId(result.getUUID(ORIGINAL_STATUS_ID).toString());
+        favoriteShare.setLogin(result.getString(LOGIN));
+        favoriteShare.setFollowerLogin(result.getString(FOLLOWER_LOGIN));
+        return favoriteShare;
+    }
+
+    private AbstractStatus findFriendRequest(Row result) {
+        FriendRequest friendRequest = new FriendRequest();
+        friendRequest.setType(StatusType.FRIEND_REQUEST);
+        friendRequest.setLogin(result.getString(LOGIN));
+        friendRequest.setFollowerLogin(result.getString(FOLLOWER_LOGIN));
+        friendRequest.setContent(result.getString(CONTENT));
+        return friendRequest;
     }
 
     private AbstractStatus findMentionFriend(Row result) {

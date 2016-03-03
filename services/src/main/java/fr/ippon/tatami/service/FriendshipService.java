@@ -89,7 +89,7 @@ public class FriendshipService {
                     followUser(followedUser,currentUser);
                     UUID followedUserStatus = friendRequestRepository.getStatusIdForFriendRequest(followedUserLogin,currentUserLogin);
                     if (followedUserStatus != null) {
-                        statusRepository.acceptFriendRequest(followedUserLogin.toString());
+                        statusRepository.acceptFriendRequest(followedUserStatus.toString());
                     }
                     friendRequestRepository.removeFriendRequest(followedUserLogin,currentUserLogin);
                     UUID currentUserStatus = friendRequestRepository.getStatusIdForFriendRequest(currentUserLogin,followedUserLogin);

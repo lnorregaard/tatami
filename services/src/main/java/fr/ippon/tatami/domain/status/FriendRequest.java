@@ -64,79 +64,83 @@ public class FriendRequest implements AbstractStatus{
         this.followerLogin = followerLogin;
     }
 
-
     @Override
     public UUID getStatusId() {
-        return null;
+        return statusId;
+    }
+
+    @Override
+    public void setStatusId(UUID statusId) {
+        this.statusId = statusId;
     }
 
     @Override
     public StatusType getType() {
-        return null;
+        return type;
     }
 
     @Override
     public String getLogin() {
-        return null;
+        return login;
     }
 
     @Override
-    public Date getStatusDate() {
-        return null;
-    }
-
-    public String getGeoLocalization() {
-        return geoLocalization;
-    }
-
-    @Override
-    public void setStatusId(UUID uuid) {
-
-    }
-
-    @Override
-    public void setStatusDate(Date date) {
-
+    public void setLogin(String login) {
+        this.login = login;
     }
 
     @Override
     public String getUsername() {
-        return null;
+        return username;
+    }
+
+    @Override
+    public void setUsername(String username) {
+        this.username = username;
     }
 
     @Override
     public String getDomain() {
-        return null;
-    }
-
-    @Override
-    public void setLogin(String string) {
-
-    }
-
-    @Override
-    public void setUsername(String string) {
-
+        return domain;
     }
 
     @Override
     public void setDomain(String domain) {
+        this.domain = domain;
+    }
 
+    @Override
+    public Date getStatusDate() {
+        return statusDate;
+    }
+
+    @Override
+    public void setStatusDate(Date statusDate) {
+        this.statusDate = statusDate;
+    }
+
+    @Override
+    public String getGeoLocalization() {
+        return geoLocalization;
+    }
+
+    public boolean isRemoved() {
+        return removed;
     }
 
     @Override
     public void setRemoved(boolean removed) {
-
-    }
-
-    @Override
-    public void setState(String state) {
-
+        this.removed = removed;
     }
 
     @Override
     public String getState() {
-        return null;
+        return state;
+    }
+
+    @Override
+    public void setState(String state) {
+        this.state = state;
     }
 
     public void setGeoLocalization(String geoLocalization) {

@@ -56,62 +56,65 @@ public class FavoriteShare implements AbstractStatus{
 
     @Override
     public UUID getStatusId() {
-        return null;
+        return statusId;
+    }
+
+    @Override
+    public void setStatusId(UUID statusId) {
+        this.statusId = statusId;
     }
 
     @Override
     public StatusType getType() {
-        return null;
+        return type;
     }
 
     @Override
     public String getLogin() {
-        return null;
+        return login;
+    }
+
+    @Override
+    public void setLogin(String login) {
+        this.login = login;
+    }
+
+    @Override
+    public String getUsername() {
+        return username;
+    }
+
+    @Override
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    @Override
+    public String getDomain() {
+        return domain;
+    }
+
+    @Override
+    public void setDomain(String domain) {
+        this.domain = domain;
     }
 
     @Override
     public Date getStatusDate() {
-        return null;
+        return statusDate;
+    }
+
+    @Override
+    public void setStatusDate(Date statusDate) {
+        this.statusDate = statusDate;
     }
 
     public String getGeoLocalization() {
         return geoLocalization;
     }
 
-    @Override
-    public void setStatusId(UUID uuid) {
 
-    }
 
-    @Override
-    public void setStatusDate(Date date) {
-
-    }
-
-    @Override
-    public String getUsername() {
-        return null;
-    }
-
-    @Override
-    public String getDomain() {
-        return null;
-    }
-
-    @Override
-    public void setLogin(String string) {
-
-    }
-
-    @Override
-    public void setUsername(String string) {
-
-    }
-
-    @Override
-    public void setDomain(String domain) {
-
-    }
 
     @Override
     public void setRemoved(boolean removed) {
@@ -134,6 +137,10 @@ public class FavoriteShare implements AbstractStatus{
 
     public void setGeoLocalization(String geoLocalization) {
         this.geoLocalization = geoLocalization;
+    }
+
+    public boolean isRemoved() {
+        return removed;
     }
 
     @Column

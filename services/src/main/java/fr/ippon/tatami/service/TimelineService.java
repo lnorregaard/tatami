@@ -277,6 +277,27 @@ public class TimelineService {
                         } else {
                             log.debug("Announced status has been deleted");
                         }
+                    } else if (abstractStatus.getType().equals(StatusType.FAVORITE_SHARE)) {
+                        FavoriteShare favoriteShare = (FavoriteShare) abstractStatus;
+                        AbstractStatus originalStatus = statusRepository.findStatusById(favoriteShare.getOriginalStatusId());
+                        if (originalStatus != null) { // Find the status that was announced
+                            statusDTO.setTimelineId(favoriteShare.getStatusId().toString());
+                            statusDTO.setSharedByUsername(favoriteShare.getUsername());
+                            statusUser = userService.getUserByLogin(originalStatus.getLogin());
+                            addStatusToLine(statuses, statusDTO, originalStatus, statusUser, usergroups, favoriteLine);
+                        }
+                    } else if (abstractStatus.getType().equals(StatusType.FRIEND_REQUEST)) {
+                        FriendRequest friendRequest = (FriendRequest) abstractStatus;
+                        statusDTO.setTimelineId(friendRequest.getStatusId().toString());
+                        User follower = userService.getUserByLogin(friendRequest.getLogin());
+                        statusUser = userService.getUserByLogin(friendRequest.getFollowerLogin());
+                        statusDTO.setFirstName(statusUser.getFirstName());
+                        statusDTO.setLastName(statusUser.getLastName());
+                        statusDTO.setAvatar(statusUser.getAvatar());
+                        statusDTO.setUsername(statusUser.getUsername());
+                        statusDTO.setContent(friendRequest.getContent());
+                        statusDTO.setSharedByUsername(follower.getUsername());
+                        statuses.add(statusDTO);
                     } else { // Normal status
                         statusDTO.setTimelineId(abstractStatus.getStatusId().toString());
                         addStatusToLine(statuses, statusDTO, abstractStatus, statusUser, usergroups, favoriteLine);

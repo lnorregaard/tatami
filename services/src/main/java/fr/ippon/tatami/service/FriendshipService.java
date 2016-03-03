@@ -2,6 +2,7 @@ package fr.ippon.tatami.service;
 
 import fr.ippon.tatami.config.Constants;
 import fr.ippon.tatami.domain.User;
+import fr.ippon.tatami.domain.status.FriendRequest;
 import fr.ippon.tatami.domain.status.MentionFriend;
 import fr.ippon.tatami.repository.*;
 import fr.ippon.tatami.security.AuthenticationService;
@@ -11,10 +12,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.inject.Inject;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -52,6 +50,9 @@ public class FriendshipService {
     private MentionlineRepository mentionlineRepository;
 
     @Inject
+    private TimelineRepository timelineRepository;
+
+    @Inject
     private AuthenticationService authenticationService;
 
     @Inject
@@ -86,11 +87,22 @@ public class FriendshipService {
                 } else if (friendSentFriendRequest) {
                     followUser(currentUser,followedUser);
                     followUser(followedUser,currentUser);
+                    UUID followedUserStatus = friendRequestRepository.getStatusIdForFriendRequest(followedUserLogin,currentUserLogin);
+                    if (followedUserStatus != null) {
+                        statusRepository.acceptFriendRequest(followedUserLogin.toString());
+                    }
                     friendRequestRepository.removeFriendRequest(followedUserLogin,currentUserLogin);
+                    UUID currentUserStatus = friendRequestRepository.getStatusIdForFriendRequest(currentUserLogin,followedUserLogin);
+                    if (currentUserStatus != null) {
+                        statusRepository.acceptFriendRequest(currentUserStatus.toString());
+                    }
                     friendRequestRepository.removeFriendRequest(currentUserLogin,followedUserLogin);
                     return true;
                 } else {
-                    return friendRequestRepository.addFriendRequest(currentUserLogin,followedUserLogin);
+                    FriendRequest friendRequest = statusRepository.createFriendRequest(followedUserLogin,currentUserLogin);
+                    timelineRepository.addStatusToTimeline(followedUserLogin,friendRequest.getStatusId().toString());
+                    timelineRepository.addStatusToTimeline(currentUserLogin,friendRequest.getStatusId().toString());
+                    return friendRequestRepository.addFriendRequest(currentUserLogin,followedUserLogin,friendRequest.getStatusId());
                 }
             } else {
                 return followUser(currentUser, followedUser);
@@ -132,7 +144,15 @@ public class FriendshipService {
         String loginToUnfollow = this.getLoginFromUsername(usernameToUnfollow);
         User userToUnfollow = userRepository.findUserByLogin(loginToUnfollow);
         if (Constants.USER_AND_FRIENDS) {
+            UUID unfollowStatus = friendRequestRepository.getStatusIdForFriendRequest(loginToUnfollow,currentUser.getLogin());
+            if (unfollowStatus != null) {
+                statusRepository.rejectFriendRequest(unfollowStatus.toString());
+            }
             friendRequestRepository.removeFriendRequest(loginToUnfollow,currentUser.getLogin());
+            UUID currentUserStatus = friendRequestRepository.getStatusIdForFriendRequest(currentUser.getLogin(),loginToUnfollow);
+            if (currentUserStatus != null) {
+                statusRepository.rejectFriendRequest(currentUserStatus.toString());
+            }
             friendRequestRepository.removeFriendRequest(currentUser.getLogin(),loginToUnfollow);
             unfollowUser(currentUser,userToUnfollow);
             unfollowUser(userToUnfollow,currentUser);

@@ -6,6 +6,7 @@ import fr.ippon.tatami.domain.status.*;
 import javax.validation.ConstraintViolationException;
 import java.util.Collection;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * The Status Repository.
@@ -32,6 +33,17 @@ public interface StatusRepository {
 
     MentionFriend createMentionFriend(String login,
                                       String followerLogin);
+
+    FavoriteShare createFavoriteShare(String login,
+                                      String followerLogin,
+                                      UUID originalStatusId);
+
+    FriendRequest createFriendRequest(String login,
+                                      String followerLogin);
+
+    void acceptFriendRequest(String statusId);
+
+    void rejectFriendRequest(String statusId);
 
     MentionShare createMentionShare(String login,
                                     String originalStatusId);

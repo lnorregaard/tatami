@@ -4,19 +4,15 @@ import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.Statement;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
-import fr.ippon.tatami.repository.FriendRepository;
 import fr.ippon.tatami.repository.FriendRequestRepository;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Repository;
 
 import javax.inject.Inject;
 import java.util.Collection;
-import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
-import static fr.ippon.tatami.config.ColumnFamilyKeys.FRIENDS;
 
 /**
  * Cassandra implementation of the Friend Request repository.
@@ -33,6 +29,20 @@ public class CassandraFriendRequestRepository implements FriendRequestRepository
     @Inject
     private Session session;
 
+    @Override
+    public UUID getStatusIdForFriendRequest(String login, String friendLogin) {
+        Statement statement = QueryBuilder.select()
+                .column("statusId")
+                .from("friendRequests")
+                .where(eq("login", login))
+                .and(eq("friendLogin",friendLogin));
+        ResultSet results = session.execute(statement);
+        if (!results.isExhausted()) {
+            return results.one().getUUID("statusId");
+        } else {
+            return null;
+        }
+    }
     @Override
     public boolean getFriendRequest(String login, String friendLogin) {
         Statement statement = QueryBuilder.select()
@@ -54,10 +64,11 @@ public class CassandraFriendRequestRepository implements FriendRequestRepository
     }
 
     @Override
-    public boolean addFriendRequest(String currentUserLogin, String followedUserLogin) {
+    public boolean addFriendRequest(String currentUserLogin, String followedUserLogin, UUID statusId) {
         Statement statement = QueryBuilder.insertInto("friendRequests")
                 .value("login", currentUserLogin)
-                .value("friendLogin", followedUserLogin);
+                .value("friendLogin", followedUserLogin)
+                .value("statusId",statusId);
         session.execute(statement);
         return true;
     }

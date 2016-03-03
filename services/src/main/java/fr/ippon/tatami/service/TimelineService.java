@@ -604,6 +604,8 @@ public class TimelineService {
             String login = authenticationService.getCurrentUser().getLogin();
             statusCounterRepository.incrementLikeCounter(abstractStatus.getStatusId());
             favoritelineRepository.addStatusToFavoriteline(login, statusId);
+            FavoriteShare favoriteShare = statusRepository.createFavoriteShare(login,abstractStatus.getLogin(),abstractStatus.getStatusId());
+            timelineRepository.addStatusToTimeline(abstractStatus.getLogin(),favoriteShare.getStatusId().toString());
         } else {
             log.warn("Cannot favorite this type of status: " + abstractStatus);
         }

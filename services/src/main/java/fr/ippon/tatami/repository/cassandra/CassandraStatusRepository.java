@@ -265,6 +265,67 @@ public class CassandraStatusRepository implements StatusRepository {
     }
 
     @Override
+    public FavoriteShare createFavoriteShare(String login, String followerLogin, UUID originalStatusId) {
+        FavoriteShare favoriteShare = new FavoriteShare();
+        favoriteShare.setLogin(login);
+        favoriteShare.setType(StatusType.FAVORITE_SHARE);
+        String username = DomainUtil.getUsernameFromLogin(login);
+        favoriteShare.setUsername(username);
+        String domain = DomainUtil.getDomainFromLogin(login);
+        favoriteShare.setDomain(domain);
+
+        Insert inserter = this.createBaseStatus(favoriteShare);
+        favoriteShare.setFollowerLogin(followerLogin);
+        favoriteShare.setOriginalStatusId(originalStatusId.toString());
+        inserter = inserter.value("originalStatusId",originalStatusId);
+        inserter = inserter.value("followerLogin",followerLogin);
+        log.debug("Persisting Announcement : {}", favoriteShare);
+        session.execute(inserter);
+        return favoriteShare;
+    }
+
+    @Override
+    public FriendRequest createFriendRequest(String login, String followerLogin) {
+        FriendRequest friendRequest = new FriendRequest();
+        friendRequest.setLogin(login);
+        friendRequest.setType(StatusType.MENTION_FRIEND);
+        String username = DomainUtil.getUsernameFromLogin(login);
+        friendRequest.setUsername(username);
+        String domain = DomainUtil.getDomainFromLogin(login);
+        friendRequest.setDomain(domain);
+
+        Insert inserter = this.createBaseStatus(friendRequest);
+        friendRequest.setFollowerLogin(followerLogin);
+        inserter = inserter.value("followerLogin",followerLogin);
+        friendRequest.setContent("PENDING");
+        inserter = inserter.value("content",friendRequest.getContent());
+        log.debug("Persisting Announcement : {}", friendRequest);
+        session.execute(inserter);
+        return friendRequest;
+    }
+
+    @Override
+    public void acceptFriendRequest(String statusId) {
+        Update.Where where = QueryBuilder.update("status")
+                .with(set("content","ACCEPTED"))
+                .where(eq("statusId",UUID.fromString(statusId)));
+        Statement statement = where;
+        session.execute(statement);
+
+    }
+
+    @Override
+    public void rejectFriendRequest(String statusId) {
+        Update.Where where = QueryBuilder.update("status")
+                .with(set("content","REJECTED"))
+                .where(eq("statusId",UUID.fromString(statusId)));
+        Statement statement = where;
+        session.execute(statement);
+
+    }
+
+
+    @Override
     public MentionShare createMentionShare(String login, String originalStatusId) {
         MentionShare mentionShare = new MentionShare();
         mentionShare.setLogin(login);

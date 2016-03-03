@@ -1,7 +1,7 @@
 package fr.ippon.tatami.repository;
 
 import java.util.Collection;
-import java.util.List;
+import java.util.UUID;
 
 /**
  * The Friend Repository.
@@ -10,11 +10,12 @@ import java.util.List;
  */
 public interface FriendRequestRepository {
 
+    UUID getStatusIdForFriendRequest(String login, String friendLogin);
     boolean getFriendRequest(String login, String friendLogin);
 
     void removeFriendRequest(String login, String friendLogin);
 
-    boolean addFriendRequest(String currentUserLogin, String followedUserLogin);
+    boolean addFriendRequest(String currentUserLogin, String followedUserLogin, UUID statusId);
 
     Collection<String> findFriendRequests(String username);
 

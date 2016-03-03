@@ -297,6 +297,7 @@ CREATE TABLE IF NOT EXISTS audit (
 CREATE TABLE IF NOT EXISTS friendrequests (
     login varchar,
     friendLogin varchar,
+    statusId timeuuid,
     PRIMARY KEY(login,friendLogin)
 );
 CREATE INDEX IF NOT EXISTS friendlogin_friendrequests ON friendrequests (friendLogin);
@@ -315,7 +316,6 @@ CREATE TABLE IF NOT EXISTS statuscounter (
     PRIMARY KEY(statusId)
 );
 
-ALTER TABLE friendrequests ADD statusId timeuuid;
 
 INSERT INTO user (login , avatar , firstname , lastname , username , domain ) VALUES('jdubois@ippon.fr', 'avatar', 'Julien','Dubois','jdubois','ippon.fr');
 INSERT INTO user (login , avatar , firstname , lastname , username , domain ) VALUES('uuser@ippon.fr', 'avatar', 'Update','User','uuser','ippon.fr');

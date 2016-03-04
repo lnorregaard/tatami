@@ -325,14 +325,14 @@ INSERT INTO user (login , avatar , firstname , lastname , username , domain ) VA
 INSERT INTO user (login , avatar , firstname , lastname , username , domain ) VALUES('userWhoPostStatus@ippon.fr','avatar','User','WhoPostStatus','userWhoPostStatus','ippon.fr');
 INSERT INTO user (login , avatar , firstname , lastname , username , domain ) VALUES('userWhoSubscribeToDigests@ippon.fr','avatar','User','WhoSubscribeToDigests','userWhoSubscribeToDigests','ippon.fr');
 INSERT INTO user (login , avatar , firstname , lastname , username , domain ) VALUES('userWhoPostForDigests@ippon.fr','avatar','User','WhoPostForDigests','userWhoPostForDigests','ippon.fr');
-INSERT INTO user (login , avatar , firstname , lastname ) VALUES('userWhoWantToFollow@ippon.fr','avatar','User','WhoWantToFollow');
-INSERT INTO user (login , avatar , firstname , lastname ) VALUES('userWhoWillBeFollowed@ippon.fr','avatar','User','WhoWillBeFollowed');
-INSERT INTO user (login , avatar , firstname , lastname ) VALUES('userWhoFollow@ippon.fr','avatar','User','WhoFollow');
-INSERT INTO user (login , avatar , firstname , lastname ) VALUES('userWhoIsFollowed@ippon.fr','avatar','User','WhoIsFollowed');
-INSERT INTO user (login , avatar , firstname , lastname ) VALUES('userWhoWantToForget@ippon.fr','avatar','User','WhoWantToForget');
-INSERT INTO user (login , avatar , firstname , lastname ) VALUES('userToForget@ippon.fr','avatar','User','ToForget');
-INSERT INTO user (login , avatar , firstname , lastname ) VALUES('userWhoReadStatus@ippon.fr','avatar','User','WhoReadStatus');
-INSERT INTO user (login , avatar , firstname , lastname ) VALUES('userWhoShouldBeFoundBySimilarSearch@ippon.fr','avatar','User','WhoShouldBeFoundBySimilarSearch');
+INSERT INTO user (login , avatar , firstname , lastname , username) VALUES('userWhoWantToFollow@ippon.fr','avatar','User','WhoWantToFollow', 'userWhoWantToFollow');
+INSERT INTO user (login , avatar , firstname , lastname , username) VALUES('userWhoWillBeFollowed@ippon.fr','avatar','User','WhoWillBeFollowed','userWhoWillBeFollowed');
+INSERT INTO user (login , avatar , firstname , lastname , username) VALUES('userWhoFollow@ippon.fr','avatar','User','WhoFollow','userWhoFollow');
+INSERT INTO user (login , avatar , firstname , lastname , username) VALUES('userWhoIsFollowed@ippon.fr','avatar','User','WhoIsFollowed','userWhoIsFollowed');
+INSERT INTO user (login , avatar , firstname , lastname , username) VALUES('userWhoWantToForget@ippon.fr','avatar','User','WhoWantToForget','userWhoWantToForget');
+INSERT INTO user (login , avatar , firstname , lastname , username) VALUES('userToForget@ippon.fr','avatar','User','ToForget','userToForget');
+INSERT INTO user (login , avatar , firstname , lastname , username) VALUES('userWhoReadStatus@ippon.fr','avatar','User','WhoReadStatus','userWhoReadStatus');
+INSERT INTO user (login , avatar , firstname , lastname , username) VALUES('userWhoShouldBeFoundBySimilarSearch@ippon.fr','avatar','User','WhoShouldBeFoundBySimilarSearch','userWhoShouldBeFoundBySimilarSearch');
 
 
 INSERT INTO status (statusId,login,username,domain,content,statusDate,type) VALUES (fa2bd770-9848-11e1-a6ca-e0f847068d52,'userWithStatus@ippon.fr','userWithStatus','ippon.fr','Tatami is an enterprise social network',dateof(now()), 'STATUS');

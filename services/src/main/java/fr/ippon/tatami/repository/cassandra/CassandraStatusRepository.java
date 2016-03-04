@@ -11,6 +11,7 @@ import com.datastax.driver.mapping.MappingManager;
 import fr.ippon.tatami.config.Constants;
 import fr.ippon.tatami.domain.Attachment;
 import fr.ippon.tatami.domain.Group;
+import fr.ippon.tatami.domain.User;
 import fr.ippon.tatami.repository.*;
 import fr.ippon.tatami.service.UserService;
 import fr.ippon.tatami.service.util.DomainUtil;
@@ -269,8 +270,9 @@ public class CassandraStatusRepository implements StatusRepository {
         FavoriteShare favoriteShare = new FavoriteShare();
         favoriteShare.setLogin(login);
         favoriteShare.setType(StatusType.FAVORITE_SHARE);
-        String username = DomainUtil.getUsernameFromLogin(login);
-        favoriteShare.setUsername(username);
+
+        User user = userService.getUserByLogin(login);
+        favoriteShare.setUsername(user.getUsername());
         String domain = DomainUtil.getDomainFromLogin(login);
         favoriteShare.setDomain(domain);
         favoriteShare.setLogin(login);
@@ -290,8 +292,8 @@ public class CassandraStatusRepository implements StatusRepository {
         FriendRequest friendRequest = new FriendRequest();
         friendRequest.setLogin(login);
         friendRequest.setType(StatusType.FRIEND_REQUEST);
-        String username = DomainUtil.getUsernameFromLogin(login);
-        friendRequest.setUsername(username);
+        User user = userService.getUserByLogin(login);
+        friendRequest.setUsername(user.getUsername());
         String domain = DomainUtil.getDomainFromLogin(login);
         friendRequest.setDomain(domain);
 

@@ -282,7 +282,8 @@ public class TimelineService {
                         AbstractStatus originalStatus = statusRepository.findStatusById(favoriteShare.getOriginalStatusId());
                         if (originalStatus != null) { // Find the status that was announced
                             statusDTO.setTimelineId(favoriteShare.getStatusId().toString());
-                            statusDTO.setSharedByUsername(favoriteShare.getUsername());
+                            User sharedUser = userService.getUserByLogin(favoriteShare.getLogin());
+                            statusDTO.setSharedByUsername(sharedUser.getUsername());
                             statusUser = userService.getUserByLogin(originalStatus.getLogin());
                             addStatusToLine(statuses, statusDTO, originalStatus, statusUser, usergroups, favoriteLine);
                         }
@@ -626,7 +627,7 @@ public class TimelineService {
             String login = authenticationService.getCurrentUser().getLogin();
             statusCounterRepository.incrementLikeCounter(abstractStatus.getStatusId());
             favoritelineRepository.addStatusToFavoriteline(login, statusId);
-            FavoriteShare favoriteShare = statusRepository.createFavoriteShare(likedUser.getUsername(),abstractStatus.getLogin(),abstractStatus.getStatusId());
+            FavoriteShare favoriteShare = statusRepository.createFavoriteShare(likedUser.getLogin(),abstractStatus.getLogin(),abstractStatus.getStatusId());
             timelineRepository.addStatusToTimeline(abstractStatus.getLogin(),favoriteShare.getStatusId().toString());
         } else {
             log.warn("Cannot favorite this type of status: " + abstractStatus);

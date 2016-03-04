@@ -769,6 +769,7 @@ public class CassandraConfiguration {
                 "    PRIMARY KEY(statusId)\n" +
                 ");\n");
         session.execute("ALTER TABLE friendrequests ADD statusId timeuuid;");
+        session.execute("ALTER TABLE avatar ADD thumb blob;");
 
     }
 

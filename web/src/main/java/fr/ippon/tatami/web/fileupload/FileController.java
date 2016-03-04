@@ -158,6 +158,7 @@ public class FileController {
             method = RequestMethod.GET)
     @Timed
     public void getAvatar(@PathVariable("avatarId") String avatarId,
+                          @RequestParam(value = "thumb",required = false) Boolean thumbnail,
                           HttpServletRequest request,
                           HttpServletResponse response) throws IOException {
 
@@ -171,14 +172,17 @@ public class FileController {
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
         } else {
             // ETag support
-
             response.setHeader(HEADER_ETAG, avatarId); // The attachmentId is unique and should not be modified
             String requestETag = request.getHeader(HEADER_IF_NONE_MATCH);
             if (requestETag != null && requestETag.equals(avatarId)) {
                 response.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
             } else {
                 try {
+
                     byte[] fileContent = avatar.getContent();
+                    if (avatar.getThumb() != null && thumbnail != null && thumbnail) {
+                        fileContent = avatar.getThumb();
+                    }
                     response.getOutputStream().write(fileContent);
                 } catch (IOException e) {
                     log.info("Error writing file to output stream. {}", e.getMessage());

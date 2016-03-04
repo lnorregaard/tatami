@@ -108,6 +108,7 @@ public class ApplicationConfiguration {
         Constants.ATTACHMENT_DIR_PREFIX = Integer.parseInt(env.getProperty("attachment.directory.prefix.number","2"));
         Constants.ATTACHMENT_THUMBNAIL_NAME = env.getProperty("attachment.thumbnail.name","_thumb");
         Constants.ATTACHMENT_IMAGE_WIDTH = Integer.parseInt(env.getProperty("attachment.image.width","-1"));
+        Constants.AVATAR_THUMBNAIL_SIZE = Integer.parseInt(env.getProperty("avatar.thumbnail.size","126"));
 
         log.info("Tatami v. {} started!", Constants.VERSION);
         log.debug("Google Analytics key : {}", Constants.GOOGLE_ANALYTICS_KEY);

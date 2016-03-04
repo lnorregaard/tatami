@@ -30,6 +30,7 @@ public class CassandraAvatarRepository implements AvatarRepository {
 
     private final Logger log = LoggerFactory.getLogger(CassandraAttachmentRepository.class);
 
+    private final String THUMB = "thumb";
     private final String CONTENT = "content";
     private final String FILENAME = "filename";
     private final String SIZE = "size";
@@ -46,11 +47,16 @@ public class CassandraAvatarRepository implements AvatarRepository {
         if (avatar.getContent() != null) {
             content = ByteBuffer.wrap(avatar.getContent());
         }
+        ByteBuffer thumb = null;
+        if (avatar.getThumb() != null) {
+            thumb = ByteBuffer.wrap(avatar.getThumb());
+        }
         avatar.setAvatarId(UUIDs.timeBased().toString());
         Statement statement = QueryBuilder.insertInto("avatar")
                 .value("id", UUID.fromString(avatar.getAvatarId()))
                 .value(FILENAME, avatar.getFilename())
                 .value(CONTENT, content)
+                .value(THUMB,thumb)
                 .value(SIZE,avatar.getSize())
                 .value(CREATION_DATE,avatar.getCreationDate());
         session.execute(statement);
@@ -79,11 +85,16 @@ public class CassandraAvatarRepository implements AvatarRepository {
         if (avatar != null) {
             Statement statement = QueryBuilder.select()
                     .column(CONTENT)
+                    .column(THUMB)
                     .from("avatar")
                     .where(eq("id", UUID.fromString(avatarId)));
 
             ResultSet results = session.execute(statement);
-            avatar.setContent(results.one().getBytes(CONTENT).array());
+            Row row = results.one();
+            avatar.setContent(row.getBytes(CONTENT).array());
+            if (row.getBytes(THUMB) != null) {
+                avatar.setThumb(row.getBytes(THUMB).array());
+            }
         }
 
         return avatar;

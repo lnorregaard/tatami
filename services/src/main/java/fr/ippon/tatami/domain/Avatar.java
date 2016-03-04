@@ -19,7 +19,18 @@ public class Avatar implements Serializable {
 
     private long size;
 
+    @JsonIgnore
+    private byte[] thumb;
+
     public Avatar() {
+    }
+
+    public byte[] getThumb() {
+        return thumb;
+    }
+
+    public void setThumb(byte[] thumb) {
+        this.thumb = thumb;
     }
 
     public String getAvatarId() {

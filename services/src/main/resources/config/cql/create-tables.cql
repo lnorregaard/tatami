@@ -317,3 +317,5 @@ CREATE TABLE IF NOT EXISTS statuscounter (
 );
 
 ALTER TABLE friendrequests ADD statusId timeuuid;
+
+ALTER TABLE avatar ADD thumb blob;

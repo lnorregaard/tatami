@@ -193,6 +193,7 @@ CREATE TABLE IF NOT EXISTS avatar (
     id timeuuid,
     filename varchar,
     content blob,
+    thumb blob,
     size bigint,
     creation_date timestamp,
     PRIMARY KEY(id)

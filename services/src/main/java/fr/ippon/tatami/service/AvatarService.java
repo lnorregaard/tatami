@@ -1,12 +1,14 @@
 package fr.ippon.tatami.service;
 
 import fr.ippon.tatami.config.Constants;
+import fr.ippon.tatami.domain.Attachment;
 import fr.ippon.tatami.domain.Avatar;
 import fr.ippon.tatami.domain.User;
 import fr.ippon.tatami.repository.AvatarRepository;
 import fr.ippon.tatami.repository.DomainConfigurationRepository;
 import fr.ippon.tatami.repository.UserRepository;
 import fr.ippon.tatami.security.AuthenticationService;
+import net.coobird.thumbnailator.Thumbnails;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -100,7 +102,7 @@ public class AvatarService {
         if (dbAvatar != null) {
             return dbAvatar;
         } else if (avatar.getFilename().startsWith("http")) {
-            byte[] bytes = null;
+            byte[] bytes = {};
             try {
                 bytes = fetchRemoteFile(avatar.getFilename());
             } catch (Exception e) {
@@ -109,9 +111,47 @@ public class AvatarService {
             avatar.setSize(bytes.length);
             avatar.setContent(bytes);
             avatar.setCreationDate(new Date());
+            resizeAvatarAndSetThumbnail(avatar);
             avatarRepository.createAvatar(avatar);
         }
         return avatar;
+    }
+
+    private void resizeAvatarAndSetThumbnail(Avatar avatar) {
+        byte[] result = new byte[0];
+        boolean isImage = false;
+
+        try {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            Thumbnails.of(new ByteArrayInputStream(avatar.getContent()))
+                    .width(Constants.AVATAR_SIZE)
+                    .height(Constants.AVATAR_SIZE)
+                    .toOutputStream(baos);
+            baos.flush();
+            result = baos.toByteArray();
+        } catch (IOException e) {
+            log.error("Error resizing avatar " + avatar.getAvatarId());
+        }
+        if (result.length > 0) {
+            avatar.setSize(result.length);
+            avatar.setContent(result);
+        }
+        generateAvatarThumbnail(avatar);
+    }
+
+    private void generateAvatarThumbnail(Avatar avatar) {
+        byte[] result = new byte[0];
+        try {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            Thumbnails.of(new ByteArrayInputStream(avatar.getContent()))
+                    .size(Constants.AVATAR_THUMBNAIL_SIZE,Constants.AVATAR_THUMBNAIL_SIZE)
+                    .toOutputStream(baos);
+            baos.flush();
+            result = baos.toByteArray();
+        } catch(IOException e) {
+            log.error("Error creating thumbnail for avatar "+avatar.getAvatarId());
+        }
+        avatar.setThumb(result);
     }
 
     private byte[] fetchRemoteFile(String location) throws Exception {

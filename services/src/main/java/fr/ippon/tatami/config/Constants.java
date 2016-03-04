@@ -25,7 +25,7 @@ public class Constants {
 
     public static final String TATAMIBOT_NAME = "tatamibot";
 
-    public static final int AVATAR_SIZE = 200;
+    public static final int AVATAR_SIZE = 230;
 
 
     /**
@@ -50,5 +50,6 @@ public class Constants {
     public static String ATTACHMENT_FILE_PATH = "";
     public static String ATTACHMENT_THUMBNAIL_NAME = "_thumb";
     public static int ATTACHMENT_IMAGE_WIDTH = -1;
+    public static int AVATAR_THUMBNAIL_SIZE = 126;
 
 }

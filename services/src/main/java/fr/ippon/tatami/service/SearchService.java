@@ -109,4 +109,6 @@ public interface SearchService {
     Ping createElasticSearchPing(Ping ping);
 
     Collection<String> getUserFavourites(String login);
+
+    void updateUser(User user);
 }

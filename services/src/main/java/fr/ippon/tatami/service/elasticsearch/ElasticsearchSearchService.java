@@ -26,9 +26,11 @@ import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
+import org.elasticsearch.index.engine.DocumentMissingException;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.HasChildQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -250,7 +252,6 @@ public class ElasticsearchSearchService implements SearchService {
                                      final String query,
                                      int page,
                                      int size) {
-
         Assert.notNull(query);
         Assert.notNull(domain);
 
@@ -331,7 +332,6 @@ public class ElasticsearchSearchService implements SearchService {
     };
 
     @Override
-    @Async
     public void addUser(final User user) {
         Assert.notNull(user, "user cannot be null");
         index(user, userMapper);
@@ -346,6 +346,15 @@ public class ElasticsearchSearchService implements SearchService {
     public void removeUser(User user) {
         delete(user, userMapper);
     }
+
+
+    @Override
+    @Async
+    public void updateUser(User user) {
+        update(user,userMapper);
+    }
+
+
 
 
     @Override
@@ -520,6 +529,36 @@ public class ElasticsearchSearchService implements SearchService {
     }
 
     /**
+     * Indexes an object to elasticsearch.
+     * This method is asynchronous.
+     *
+     * @param object Object to index.
+     * @param mapper Converter to JSON.
+     */
+    private <T> void update(T object, ElasticsearchMapper<T> mapper) {
+        Assert.notNull(object);
+        Assert.notNull(mapper);
+
+        final String type = mapper.type();
+        final String id = mapper.id(object);
+        try {
+            final XContentBuilder source = mapper.toJson(object);
+
+            log.debug("Ready to index the {} id {} into Elasticsearch: {}", type, id, stringify(source));
+            client()
+                    .prepareUpdate(indexName(type), type, id)
+                    .setDoc(source)
+                    .execute(getUpdateListener(type, id, object,mapper));
+        } catch (DocumentMissingException e) {
+            log.info("The " + type + " id " + id + " wasn't indexed, indexing now");
+            index(object,mapper);
+        } catch (IOException e) {
+
+            log.error("The " + type + " id " + id + " wasn't indexed", e);
+        }
+    }
+
+    /**
      * Indexes an collection of objects to elasticsearch.
      * This method is synchronous.
      *
@@ -566,6 +605,8 @@ public class ElasticsearchSearchService implements SearchService {
         }
     }
 
+
+
     /**
      * delete a document.
      * This method is asynchronous.
@@ -604,6 +645,31 @@ public class ElasticsearchSearchService implements SearchService {
             }
         };
     }
+
+    private <T> ActionListener<UpdateResponse> getUpdateListener(final String id, final String type, final T object, final ElasticsearchMapper<T> mapper) {
+        return new ActionListener<UpdateResponse>() {
+            @Override
+            public void onResponse(UpdateResponse updateResponse) {
+                if (log.isDebugEnabled()) {
+                    if (!updateResponse.isCreated()) {
+                        log.debug("{} of id {} was not found therefore not updated.", type, id);
+                    } else {
+                        log.debug("{} of id {} was updated from Elasticsearch.", type, id);
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Throwable e) {
+                if (e.getCause() != null && e.getCause().getCause() instanceof DocumentMissingException) {
+                    index(object, mapper);
+                } else {
+                    log.error("The " + type + " of id " + id + " wasn't update from Elasticsearch.", e);
+                }
+            }
+        };
+    }
+
 
     public Collection<String> searchByUsername(String domain, String prefix, int size) {
 
@@ -838,7 +904,6 @@ public class ElasticsearchSearchService implements SearchService {
      * @param login that needs to be indexed.
      */
     @Override
-    @Async
     public void indexUserFavourite(String favourite, String login) {
         Assert.notNull(favourite);
         Assert.notNull(login);
@@ -967,6 +1032,7 @@ public class ElasticsearchSearchService implements SearchService {
         log.debug("search favourites " + " for user(\"" + login + "\") = result : " + ids);
         return ids;
     }
+
 
     private List<String> getTypesFromHits(SearchHit[] hits, String type) {
         if (hits == null || hits.length == 0) {

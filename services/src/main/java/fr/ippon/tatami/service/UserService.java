@@ -179,8 +179,7 @@ public class UserService {
                 usernameService.updateUsername(user, currentUser);
             }
             userRepository.updateUser(user);
-            searchService.removeUser(user);
-            searchService.addUser(user);
+            searchService.updateUser(user);
         } catch (ConstraintViolationException cve) {
             log.info("Constraint violated while updating user " + user + " : " + cve);
             throw cve;

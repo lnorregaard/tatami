@@ -58,14 +58,8 @@ public class FriendshipService {
     @Inject
     private UsernameService usernameService;
 
-    /**
-     * Follow a user.
-     *
-     * @return true if the operation succeeds, false otherwise
-     */
-    public boolean followUser(String usernameToFollow) {
-        log.debug("Following user : {}", usernameToFollow);
-        User currentUser = authenticationService.getCurrentUser();
+
+    public boolean followUser(User currentUser, String usernameToFollow) {
         String loginToFollow = getLoginFromUsername(usernameToFollow);
         log.debug("Following login : {}", loginToFollow);
         if (loginToFollow == null || loginToFollow.equals("")) {
@@ -111,6 +105,18 @@ public class FriendshipService {
             log.debug("Followed user does not exist : " + loginToFollow);
             return false;
         }
+
+    }
+
+        /**
+         * Follow a user.
+         *
+         * @return true if the operation succeeds, false otherwise
+         */
+    public boolean followUser(String usernameToFollow) {
+        log.debug("Following user : {}", usernameToFollow);
+        User currentUser = authenticationService.getCurrentUser();
+        return followUser(currentUser,usernameToFollow);
     }
 
     private boolean followUser(User currentUser, User followedUser) {

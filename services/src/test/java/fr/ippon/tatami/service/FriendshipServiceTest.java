@@ -101,6 +101,38 @@ public class FriendshipServiceTest extends AbstractCassandraTatamiTest {
         Constants.MODERATOR_STATUS = false;
     }
 
+    @Test
+    public void shouldGenerateFriend() {
+        Constants.USER_AND_FRIENDS = true;
+        Constants.MODERATOR_STATUS = true;
+        mockAuthentication("userWhoWantToFollowWithDifferentUsername@ippon.fr");
+
+        User userWhoFollow = userService.getUserByUsername("userWhoWantToFollow");
+        assertThat(userWhoFollow.getFriendsCount(), is(0L));
+        User followedUser = userService.getUserByUsername("userWhoWillBeFollowed");
+        assertTrue(friendshipService.followUser("userWhoWillBeFollowed"));
+        assertTrue(friendshipService.followUser(followedUser,"userWhoWantToFollow"));
+
+        /* verify */
+        userWhoFollow = userService.getUserByUsername("userWhoWantToFollow");
+//        Collection<StatusDTO> statuses = timelineService.getTimeline(10,null,null, null);
+//        assertThat(statuses.size(),is(2));
+//        StatusDTO status = statuses.iterator().next();
+//        assertThat(status.getSharedByUsername(),is("userWhoWillBeFollowed"));
+//        assertThat(status.getUsername(),is("userWhoWantToFollow"));
+
+        User userWhoIsFollowed = userService.getUserByUsername("userWhoWillBeFollowed");
+        Collection<StatusDTO> followedstatuses = timelineService.getUserTimeline(userWhoIsFollowed.getLogin(),10,null,null,null);
+//        assertThat(followedstatuses.size(),is(2));
+//        StatusDTO followedStatus = followedstatuses.iterator().next();
+//        assertThat(followedStatus.getSharedByUsername(),is("userWhoWillBeFollowed"));
+//        assertThat(followedStatus.getUsername(),is("userWhoWantToFollow"));
+        // Clean up
+        friendshipService.unfollowUser("userWhoWillBeFollowed");
+        Constants.USER_AND_FRIENDS = false;
+        Constants.MODERATOR_STATUS = false;
+    }
+
 
     @Test
     public void shouldNotFollowUserBecauseUserDoesNotExist() {

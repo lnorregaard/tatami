@@ -89,12 +89,6 @@ public class FriendshipServiceTest extends AbstractCassandraTatamiTest {
         assertThat(status.getSharedByUsername(),is("userWhoWillBeFollowed"));
         assertThat(status.getUsername(),is("userWhoWantToFollow"));
 
-        User userWhoIsFollowed = userService.getUserByUsername("userWhoWillBeFollowed");
-        Collection<StatusDTO> followedstatuses = timelineService.getUserTimeline(userWhoIsFollowed.getLogin(),10,null,null,StatusType.FRIEND_REQUEST.toString());
-        assertThat(followedstatuses.size(),is(1));
-        StatusDTO followedStatus = followedstatuses.iterator().next();
-        assertThat(followedStatus.getSharedByUsername(),is("userWhoWillBeFollowed"));
-        assertThat(followedStatus.getUsername(),is("userWhoWantToFollow"));
         // Clean up
         friendshipService.unfollowUser("userWhoWillBeFollowed");
         Constants.USER_AND_FRIENDS = false;

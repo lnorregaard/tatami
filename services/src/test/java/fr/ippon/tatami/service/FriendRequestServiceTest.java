@@ -47,9 +47,7 @@ public class FriendRequestServiceTest extends AbstractCassandraTatamiTest {
 
     @Test
     public void shouldBeFriendWithUser() {
-        User userWhoWillBeFollowed = new User();
-        userWhoWillBeFollowed.setLogin("userWhoWillBeFollowed@ippon.fr");
-        userService.createUser(userWhoWillBeFollowed);
+        Constants.USER_AND_FRIENDS = false;
         mockAuthentication("userWhoWillBeFollowed@ippon.fr");
         friendshipService.followUser("userWhoWantToFollow");
 
@@ -75,10 +73,8 @@ public class FriendRequestServiceTest extends AbstractCassandraTatamiTest {
         /* verify clean up */
         userWhoFollow = userService.getUserByUsername("userWhoWantToFollow");
         assertThat(userWhoFollow.getFriendsCount(), is(0L));
-        assertThat(userWhoFollow.getFollowersCount(), is(0L));
 
         userWhoIsFollowed = userService.getUserByUsername("userWhoWillBeFollowed");
-        assertThat(userWhoIsFollowed.getFriendsCount(), is(0L));
         assertThat(userWhoIsFollowed.getFollowersCount(), is(0L));
     }
 

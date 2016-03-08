@@ -118,7 +118,12 @@ public class UserService {
     public User getUserByUsername(String username) {
         User currentUser = authenticationService.getCurrentUser();
         String domain = DomainUtil.getDomainFromLogin(currentUser.getLogin());
-        String login = usernameService.getLoginFromUsernameAndDomain(username, domain);
+        String login = "";
+        if (Constants.USER_AND_FRIENDS) {
+            login = DomainUtil.getLoginFromUsernameAndDomain(username, domain);
+        } else {
+            login = usernameService.getLoginFromUsernameAndDomain(username, domain);
+        }
         return getUserByLogin(login);
     }
 
@@ -207,6 +212,7 @@ public class UserService {
     public void createUser(User user) {
         String login = user.getLogin();
 
+        String username = DomainUtil.getUsernameFromLogin(login);
         String domain = DomainUtil.getDomainFromLogin(login);
         domainRepository.addUserInDomain(domain, login);
 
@@ -219,7 +225,7 @@ public class UserService {
             String encryptedPassword = encoder.encode(password);
             user.setPassword(encryptedPassword);
         }
-
+        user.setUsername(username);
         user.setDomain(domain);
         user.setFirstName(StringUtils.defaultString(user.getFirstName()));
         user.setLastName(StringUtils.defaultString(user.getLastName()));
@@ -230,6 +236,8 @@ public class UserService {
         user.setWeeklyDigestSubscription(true);
         if (Constants.USER_AND_FRIENDS) {
             usernameService.createUsername(user);
+        } else {
+            user.setUsername(username);
         }
         counterRepository.createStatusCounter(user.getLogin());
         counterRepository.createFriendsCounter(user.getLogin());

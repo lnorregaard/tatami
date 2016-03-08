@@ -294,7 +294,11 @@ public class TimelineService {
                         statusUser = userService.getUserByLogin(friendRequest.getFollowerLogin());
                         statusDTO.setFirstName(statusUser.getFirstName());
                         statusDTO.setLastName(statusUser.getLastName());
-                        statusDTO.setAvatar(statusUser.getAvatar());
+                        if (!currentUser.getLogin().equals(statusUser.getLogin())) {
+                            statusDTO.setAvatar(follower.getAvatar());
+                        } else {
+                            statusDTO.setAvatar(statusUser.getAvatar());
+                        }
                         statusDTO.setUsername(statusUser.getUsername());
                         statusDTO.setContent(friendRequest.getContent());
                         statusDTO.setSharedByUsername(follower.getUsername());

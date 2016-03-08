@@ -120,9 +120,9 @@ public class UserService {
         String domain = DomainUtil.getDomainFromLogin(currentUser.getLogin());
         String login = "";
         if (Constants.USER_AND_FRIENDS) {
-            login = DomainUtil.getLoginFromUsernameAndDomain(username, domain);
-        } else {
             login = usernameService.getLoginFromUsernameAndDomain(username, domain);
+        } else {
+            login = DomainUtil.getLoginFromUsernameAndDomain(username, domain);
         }
         return getUserByLogin(login);
     }

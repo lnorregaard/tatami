@@ -335,6 +335,11 @@ INSERT INTO user (login , avatar , firstname , lastname , username) VALUES('user
 INSERT INTO user (login , avatar , firstname , lastname , username) VALUES('userWhoReadStatus@ippon.fr','avatar','User','WhoReadStatus','userWhoReadStatus');
 INSERT INTO user (login , avatar , firstname , lastname , username) VALUES('userWhoShouldBeFoundBySimilarSearch@ippon.fr','avatar','User','WhoShouldBeFoundBySimilarSearch','userWhoShouldBeFoundBySimilarSearch');
 
+INSERT INTO user (login , avatar , firstname , lastname , username) VALUES('userWhoWantToFollowWithDifferentUsername@ippon.fr','avatar','User','WhoWantToFollow', 'userWhoWantToFollow');
+INSERT INTO username (username , domain,login, created) VALUES('userWhoWantToFollow','ippon.fr','userWhoWantToFollowWithDifferentUsername@ippon.fr',fa2bd770-9848-11e1-a6ca-e0f847068d52);
+INSERT INTO user (login , avatar , firstname , lastname , username) VALUES('userWhoWillBeFollowedWithDifferentUsername@ippon.fr','avatar','User','WhoWillBeFollowed','userWhoWillBeFollowed');
+INSERT INTO username (username , domain,login, created) VALUES('userWhoWillBeFollowed','ippon.fr','userWhoWillBeFollowedWithDifferentUsername@ippon.fr',fa2bd770-9848-11e1-a6ca-e0f847068d52);
+
 
 INSERT INTO status (statusId,login,username,domain,content,statusDate,type) VALUES (fa2bd770-9848-11e1-a6ca-e0f847068d52,'userWithStatus@ippon.fr','userWithStatus','ippon.fr','Tatami is an enterprise social network',dateof(now()), 'STATUS');
 INSERT INTO status (statusId,login,username,domain,content,statusDate, type) VALUES (f97d6470-9847-11e1-a6ca-e0f847068d52,'userWithStatus@ippon.fr','userWithStatus','ippon.fr','Tatami is fully Open Source',dateof(now()),'STATUS');

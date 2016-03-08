@@ -207,7 +207,6 @@ public class UserService {
     public void createUser(User user) {
         String login = user.getLogin();
 
-        String username = DomainUtil.getUsernameFromLogin(login);
         String domain = DomainUtil.getDomainFromLogin(login);
         domainRepository.addUserInDomain(domain, login);
 
@@ -221,7 +220,6 @@ public class UserService {
             user.setPassword(encryptedPassword);
         }
 
-        user.setUsername(username);
         user.setDomain(domain);
         user.setFirstName(StringUtils.defaultString(user.getFirstName()));
         user.setLastName(StringUtils.defaultString(user.getLastName()));

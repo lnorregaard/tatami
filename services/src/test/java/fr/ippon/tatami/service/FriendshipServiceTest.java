@@ -1,12 +1,19 @@
 package fr.ippon.tatami.service;
 
 import fr.ippon.tatami.AbstractCassandraTatamiTest;
+import fr.ippon.tatami.config.Constants;
 import fr.ippon.tatami.domain.User;
+import fr.ippon.tatami.domain.status.Status;
+import fr.ippon.tatami.domain.status.StatusType;
 import fr.ippon.tatami.security.AuthenticationService;
+import fr.ippon.tatami.service.dto.StatusDTO;
 import org.junit.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import javax.inject.Inject;
+
+import java.util.Collection;
+import java.util.List;
 
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
@@ -21,6 +28,8 @@ public class FriendshipServiceTest extends AbstractCassandraTatamiTest {
 
     @Inject
     public FriendshipService friendshipService;
+
+    @Inject TimelineService timelineService;
 
     @Test
     public void shouldGetAUserServiceInjected() {
@@ -60,6 +69,38 @@ public class FriendshipServiceTest extends AbstractCassandraTatamiTest {
         // Clean up
         friendshipService.unfollowUser("userWhoWillBeFollowed");
     }
+
+    @Test
+    public void shouldGenerateFriendRequest() {
+        Constants.USER_AND_FRIENDS = true;
+        Constants.MODERATOR_STATUS = true;
+        mockAuthentication("userWhoWantToFollowWithDifferentUsername@ippon.fr");
+
+        User userWhoFollow = userService.getUserByUsername("userWhoWantToFollow");
+        assertThat(userWhoFollow.getFriendsCount(), is(0L));
+
+        assertTrue(friendshipService.followUser("userWhoWillBeFollowed"));
+
+        /* verify */
+        userWhoFollow = userService.getUserByUsername("userWhoWantToFollow");
+        Collection<StatusDTO> statuses = timelineService.getTimeline(10,null,null, StatusType.FRIEND_REQUEST.toString());
+        assertThat(statuses.size(),is(1));
+        StatusDTO status = statuses.iterator().next();
+        assertThat(status.getSharedByUsername(),is("userWhoWillBeFollowed"));
+        assertThat(status.getUsername(),is("userWhoWantToFollow"));
+
+        User userWhoIsFollowed = userService.getUserByUsername("userWhoWillBeFollowed");
+        Collection<StatusDTO> followedstatuses = timelineService.getUserTimeline(userWhoIsFollowed.getLogin(),10,null,null,StatusType.FRIEND_REQUEST.toString());
+        assertThat(followedstatuses.size(),is(1));
+        StatusDTO followedStatus = followedstatuses.iterator().next();
+        assertThat(followedStatus.getSharedByUsername(),is("userWhoWillBeFollowed"));
+        assertThat(followedStatus.getUsername(),is("userWhoWantToFollow"));
+        // Clean up
+        friendshipService.unfollowUser("userWhoWillBeFollowed");
+        Constants.USER_AND_FRIENDS = false;
+        Constants.MODERATOR_STATUS = false;
+    }
+
 
     @Test
     public void shouldNotFollowUserBecauseUserDoesNotExist() {
@@ -147,5 +188,6 @@ public class FriendshipServiceTest extends AbstractCassandraTatamiTest {
         when(mockAuthenticationService.getCurrentUser()).thenReturn(authenticateUser);
         ReflectionTestUtils.setField(friendshipService, "authenticationService", mockAuthenticationService);
         ReflectionTestUtils.setField(userService, "authenticationService", mockAuthenticationService);
+        ReflectionTestUtils.setField(timelineService, "authenticationService", mockAuthenticationService);
     }
 }

@@ -328,13 +328,15 @@ public class TimelineService {
 
         Collection<String> loginWhoShare = sharesRepository.findLoginsWhoSharedAStatus(statusDTO.getStatusId());
         User currentUser = authenticationService.getCurrentUser();
-        if(currentUser != null && loginWhoShare.contains(currentUser.getLogin()) )
+        if(currentUser != null && loginWhoShare.contains(currentUser.getLogin()) ) {
             isSharedByMe = true;
-        else if(currentUser != null && currentUser.getUsername().equals(statusDTO.getSharedByUsername())) //Greg ce n'est pas normal de devoir faire ça
+        } else if(currentUser != null && currentUser.getUsername().equals(statusDTO.getSharedByUsername())) {//Greg ce n'est pas normal de devoir faire ça
             isSharedByMe = true;
-        else
+        } else if(currentUser != null && statusDTO.getContent() != null && statusDTO.isStatusPrivate() && currentUser.getUsername().equals(statusDTO.getUsername())) {
+            isSharedByMe = true;
+        } else {
             isSharedByMe = false;
-
+        }
         return isSharedByMe;
     }
 
@@ -500,7 +502,6 @@ public class TimelineService {
         if (statusType != null) {
             dtos = dtos.stream()
                     .filter(status -> status.getType() == StatusType.valueOf(statusType))
-                    .filter(status -> !status.isStatusPrivate())
                     .collect(Collectors.toList());
         }
         if (statuses.size() != dtos.size()) {

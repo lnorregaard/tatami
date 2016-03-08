@@ -6,6 +6,7 @@ import fr.ippon.tatami.domain.Group;
 import fr.ippon.tatami.domain.User;
 import fr.ippon.tatami.domain.status.Status;
 import fr.ippon.tatami.domain.status.StatusDetails;
+import fr.ippon.tatami.domain.status.StatusType;
 import fr.ippon.tatami.security.AuthenticationService;
 import fr.ippon.tatami.service.GroupService;
 import fr.ippon.tatami.service.StatusUpdateService;
@@ -29,6 +30,7 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * REST controller for managing status.
@@ -106,7 +108,9 @@ public class TimelineController {
             count = 20; //Default value
         }
         try {
-            return timelineService.getTimeline(count, start, finish,"STATUS");
+            return timelineService.getTimeline(count, start, finish, StatusType.STATUS.toString()).stream()
+                    .filter(status -> !status.isStatusPrivate())
+                    .collect(Collectors.toList());
         } catch (Exception e) {
             StringWriter stack = new StringWriter();
             PrintWriter pw = new PrintWriter(stack);

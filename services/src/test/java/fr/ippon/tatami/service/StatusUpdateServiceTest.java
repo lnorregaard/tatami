@@ -3,6 +3,7 @@ package fr.ippon.tatami.service;
 import fr.ippon.tatami.AbstractCassandraTatamiTest;
 import fr.ippon.tatami.domain.User;
 import fr.ippon.tatami.domain.status.Status;
+import fr.ippon.tatami.domain.status.StatusType;
 import fr.ippon.tatami.repository.MentionlineRepository;
 import fr.ippon.tatami.repository.StatusRepository;
 import fr.ippon.tatami.security.AuthenticationService;
@@ -73,6 +74,29 @@ public class StatusUpdateServiceTest extends AbstractCassandraTatamiTest {
         List<String> johnMentions = mentionlineRepository.getMentionline("john@ippon.fr", 10, null, null);
         assertThat(johnMentions.size(), is(1));
     }
+
+    @Test
+    public void shouldMentionUserPrivate() throws Exception {
+        mockAuthenticationOnTimelineServiceWithACurrentUser("timelineUser@ippon.fr");
+        mockAuthenticationOnStatusUpdateServiceWithACurrentUser("timelineUser@ippon.fr");
+        String content = "Hello @jane2! @john2 ! world";
+
+        statusUpdateService.postStatus(content, true, new ArrayList<String>(), null);
+
+        List<String> janeMentions = mentionlineRepository.getMentionline("jane2@ippon.fr", 10, null, null);
+        assertThat(janeMentions.size(), is(1));
+
+        Status status = (Status) statusRepository.findStatusById(janeMentions.get(0));
+        assertThat(status.getContent(), is(content));
+
+        List<String> johnMentions = mentionlineRepository.getMentionline("john2@ippon.fr", 10, null, null);
+        assertThat(johnMentions.size(), is(1));
+
+        Collection<StatusDTO> statuses = timelineService.getTimeline(10,null,null, null);
+        assertThat(statuses.size(), is(1));
+        assertThat(statuses.iterator().next().isShareByMe(), is(true));
+    }
+
 
     private void assertThatNewTestIsPosted(String username, String content, Collection<StatusDTO> statuses) {
         assertThat(statuses, notNullValue());

@@ -65,6 +65,8 @@ public class TimelineServiceTest extends AbstractCassandraTatamiTest {
         assertThatLineForUserWithStatusIsOk(username, status);
     }
 
+
+
     private void mockAuthenticationOnTimelineServiceWithACurrentUser(String login) {
         User authenticateUser = constructAUser(login);
         AuthenticationService mockAuthenticationService = mock(AuthenticationService.class);

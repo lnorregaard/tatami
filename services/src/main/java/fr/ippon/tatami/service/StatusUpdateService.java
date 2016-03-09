@@ -271,7 +271,6 @@ public class StatusUpdateService {
                 postPublicStatus(group, status);
             }
         }
-
         if (log.isInfoEnabled()) {
             long finishTime = Calendar.getInstance().getTimeInMillis();
             log.info("Status created in " + (finishTime - startTime) + "ms.");

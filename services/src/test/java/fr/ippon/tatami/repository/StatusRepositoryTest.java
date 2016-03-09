@@ -13,6 +13,7 @@ import java.util.ArrayList;
 
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
@@ -41,7 +42,7 @@ public class StatusRepositoryTest extends AbstractCassandraTatamiTest {
     @Test
     public void shouldCreateAStatusPending() {
         Constants.MODERATOR_STATUS = true;
-        String login = "jdubois@ippon.fr";
+        String login = "userWhoPostStatus@ippon.fr";
         String content = "content";
 
         Status created = statusRepository.createStatus(login, false, null, new ArrayList<>(),
@@ -52,7 +53,7 @@ public class StatusRepositoryTest extends AbstractCassandraTatamiTest {
         assertEquals(found.getState(),"PENDING");
 
         AbstractStatus foundStatus =  statusRepository.findStatusById(created.getStatusId().toString());
-        assertThat(foundStatus, nullValue());
+        assertThat(foundStatus, notNullValue());
         Constants.MODERATOR_STATUS = false;
     }
 

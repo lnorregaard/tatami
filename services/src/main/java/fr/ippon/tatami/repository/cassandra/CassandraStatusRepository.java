@@ -404,9 +404,9 @@ public class CassandraStatusRepository implements StatusRepository {
         }
         Row row = rs.one();
         AbstractStatus status = null;
-        if (excludeStates && row.getString("state") != null) {
-            return status;
-        }
+//        if (excludeStates && row.getString("state") != null) {
+//            return status;
+//        }
         String type = row.getString(TYPE);
         if (type == null || type.equals(StatusType.STATUS.name())) {
             status = findStatus(row, statusId);

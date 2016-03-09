@@ -788,7 +788,6 @@ public class TimelineService {
             }
             statusUpdateService.postPublicStatus(group, status);
             statusCounterRepository.createLikeCounter(status.getStatusId());
-            timelineRepository.addStatusToTimeline(status.getLogin(),statusId);
         }
     }
 

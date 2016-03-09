@@ -58,6 +58,9 @@ public class FriendshipService {
     @Inject
     private UsernameService usernameService;
 
+    @Inject
+    private UserService userService;
+
 
     public boolean followUser(User currentUser, String usernameToFollow) {
         String loginToFollow = getLoginFromUsername(usernameToFollow);
@@ -96,7 +99,14 @@ public class FriendshipService {
                     FriendRequest friendRequest = statusRepository.createFriendRequest(followedUserLogin,currentUserLogin);
                     timelineRepository.addStatusToTimeline(followedUserLogin,friendRequest.getStatusId().toString());
                     timelineRepository.addStatusToTimeline(currentUserLogin,friendRequest.getStatusId().toString());
-                    return friendRequestRepository.addFriendRequest(currentUserLogin,followedUserLogin,friendRequest.getStatusId());
+                    if (userService.isAdmin(followedUser.getLogin())) {
+                        followUser(currentUser,followedUser);
+                        followUser(followedUser,currentUser);
+                        statusRepository.acceptFriendRequest(friendRequest.getStatusId().toString());
+                        return true;
+                    } else {
+                        return friendRequestRepository.addFriendRequest(currentUserLogin,followedUserLogin,friendRequest.getStatusId());
+                    }
                 }
             } else {
                 return followUser(currentUser, followedUser);
@@ -105,7 +115,6 @@ public class FriendshipService {
             log.debug("Followed user does not exist : " + loginToFollow);
             return false;
         }
-
     }
 
         /**
@@ -150,19 +159,23 @@ public class FriendshipService {
         String loginToUnfollow = this.getLoginFromUsername(usernameToUnfollow);
         User userToUnfollow = userRepository.findUserByLogin(loginToUnfollow);
         if (Constants.USER_AND_FRIENDS) {
-            UUID unfollowStatus = friendRequestRepository.getStatusIdForFriendRequest(loginToUnfollow,currentUser.getLogin());
-            if (unfollowStatus != null) {
-                statusRepository.rejectFriendRequest(unfollowStatus.toString());
+            if (userService.isAdmin(loginToUnfollow)) {
+                return false;
+            } else {
+                UUID unfollowStatus = friendRequestRepository.getStatusIdForFriendRequest(loginToUnfollow,currentUser.getLogin());
+                if (unfollowStatus != null) {
+                    statusRepository.rejectFriendRequest(unfollowStatus.toString());
+                }
+                friendRequestRepository.removeFriendRequest(loginToUnfollow,currentUser.getLogin());
+                UUID currentUserStatus = friendRequestRepository.getStatusIdForFriendRequest(currentUser.getLogin(),loginToUnfollow);
+                if (currentUserStatus != null) {
+                    statusRepository.rejectFriendRequest(currentUserStatus.toString());
+                }
+                friendRequestRepository.removeFriendRequest(currentUser.getLogin(),loginToUnfollow);
+                unfollowUser(currentUser,userToUnfollow);
+                unfollowUser(userToUnfollow,currentUser);
+                return true;
             }
-            friendRequestRepository.removeFriendRequest(loginToUnfollow,currentUser.getLogin());
-            UUID currentUserStatus = friendRequestRepository.getStatusIdForFriendRequest(currentUser.getLogin(),loginToUnfollow);
-            if (currentUserStatus != null) {
-                statusRepository.rejectFriendRequest(currentUserStatus.toString());
-            }
-            friendRequestRepository.removeFriendRequest(currentUser.getLogin(),loginToUnfollow);
-            unfollowUser(currentUser,userToUnfollow);
-            unfollowUser(userToUnfollow,currentUser);
-            return true;
         }
         return unfollowUser(currentUser, userToUnfollow);
     }

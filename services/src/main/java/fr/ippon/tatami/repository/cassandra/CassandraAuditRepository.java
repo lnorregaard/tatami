@@ -1,8 +1,10 @@
 package fr.ippon.tatami.repository.cassandra;
 
+import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.Statement;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
+import com.datastax.driver.core.querybuilder.Select;
 import com.datastax.driver.core.utils.UUIDs;
 import fr.ippon.tatami.domain.User;
 import fr.ippon.tatami.repository.AuditRepository;
@@ -12,7 +14,11 @@ import org.springframework.stereotype.Repository;
 
 import javax.inject.Inject;
 
-import static com.datastax.driver.core.querybuilder.QueryBuilder.ttl;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+import static com.datastax.driver.core.querybuilder.QueryBuilder.*;
+import static com.datastax.driver.core.querybuilder.QueryBuilder.desc;
 
 /**
  * Created by lnorregaard on 08/12/15.
@@ -52,6 +58,8 @@ public class CassandraAuditRepository implements AuditRepository {
         session.execute(statement);
     }
 
+
+
     @Override
     public void blockUser(String moderator, String username, String comment) {
         log.info("Creating audit for user : {} moderator {} comment: {}", username,moderator,comment);
@@ -64,6 +72,23 @@ public class CassandraAuditRepository implements AuditRepository {
                 .value(COMMENT,comment)
                 .using(ttl(COLUMN_TTL));
         session.execute(statement);
+    }
+
+    @Override
+    public String getCommentForStatus(String statusId) {
+        Select.Where where = QueryBuilder.select()
+                .column("comment")
+                .from(TABLE)
+                .where(eq(BLOCKED_ID, statusId));
+        Statement statement = where;
+        ResultSet results = session.execute(statement);
+        if (results.isExhausted()) {
+            return "";
+        }
+        return results
+                .one()
+                .getString(COMMENT);
+
     }
 
 }

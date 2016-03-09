@@ -69,6 +69,19 @@ public class TimelineController {
     }
 
     /**
+     * GET  /statuses/:id/audit -> returns the details for a status, specified by the id parameter
+     */
+    @RequestMapping(value = "/rest/statuses/{statusId}/audit",
+            method = RequestMethod.GET,
+            produces = "plain/text")
+    @ResponseBody
+    public String getAuditMessage(@PathVariable("statusId") String statusId) {
+        log.debug("REST request to get audit message for Id : {}", statusId);
+        return timelineService.getAuditMessage(statusId);
+    }
+
+
+    /**
      * GET  /statuses/home_timeline -> get the latest statuses from the current user
      */
     @RequestMapping(value = "/rest/statuses/home_timeline",

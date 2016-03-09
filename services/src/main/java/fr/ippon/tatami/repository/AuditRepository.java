@@ -9,4 +9,6 @@ public interface AuditRepository {
     void blockStatus(String moderator, String statusId, String username, String comment);
 
     void blockUser(String moderator, String username, String comment);
+
+    String getCommentForStatus(String statusId);
 }

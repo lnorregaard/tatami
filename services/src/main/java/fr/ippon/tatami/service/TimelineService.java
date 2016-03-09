@@ -832,4 +832,8 @@ public class TimelineService {
             return 0L;
         }
     }
+
+    public String getAuditMessage(String statusId) {
+        return auditRepository.getCommentForStatus(statusId);
+    }
 }

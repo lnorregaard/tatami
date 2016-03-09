@@ -504,11 +504,11 @@ public class TimelineService {
                     .filter(status -> status.getType() == StatusType.valueOf(statusType))
                     .collect(Collectors.toList());
         }
-        if (statuses.size() != dtos.size()) {
-            Collection<String> statusIdsToDelete = findStatusesToCleanUp(statuses, dtos);
-            timelineRepository.removeStatusesFromTimeline(login, statusIdsToDelete);
-            return getTimeline(nbStatus, start, finish, statusType);
-        }
+//        if (statuses.size() != dtos.size()) {
+//            Collection<String> statusIdsToDelete = findStatusesToCleanUp(statuses, dtos);
+//            timelineRepository.removeStatusesFromTimeline(login, statusIdsToDelete);
+//            return getTimeline(nbStatus, start, finish, statusType);
+//        }
         return dtos;
     }
 

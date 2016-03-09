@@ -1,5 +1,6 @@
 package fr.ippon.tatami.service;
 
+import fr.ippon.tatami.config.Constants;
 import fr.ippon.tatami.domain.Group;
 import fr.ippon.tatami.domain.User;
 import fr.ippon.tatami.repository.*;
@@ -504,11 +505,13 @@ public class TimelineService {
                     .filter(status -> status.getType() == StatusType.valueOf(statusType))
                     .collect(Collectors.toList());
         }
-//        if (statuses.size() != dtos.size()) {
-//            Collection<String> statusIdsToDelete = findStatusesToCleanUp(statuses, dtos);
-//            timelineRepository.removeStatusesFromTimeline(login, statusIdsToDelete);
-//            return getTimeline(nbStatus, start, finish, statusType);
-//        }
+        if (!Constants.MODERATOR_STATUS) {
+            if (statuses.size() != dtos.size()) {
+                Collection<String> statusIdsToDelete = findStatusesToCleanUp(statuses, dtos);
+                timelineRepository.removeStatusesFromTimeline(login, statusIdsToDelete);
+                return getTimeline(nbStatus, start, finish, statusType);
+            }
+        }
         return dtos;
     }
 

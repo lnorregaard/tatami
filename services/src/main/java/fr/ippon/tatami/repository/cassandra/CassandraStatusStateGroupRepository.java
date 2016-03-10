@@ -67,7 +67,7 @@ public class CassandraStatusStateGroupRepository implements StatusStateGroupRepo
         }
         Statement statement = QueryBuilder.delete().from(STATUS_STATE_GROUP_LINE)
                 .where(eq(GROUP_ID,groupId))
-                .and(in(STATE,withoutState(STATES,newState)))
+                .and(in(STATE,STATES))
                 .and(eq(STATUS_ID, statusId));
         log.debug("execute statement : {}", statement.toString());
         session.execute(statement);
@@ -146,6 +146,27 @@ public class CassandraStatusStateGroupRepository implements StatusStateGroupRepo
         return results
                 .one()
                 .getLong(0);
+    }
+
+    @Override
+    public void removeState(String groupId, UUID statusId) {
+        Statement statement = QueryBuilder.select()
+                .all()
+                .from(STATUS_STATE_GROUP_LINE)
+                .allowFiltering()
+                .where(eq(STATUS_ID, statusId));
+        log.debug("execute statement : {}", statement.toString());
+        ResultSet results = session.execute(statement);
+        if (!results.isExhausted()) {
+            Row row = results
+                    .one();
+            Statement deleteStatement = QueryBuilder.delete().from(STATUS_STATE_GROUP_LINE)
+                    .where(eq(GROUP_ID,row.getString(GROUP_ID)))
+                    .and(eq(STATE,row.getString(STATE)))
+                    .and(eq(STATUS_ID, row.getUUID(STATUS_ID)));
+            log.debug("execute delete statement : {}", deleteStatement.toString());
+            session.execute(deleteStatement);
+        }
     }
 
     private Select.Where addWhere(Select select, Select.Where where, Clause clause) {

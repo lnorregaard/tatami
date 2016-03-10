@@ -102,6 +102,7 @@ public class TimelineService {
 
     public StatusDTO getStatus(String statusId) {
         List<String> line = new ArrayList<String>();
+
         line.add(statusId);
         Collection<StatusDTO> statusCollection = buildStatusList(line);
         if (statusCollection.isEmpty()) {
@@ -228,6 +229,7 @@ public class TimelineService {
                     statusDTO.setGeoLocalization(abstractStatus.getGeoLocalization());
                     statusDTO.setActivated(statusUser.getActivated());
                     statusDTO.setFavoriteCount(statusCounterRepository.getLikeCounter(abstractStatus.getStatusId()));
+                    statusDTO.setState(abstractStatus.getState());
                     StatusType type = abstractStatus.getType();
                     if (type == null) {
                         statusDTO.setType(StatusType.STATUS);
@@ -572,11 +574,11 @@ public class TimelineService {
             User currentUser = authenticationService.getCurrentUser();
             if (status.getLogin().equals(currentUser.getLogin())) {
                 statusRepository.removeStatus(status);
-                statusStateGroupRepository.updateState(status.getGroupId(),status.getStatusId(),null);
+                statusStateGroupRepository.removeState(status.getGroupId(),status.getStatusId());
                 counterRepository.decrementStatusCounter(currentUser.getLogin());
                 searchService.removeStatus(status);
+                statusCounterRepository.deleteCounters(status.getStatusId());
             }
-            statusCounterRepository.deleteCounters(status.getStatusId());
         } else if (abstractStatus.getType().equals(StatusType.ANNOUNCEMENT)) {
             User currentUser = authenticationService.getCurrentUser();
             if (abstractStatus.getLogin().equals(currentUser.getLogin())) {

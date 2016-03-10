@@ -24,4 +24,6 @@ public interface StatusStateGroupRepository {
     List<UUID> findStatuses(String state, String groupId, UUID from, UUID to, int count);
 
     Long findStatusesCount(String types, String groupId);
+
+    void removeState(String groupId, UUID statusId);
 }

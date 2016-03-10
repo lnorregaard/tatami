@@ -52,4 +52,12 @@ public class Constants {
     public static int ATTACHMENT_IMAGE_WIDTH = -1;
     public static int AVATAR_THUMBNAIL_SIZE = 126;
 
+
+    public static int STORAGE_BASICSIZE = 10;
+    public static int STORAGE_PREMIUMSIZE = 1000;
+    public static int STORAGE_IPPONSIZE = 100000;
+    public static int STORAGE_BASICSUSCRIPTION = 0;
+    public static int STORAGE_PREMIUMSUSCRIPTION = 1;
+    public static int STORAGE_IPPONSUSCRIPTION = -1;
+
 }

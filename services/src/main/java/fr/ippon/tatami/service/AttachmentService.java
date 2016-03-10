@@ -70,6 +70,11 @@ public class AttachmentService {
             throw new StorageSizeException("User storage exceeded for user " + currentUser.getLogin());
         }
         attachment.setThumbnail(computeThumbnail(attachment));
+
+        if (Constants.LOCAL_ATTACHMENT_STORAGE) {
+            attachment.setContent(null);
+            attachment.setThumbnail(null);
+        }
         attachmentRepository.createAttachment(attachment);
         userAttachmentRepository.addAttachmentId(authenticationService.getCurrentUser().getLogin(),
                 attachment.getAttachmentId());

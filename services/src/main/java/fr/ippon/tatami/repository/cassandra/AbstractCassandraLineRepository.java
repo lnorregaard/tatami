@@ -61,13 +61,13 @@ public abstract class AbstractCassandraLineRepository {
      * Remove a collection of statuses.
      */
     protected void removeStatuses(String key, String table, Collection<String> statusIdsToDelete) {
-        BatchStatement batch = new BatchStatement();
-        for (String statusId : statusIdsToDelete) {
-            batch.add(getDeleteByIdStmt().bind()
-                    .setString("key", key)
-                    .setUUID("statusId", UUID.fromString(statusId)));
-        }
-        session.execute(batch);
+//        BatchStatement batch = new BatchStatement();
+//        for (String statusId : statusIdsToDelete) {
+//            batch.add(getDeleteByIdStmt().bind()
+//                    .setString("key", key)
+//                    .setUUID("statusId", UUID.fromString(statusId)));
+//        }
+//        session.execute(batch);
     }
 
     protected List<String> getLineFromTable(String table, String key, int size, String start, String finish) {

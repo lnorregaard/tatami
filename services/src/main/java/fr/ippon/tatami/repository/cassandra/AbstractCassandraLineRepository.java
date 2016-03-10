@@ -4,6 +4,7 @@ import com.datastax.driver.core.*;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.querybuilder.Select;
 import com.datastax.driver.core.utils.UUIDs;
+import fr.ippon.tatami.config.Constants;
 import fr.ippon.tatami.domain.status.Share;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,13 +62,15 @@ public abstract class AbstractCassandraLineRepository {
      * Remove a collection of statuses.
      */
     protected void removeStatuses(String key, String table, Collection<String> statusIdsToDelete) {
-//        BatchStatement batch = new BatchStatement();
-//        for (String statusId : statusIdsToDelete) {
-//            batch.add(getDeleteByIdStmt().bind()
-//                    .setString("key", key)
-//                    .setUUID("statusId", UUID.fromString(statusId)));
-//        }
-//        session.execute(batch);
+        if (!Constants.USER_AND_FRIENDS) {
+            BatchStatement batch = new BatchStatement();
+            for (String statusId : statusIdsToDelete) {
+                batch.add(getDeleteByIdStmt().bind()
+                        .setString("key", key)
+                        .setUUID("statusId", UUID.fromString(statusId)));
+            }
+            session.execute(batch);
+        }
     }
 
     protected List<String> getLineFromTable(String table, String key, int size, String start, String finish) {

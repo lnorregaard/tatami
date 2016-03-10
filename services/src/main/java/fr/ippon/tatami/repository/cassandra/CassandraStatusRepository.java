@@ -147,11 +147,9 @@ public class CassandraStatusRepository implements StatusRepository {
         }
 
         status.setContent(content);
+
         if (!admin && Constants.MODERATOR_STATUS && (status.getStatusPrivate() == null || !status.getStatusPrivate()) ) {
             status.setState("PENDING");
-            statusStateGroupRepository.createStatusStateGroup(status.getStatusId(),"PENDING",status.getGroupId());
-        } else if (admin && Constants.MODERATOR_STATUS && (status.getStatusPrivate() == null || !status.getStatusPrivate())) {
-            statusStateGroupRepository.createStatusStateGroup(status.getStatusId(),"APPROVED",status.getGroupId());
         }
 
         Set<ConstraintViolation<Status>> constraintViolations = validator.validate(status);
@@ -184,6 +182,11 @@ public class CassandraStatusRepository implements StatusRepository {
         BatchStatement batch = new BatchStatement();
         batch.add(mapper.saveQuery(status));
         session.execute(batch);
+        if (!admin && Constants.MODERATOR_STATUS && (status.getStatusPrivate() == null || !status.getStatusPrivate()) ) {
+            statusStateGroupRepository.createStatusStateGroup(status.getStatusId(),"PENDING",status.getGroupId());
+        } else if (admin && Constants.MODERATOR_STATUS && (status.getStatusPrivate() == null || !status.getStatusPrivate())) {
+            statusStateGroupRepository.createStatusStateGroup(status.getStatusId(),"APPROVED",status.getGroupId());
+        }
 
         return status;
     }

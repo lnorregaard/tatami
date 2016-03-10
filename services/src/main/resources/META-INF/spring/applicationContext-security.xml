@@ -64,9 +64,9 @@
     </http>
 
     <authentication-manager alias="authenticationManager">
-        <authentication-provider ref="ldapAuthenticationProvider"/>
+        <!--<authentication-provider ref="ldapAuthenticationProvider"/>-->
         <authentication-provider ref="daoAuthenticationProvider"/>
-        <authentication-provider ref="googleAuthProvider"/>
+        <!--<authentication-provider ref="googleAuthProvider"/>-->
     </authentication-manager>
 
     <!-- Defining our client -->

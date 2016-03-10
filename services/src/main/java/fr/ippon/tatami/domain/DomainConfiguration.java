@@ -7,7 +7,11 @@ import java.util.Properties;
 
 import com.datastax.driver.mapping.annotations.*;
 
+import fr.ippon.tatami.config.Constants;
 import org.apache.commons.io.IOUtils;
+import org.springframework.core.env.Environment;
+
+import javax.inject.Inject;
 
 /**
  * The configuration for a specific domain.
@@ -30,13 +34,12 @@ public class DomainConfiguration implements Serializable {
         public static String PREMIUMSUSCRIPTION = "1";
 
         public static String IPPONSUSCRIPTION = "-1";
-                
+
         static{
             InputStream inputStream=null;
             try{
-            	
-                
-                
+
+
                 inputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("META-INF/tatami/tatami.properties");
                 
                 Properties props = new Properties();
@@ -106,7 +109,7 @@ public class DomainConfiguration implements Serializable {
         try {
             return Long.parseLong(this.storageSize) * 1000000;
         } catch (NumberFormatException nfe) {
-            return Long.parseLong(SubscriptionAndStorageSizeOptions.BASICSIZE) * 1000000;
+            return Constants.STORAGE_BASICSIZE * 1000000;
         }
     }
 

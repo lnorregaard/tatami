@@ -109,6 +109,19 @@ public class ApplicationConfiguration {
         Constants.ATTACHMENT_THUMBNAIL_NAME = env.getProperty("attachment.thumbnail.name","_thumb");
         Constants.ATTACHMENT_IMAGE_WIDTH = Integer.parseInt(env.getProperty("attachment.image.width","-1"));
         Constants.AVATAR_THUMBNAIL_SIZE = Integer.parseInt(env.getProperty("avatar.thumbnail.size","126"));
+        String basicSize = "storage.basic.max.size";
+        String premiumSize = "storage.premium.max.size";
+        String ipponSize = "storage.ippon.max.size";
+        String basicSuscription = "suscription.level.free";
+        String premiumSuscription = "suscription.level.premium";
+        String ipponSuscription = "suscription.level.ippon";
+
+        Constants.STORAGE_BASICSIZE= Integer.parseInt(env.getProperty(basicSize,"100"));
+        Constants.STORAGE_PREMIUMSIZE= Integer.parseInt(env.getProperty(premiumSize,"1000"));
+        Constants.STORAGE_IPPONSIZE= Integer.parseInt(env.getProperty(ipponSize,"10000"));
+        Constants.STORAGE_BASICSUSCRIPTION= Integer.parseInt(env.getProperty(basicSuscription,"10"));
+        Constants.STORAGE_PREMIUMSUSCRIPTION= Integer.parseInt(env.getProperty(premiumSuscription,"10"));
+        Constants.STORAGE_IPPONSUSCRIPTION= Integer.parseInt(env.getProperty(ipponSuscription,"10"));
 
         log.info("Tatami v. {} started!", Constants.VERSION);
         log.debug("Google Analytics key : {}", Constants.GOOGLE_ANALYTICS_KEY);

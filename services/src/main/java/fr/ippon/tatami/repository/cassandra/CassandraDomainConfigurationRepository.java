@@ -2,8 +2,6 @@ package fr.ippon.tatami.repository.cassandra;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
-import javax.validation.ConstraintViolation;
-import javax.validation.ConstraintViolationException;
 
 
 import com.datastax.driver.core.BatchStatement;
@@ -11,9 +9,7 @@ import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.mapping.Mapper;
 import com.datastax.driver.mapping.MappingManager;
-import fr.ippon.tatami.domain.Domain;
-import fr.ippon.tatami.domain.User;
-import fr.ippon.tatami.domain.validation.ContraintsUserCreation;
+import fr.ippon.tatami.config.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
@@ -21,8 +17,6 @@ import org.springframework.stereotype.Repository;
 import fr.ippon.tatami.domain.DomainConfiguration;
 import fr.ippon.tatami.repository.DomainConfigurationRepository;
 
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * Cassandra implementation of the DomainConfiguration repository.
@@ -44,6 +38,8 @@ public class CassandraDomainConfigurationRepository implements DomainConfigurati
 
 
     private PreparedStatement deleteByLoginStmt;
+
+
 
     @PostConstruct
     public void init() {
@@ -96,10 +92,10 @@ public class CassandraDomainConfigurationRepository implements DomainConfigurati
 
     private void setDefaultValues(DomainConfiguration domainConfiguration) {
         if (domainConfiguration.getStorageSize() == null) {
-            domainConfiguration.setStorageSize(DomainConfiguration.SubscriptionAndStorageSizeOptions.BASICSIZE);
+            domainConfiguration.setStorageSize("" + Constants.STORAGE_BASICSIZE);
         }
         if (domainConfiguration.getSubscriptionLevel() == null) {
-            domainConfiguration.setSubscriptionLevel(DomainConfiguration.SubscriptionAndStorageSizeOptions.BASICSUSCRIPTION);
+            domainConfiguration.setSubscriptionLevel("" + Constants.STORAGE_BASICSUSCRIPTION);
         }
     }
 }

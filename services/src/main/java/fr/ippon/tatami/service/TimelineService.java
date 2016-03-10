@@ -102,6 +102,7 @@ public class TimelineService {
 
     public StatusDTO getStatus(String statusId) {
         List<String> line = new ArrayList<String>();
+
         line.add(statusId);
         Collection<StatusDTO> statusCollection = buildStatusList(line);
         if (statusCollection.isEmpty()) {

@@ -147,10 +147,10 @@ public class CassandraStatusRepository implements StatusRepository {
         }
 
         status.setContent(content);
-        if (!admin && Constants.MODERATOR_STATUS) {
+        if (!admin && Constants.MODERATOR_STATUS && (status.getStatusPrivate() == null || !status.getStatusPrivate()) ) {
             status.setState("PENDING");
             statusStateGroupRepository.createStatusStateGroup(status.getStatusId(),"PENDING",status.getGroupId());
-        } else if (admin && Constants.MODERATOR_STATUS) {
+        } else if (admin && Constants.MODERATOR_STATUS && (status.getStatusPrivate() == null || !status.getStatusPrivate())) {
             statusStateGroupRepository.createStatusStateGroup(status.getStatusId(),"APPROVED",status.getGroupId());
         }
 
@@ -430,8 +430,14 @@ public class CassandraStatusRepository implements StatusRepository {
             return null;
         }
         status.setStatusId(UUID.fromString(statusId));
-        status.setLogin(row.getString(LOGIN));
-        status.setUsername(row.getString(USERNAME));
+        User user = userService.getUserByLogin(row.getString(LOGIN));
+        if (user != null) {
+            status.setLogin(user.getLogin());
+            status.setUsername(user.getUsername());
+        } else {
+            status.setLogin(row.getString(LOGIN));
+            status.setUsername(row.getString(USERNAME));
+        }
         status.setState(row.getString("state"));
 
         String domain = row.getString(DOMAIN);

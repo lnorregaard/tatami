@@ -118,20 +118,20 @@
 
 
 
-    <beans:bean id="ldapAuthenticationProvider" class="fr.ippon.tatami.security.TatamiLdapAuthenticationProvider">
-        <beans:constructor-arg>
-            <beans:bean class="org.springframework.security.ldap.authentication.BindAuthenticator">
-                <beans:constructor-arg ref="ldapContextSource"/>
-                <beans:property name="userSearch">
-                    <beans:bean class="org.springframework.security.ldap.search.FilterBasedLdapUserSearch">
-                        <beans:constructor-arg value="${tatami.ldapauth.searchbase}"/>
-                        <beans:constructor-arg value="${tatami.ldapauth.searchfilter}"/>
-                        <beans:constructor-arg ref="ldapContextSource"/>
-                    </beans:bean>
-                </beans:property>
-            </beans:bean>
-        </beans:constructor-arg>
-        <beans:constructor-arg value="${tatami.ldapauth.domain}"/>
-    </beans:bean>
+    <!--<beans:bean id="ldapAuthenticationProvider" class="fr.ippon.tatami.security.TatamiLdapAuthenticationProvider">-->
+        <!--<beans:constructor-arg>-->
+            <!--<beans:bean class="org.springframework.security.ldap.authentication.BindAuthenticator">-->
+                <!--<beans:constructor-arg ref="ldapContextSource"/>-->
+                <!--<beans:property name="userSearch">-->
+                    <!--<beans:bean class="org.springframework.security.ldap.search.FilterBasedLdapUserSearch">-->
+                        <!--<beans:constructor-arg value="${tatami.ldapauth.searchbase}"/>-->
+                        <!--<beans:constructor-arg value="${tatami.ldapauth.searchfilter}"/>-->
+                        <!--<beans:constructor-arg ref="ldapContextSource"/>-->
+                    <!--</beans:bean>-->
+                <!--</beans:property>-->
+            <!--</beans:bean>-->
+        <!--</beans:constructor-arg>-->
+        <!--<beans:constructor-arg value="${tatami.ldapauth.domain}"/>-->
+    <!--</beans:bean>-->
 
 </beans:beans>

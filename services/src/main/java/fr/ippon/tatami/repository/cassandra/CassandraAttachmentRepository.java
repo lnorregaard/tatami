@@ -66,8 +66,8 @@ public class CassandraAttachmentRepository implements AttachmentRepository {
         attachment.setAttachmentId(attachmentId.toString());
         if (Constants.LOCAL_ATTACHMENT_STORAGE) {
             saveAttachmentLocal(attachment);
-            attachment.setContent(new byte[0]);
-            attachment.setThumbnail(new byte[0]);
+            content = null;
+            thumbnail = null;
         }
         Statement statement = QueryBuilder.insertInto(ATTACHMENT_CF)
                 .value("id", UUID.fromString(attachment.getAttachmentId()))

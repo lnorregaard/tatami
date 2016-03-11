@@ -73,6 +73,11 @@ public class CassandraUserlineRepository extends AbstractCassandraLineRepository
     }
 
     @Override
+    public void removeStatusFromUserline(String login, String statusId) {
+        removeStatus(login,USERLINE_CF,statusId);
+    }
+
+    @Override
     public void deleteUserline(String login) {
         Statement statement = QueryBuilder.delete().from(ColumnFamilyKeys.USERLINE_CF)
                 .where(eq("key", login));

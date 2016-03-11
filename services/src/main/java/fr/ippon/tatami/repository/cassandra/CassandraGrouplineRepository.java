@@ -59,6 +59,11 @@ public class CassandraGrouplineRepository extends AbstractCassandraLineRepositor
     }
 
     @Override
+    public void removeStatusFromGroupline(UUID groupId, String statusId) {
+        removeStatus(groupId.toString(),ColumnFamilyKeys.GROUPLINE,statusId);
+    }
+
+    @Override
     public PreparedStatement getDeleteByIdStmt() {
         return deleteByIdStmt;
     }

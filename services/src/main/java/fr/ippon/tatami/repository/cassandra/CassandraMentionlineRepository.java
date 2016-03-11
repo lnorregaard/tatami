@@ -59,6 +59,11 @@ public class CassandraMentionlineRepository extends AbstractCassandraLineReposit
     }
 
     @Override
+    public void removeStatusFromMentionline(String mentionedLogin, String statusId) {
+        removeStatus(mentionedLogin,ColumnFamilyKeys.MENTIONLINE,statusId   );
+    }
+
+    @Override
     public PreparedStatement getDeleteByIdStmt() {
         return deleteByIdStmt;
     }

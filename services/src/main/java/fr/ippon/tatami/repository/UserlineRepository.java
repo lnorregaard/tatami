@@ -34,4 +34,6 @@ public interface UserlineRepository {
      * - The value is always null
      */
     List<String> getUserline(String login, int size, String start, String finish);
+
+    void removeStatusFromUserline(String login, String statusId);
 }

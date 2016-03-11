@@ -59,6 +59,11 @@ public class CassandraTaglineRepository extends AbstractCassandraLineRepository 
         return getLineFromTable(TAGLINE, getKey(domain, tag), size, start, finish);
     }
 
+    @Override
+    public void removeStatusToTagline(String tag, Status status) {
+        removeStatus(getKey(status.getDomain(), tag), TAGLINE, status.getStatusId().toString());
+    }
+
     /**
      * Generates the key for this column family.
      */

@@ -28,4 +28,6 @@ public interface TaglineRepository {
      * - Value is always null
      */
     List<String> getTagline(String domain, String tag, int size, String start, String finish);
+
+    void removeStatusToTagline(String tag, Status status);
 }

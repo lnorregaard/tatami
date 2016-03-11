@@ -50,4 +50,8 @@ public class MentionService {
             }
         }
     }
+    public void mentionRemoveUser(String mentionedLogin, Status status) {
+        mentionlineRepository.removeStatusFromMentionline(mentionedLogin, status.getStatusId().toString());
+
+    }
 }

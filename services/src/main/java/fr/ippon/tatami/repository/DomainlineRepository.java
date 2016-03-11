@@ -20,6 +20,9 @@ public interface DomainlineRepository {
      */
     void removeStatusFromDomainline(String domain, Collection<String> statusIdsToDelete);
 
+
+    void removeStatusFromDomainline(String domain, String statusId);
+
     /**
      * The Domainline : the public status for a domain.
      * - The name is the statusId of the statuses

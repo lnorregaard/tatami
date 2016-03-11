@@ -804,6 +804,11 @@ public class TimelineService {
             statusStateGroupRepository.updateState(status.getGroupId(),status.getStatusId(),"BLOCKED");
             statusRepository.updateState(statusId,"BLOCKED");
             auditRepository.blockStatus(moderator,statusId,username,comment);
+            Group group = null;
+            if (status.getGroupId() != null) {
+                group = groupService.getGroupById(status.getDomain(), UUID.fromString(status.getGroupId()));
+            }
+            statusUpdateService.removePublicStatus(group, status);
         }
     }
 

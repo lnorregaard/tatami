@@ -139,7 +139,7 @@ public class CassandraAttachmentRepository implements AttachmentRepository {
                 delete(filenameThumb);
             }
         } catch (IOException e) {
-            log.warn("Could not create file", e);
+            log.warn("Could not delete file", e);
         }
     }
 

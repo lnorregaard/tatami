@@ -59,7 +59,7 @@ public class CassandraUserlineRepository extends AbstractCassandraLineRepository
 
     @Override
     public void removeStatusesFromUserline(String login, Collection<String> statusIdsToDelete) {
-        removeStatuses(login,"userline",statusIdsToDelete);
+        removeStatusesFromGroup(login,"userline",statusIdsToDelete);
     }
 
     @Override

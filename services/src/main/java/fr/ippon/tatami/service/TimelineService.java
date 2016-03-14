@@ -468,7 +468,7 @@ public class TimelineService {
             Collection<String> statusIdsToDelete = findStatusesToCleanUp(statuses, dtos);
             grouplineRepository.removeStatusesFromGroupline(groupId, statusIdsToDelete);
             if (statusIdsToDelete != null && !statusIdsToDelete.isEmpty()) {
-                return getGroupline(groupId, nbStatus, start, finish);
+                return getGroupline(groupId+ statusIdsToDelete.size(), nbStatus, start, finish);
             }
         }
         return dtos;
@@ -574,6 +574,11 @@ public class TimelineService {
         if (abstractStatus != null && abstractStatus.getType().equals(StatusType.STATUS)) {
             Status status = (Status) abstractStatus;
             User currentUser = authenticationService.getCurrentUser();
+            Group group = null;
+            if (status.getGroupId() != null) {
+                group = groupService.getGroupById(status.getDomain(), UUID.fromString(status.getGroupId()));
+            }
+            statusUpdateService.removePublicStatus(group, status);
             if (status.getLogin().equals(currentUser.getLogin())) {
                 statusRepository.removeStatus(status);
                 statusStateGroupRepository.removeState(status.getGroupId(),status.getStatusId());

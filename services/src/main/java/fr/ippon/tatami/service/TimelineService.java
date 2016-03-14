@@ -671,7 +671,7 @@ public class TimelineService {
             if (status.getLogin().equals(currentUser.getLogin())) {
                 statusRepository.removeStatus(status);
                 statusStateGroupRepository.removeState(status.getGroupId(),status.getStatusId());
-                counterRepository.decrementStatusCounter(currentUser.getLogin());
+//                counterRepository.decrementStatusCounter(currentUser.getLogin());
                 searchService.removeStatus(status);
                 statusCounterRepository.deleteCounters(status.getStatusId());
             }

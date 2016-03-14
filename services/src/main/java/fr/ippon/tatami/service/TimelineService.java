@@ -437,7 +437,7 @@ public class TimelineService {
                 mentionlineRepository.getMentionline(login, nbStatus, start, finish);
 
         Collection<StatusDTO> dtos = buildStatusList(statuses);
-        if (rounds < Constants.MAX_GROUP_LOADS && statuses.size() != dtos.size()) {
+        if (rounds < Constants.MAX_TIMELINE_LOADS && statuses.size() != dtos.size()) {
             Collection<String> statusIdsToDelete = findStatusesToCleanUp(statuses, dtos);
             mentionlineRepository.removeStatusesFromMentionline(login, statusIdsToDelete);
             return getMentionline(login,nbStatus+statusIdsToDelete.size(), start, finish,rounds++);
@@ -473,7 +473,7 @@ public class TimelineService {
         List<String> statuses = taglineRepository.getTagline(domain, tag, nbStatus, start, finish);
 
         Collection<StatusDTO> dtos = buildStatusList(statuses);
-        if (rounds < Constants.MAX_GROUP_LOADS && statuses.size() != dtos.size()) {
+        if (rounds < Constants.MAX_TIMELINE_LOADS && statuses.size() != dtos.size()) {
             Collection<String> statusIdsToDelete = findStatusesToCleanUp(statuses, dtos);
             taglineRepository.removeStatusesFromTagline(tag, domain, statusIdsToDelete);
             return getTagline(domain, tag, nbStatus, start, finish, rounds++);
@@ -503,7 +503,7 @@ public class TimelineService {
     private Collection<StatusDTO> getGroupline(String groupId, Integer nbStatus, String start, String finish, int rounds) {
         List<String> statuses = grouplineRepository.getGroupline(groupId, nbStatus, start, finish);
         Collection<StatusDTO> dtos = buildStatusList(statuses);
-        if (rounds < Constants.MAX_GROUP_LOADS && statuses.size() != dtos.size()) {
+        if (rounds < Constants.MAX_TIMELINE_LOADS && statuses.size() != dtos.size()) {
             Collection<String> statusIdsToDelete = findStatusesToCleanUp(statuses, dtos);
             grouplineRepository.removeStatusesFromGroupline(groupId, statusIdsToDelete);
             if (statusIdsToDelete != null && !statusIdsToDelete.isEmpty()) {
@@ -568,7 +568,7 @@ public class TimelineService {
                     .filter(status -> status.getType() == StatusType.valueOf(statusType))
                     .collect(Collectors.toList());
         }
-        if (round < Constants.MAX_GROUP_LOADS ) {
+        if (round < Constants.MAX_TIMELINE_LOADS) {
             if (!Constants.MODERATOR_STATUS) {
                 if (statuses.size() != dtos.size()) {
                     Collection<String> statusIdsToDelete = findStatusesToCleanUp(statuses, dtos);
@@ -608,7 +608,7 @@ public class TimelineService {
                 domainlineRepository.getDomainline(domain, nbStatus, start, finish);
 
         Collection<StatusDTO> dtos = buildStatusList(statuses);
-        if (rounds < Constants.MAX_GROUP_LOADS && statuses.size() != dtos.size()) {
+        if (rounds < Constants.MAX_TIMELINE_LOADS && statuses.size() != dtos.size()) {
             Collection<String> statusIdsToDelete = findStatusesToCleanUp(statuses, dtos);
             domainlineRepository.removeStatusFromDomainline(domain, statusIdsToDelete);
             return getDomainline(domain,nbStatus + statusIdsToDelete.size(), start, finish,rounds++);
@@ -646,7 +646,7 @@ public class TimelineService {
     private Collection<StatusDTO> getUserline(String login, int nbStatus, String start, String finish, int rounds) {
         List<String> statuses = userlineRepository.getUserline(login, nbStatus, start, finish);
         Collection<StatusDTO> dtos = buildStatusList(statuses);
-        if (rounds < Constants.MAX_GROUP_LOADS && statuses.size() != dtos.size()) {
+        if (rounds < Constants.MAX_TIMELINE_LOADS && statuses.size() != dtos.size()) {
             Collection<String> statusIdsToDelete = findStatusesToCleanUp(statuses, dtos);
             userlineRepository.removeStatusesFromUserline(login, statusIdsToDelete);
             if (statusIdsToDelete != null && !statusIdsToDelete.isEmpty()) {

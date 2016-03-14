@@ -801,6 +801,10 @@ public class TimelineService {
     @Secured("ROLE_ADMIN")
     public void blockStatus(String moderator, String statusId, String comment,String username) {
         AbstractStatus abstractStatus = statusRepository.findStatusById(statusId,false);
+        boolean approved = false;
+        if (abstractStatus.getState() == null) {
+
+        }
         if (abstractStatus instanceof Status) {
             Status status = (Status) abstractStatus;
             statusStateGroupRepository.updateState(status.getGroupId(),status.getStatusId(),"BLOCKED");
@@ -810,7 +814,9 @@ public class TimelineService {
             if (status.getGroupId() != null) {
                 group = groupService.getGroupById(status.getDomain(), UUID.fromString(status.getGroupId()));
             }
-            statusUpdateService.removePublicStatus(group, status);
+            if (approved) {
+                statusUpdateService.removePublicStatus(group, status);
+            }
         }
     }
 

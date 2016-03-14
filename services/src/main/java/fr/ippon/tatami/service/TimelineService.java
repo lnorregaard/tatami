@@ -559,7 +559,20 @@ public class TimelineService {
         if (statuses.size() != dtos.size()) {
             Collection<String> statusIdsToDelete = findStatusesToCleanUp(statuses, dtos);
             domainlineRepository.removeStatusFromDomainline(domain, statusIdsToDelete);
-            return getDomainline(nbStatus, start, finish);
+            return getDomainline(domain,nbStatus + statusIdsToDelete.size(), start, finish,1);
+        }
+        return dtos;
+    }
+
+    private Collection<StatusDTO> getDomainline(String domain, int nbStatus, String start, String finish, int rounds) {
+        List<String> statuses =
+                domainlineRepository.getDomainline(domain, nbStatus, start, finish);
+
+        Collection<StatusDTO> dtos = buildStatusList(statuses);
+        if (rounds < Constants.MAX_GROUP_LOADS && statuses.size() != dtos.size()) {
+            Collection<String> statusIdsToDelete = findStatusesToCleanUp(statuses, dtos);
+            domainlineRepository.removeStatusFromDomainline(domain, statusIdsToDelete);
+            return getDomainline(domain,nbStatus + statusIdsToDelete.size(), start, finish,rounds++);
         }
         return dtos;
     }
@@ -586,7 +599,7 @@ public class TimelineService {
         if (statuses.size() != dtos.size()) {
             Collection<String> statusIdsToDelete = findStatusesToCleanUp(statuses, dtos);
             userlineRepository.removeStatusesFromUserline(login, statusIdsToDelete);
-            return getUserline(login, nbStatus, start, finish,1);
+            return getUserline(login, nbStatus+statusIdsToDelete.size(), start, finish,1);
         }
         return dtos;
     }
@@ -594,8 +607,7 @@ public class TimelineService {
     private Collection<StatusDTO> getUserline(String login, int nbStatus, String start, String finish, int rounds) {
         List<String> statuses = userlineRepository.getUserline(login, nbStatus, start, finish);
         Collection<StatusDTO> dtos = buildStatusList(statuses);
-        if (rounds < Constants.MAX_GROUP_LOADS)
-        if (statuses.size() != dtos.size()) {
+        if (rounds < Constants.MAX_GROUP_LOADS && statuses.size() != dtos.size()) {
             Collection<String> statusIdsToDelete = findStatusesToCleanUp(statuses, dtos);
             userlineRepository.removeStatusesFromUserline(login, statusIdsToDelete);
             if (statusIdsToDelete != null && !statusIdsToDelete.isEmpty()) {

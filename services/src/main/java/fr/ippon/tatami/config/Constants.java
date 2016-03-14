@@ -6,6 +6,7 @@ package fr.ippon.tatami.config;
 public class Constants {
 
 
+    public static final int MAX_GROUP_LOADS = 3;
     public static int ATTACHMENT_DIR_PREFIX = 2;
 
     private Constants() {

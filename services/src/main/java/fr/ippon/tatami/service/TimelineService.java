@@ -563,10 +563,25 @@ public class TimelineService {
         if (statuses.size() != dtos.size()) {
             Collection<String> statusIdsToDelete = findStatusesToCleanUp(statuses, dtos);
             userlineRepository.removeStatusesFromUserline(login, statusIdsToDelete);
-            return getUserline(username, nbStatus, start, finish);
+            return getUserline(login, nbStatus, start, finish,1);
         }
         return dtos;
     }
+
+    private Collection<StatusDTO> getUserline(String login, int nbStatus, String start, String finish, int rounds) {
+        List<String> statuses = userlineRepository.getUserline(login, nbStatus, start, finish);
+        Collection<StatusDTO> dtos = buildStatusList(statuses);
+        if (rounds < Constants.MAX_GROUP_LOADS)
+        if (statuses.size() != dtos.size()) {
+            Collection<String> statusIdsToDelete = findStatusesToCleanUp(statuses, dtos);
+            userlineRepository.removeStatusesFromUserline(login, statusIdsToDelete);
+            if (statusIdsToDelete != null && !statusIdsToDelete.isEmpty()) {
+                return getUserline(login, nbStatus + statusIdsToDelete.size(), start, finish, rounds++);
+            }
+        }
+        return dtos;
+    }
+
 
     public void removeStatus(String statusId) {
         log.debug("Removing status : {}", statusId);

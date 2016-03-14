@@ -467,7 +467,9 @@ public class TimelineService {
         if (statuses.size() != dtos.size()) {
             Collection<String> statusIdsToDelete = findStatusesToCleanUp(statuses, dtos);
             grouplineRepository.removeStatusesFromGroupline(groupId, statusIdsToDelete);
-            return getGroupline(groupId, nbStatus, start, finish);
+            if (statusIdsToDelete != null && !statusIdsToDelete.isEmpty()) {
+                return getGroupline(groupId, nbStatus, start, finish);
+            }
         }
         return dtos;
     }

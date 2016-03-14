@@ -513,19 +513,42 @@ public class TimelineService {
             if (statuses.size() != dtos.size()) {
                 Collection<String> statusIdsToDelete = findStatusesToCleanUp(statuses, dtos);
                 timelineRepository.removeStatusesFromTimeline(login, statusIdsToDelete);
-                return getTimeline(nbStatus, start, finish, statusType);
+                return getUserTimelineRound(login,nbStatus, start, finish, statusType, 1);
             }
         }
         return dtos;
     }
 
-    /**
-     * The domainline contains all the public statuses of the domain (status with no group, or
-     * in a public group), for the last 30 days.
-     *
-     * @param nbStatus the number of status to retrieve, starting from most recent ones
-     * @return a status list
-     */
+    private Collection<StatusDTO> getUserTimelineRound(String login, int nbStatus, String start, String finish, String statusType, int round) {
+        List<String> statuses =
+                timelineRepository.getTimeline(login, nbStatus, start, finish, statusType);
+
+        Collection<StatusDTO> dtos = buildStatusList(statuses);
+        if (statusType != null) {
+            dtos = dtos.stream()
+                    .filter(status -> status.getType() == StatusType.valueOf(statusType))
+                    .collect(Collectors.toList());
+        }
+        if (round < Constants.MAX_GROUP_LOADS ) {
+            if (!Constants.MODERATOR_STATUS) {
+                if (statuses.size() != dtos.size()) {
+                    Collection<String> statusIdsToDelete = findStatusesToCleanUp(statuses, dtos);
+                    timelineRepository.removeStatusesFromTimeline(login, statusIdsToDelete);
+                    return getUserTimelineRound(login, nbStatus, start, finish, statusType,round++);
+                }
+            }
+        }
+        return dtos;
+    }
+
+
+        /**
+         * The domainline contains all the public statuses of the domain (status with no group, or
+         * in a public group), for the last 30 days.
+         *
+         * @param nbStatus the number of status to retrieve, starting from most recent ones
+         * @return a status list
+         */
     public Collection<StatusDTO> getDomainline(int nbStatus, String start, String finish) {
         User currentUser = authenticationService.getCurrentUser();
         String domain = DomainUtil.getDomainFromLogin(currentUser.getLogin());

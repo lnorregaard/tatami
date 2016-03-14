@@ -76,13 +76,11 @@ public abstract class AbstractCassandraLineRepository {
      * Remove a status.
      */
     protected void removeStatus(String key, String table, String statusId) {
-        if (!Constants.USER_AND_FRIENDS) {
             BatchStatement batch = new BatchStatement();
             batch.add(getDeleteByIdStmt().bind()
                     .setString("key", key)
                     .setUUID("statusId", UUID.fromString(statusId)));
             session.execute(batch);
-        }
     }
 
     /**

@@ -75,7 +75,9 @@ public class HomeController {
     }
 
     @RequestMapping(value = "/register/automatic", method = RequestMethod.POST)
-    public String automaticRegistration(@RequestParam String email, @RequestParam String password) {
+    public String automaticRegistration(@RequestParam String email,
+                                        @RequestParam String password,
+                                        @RequestParam(required = false) String username) {
         String enabled = env.getProperty("tatami.automatic.registration");
         if (enabled != null && !enabled.equals("true")) {
             log.warn("Automatic registration should not have been called.");
@@ -96,6 +98,9 @@ public class HomeController {
         log.debug("Creating user {}", email);
         User user = new User();
         user.setLogin(email);
+        if (username != null) {
+            user.setUsername(username);
+        }
         StandardPasswordEncoder encoder = new StandardPasswordEncoder();
         String encryptedPassword = encoder.encode(password);
         user.setPassword(encryptedPassword);

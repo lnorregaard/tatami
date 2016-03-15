@@ -225,7 +225,9 @@ public class UserService {
             String encryptedPassword = encoder.encode(password);
             user.setPassword(encryptedPassword);
         }
-        user.setUsername(username);
+        if (user.getUsername() == null) {
+            user.setUsername(username);
+        }
         user.setDomain(domain);
         user.setFirstName(StringUtils.defaultString(user.getFirstName()));
         user.setLastName(StringUtils.defaultString(user.getLastName()));

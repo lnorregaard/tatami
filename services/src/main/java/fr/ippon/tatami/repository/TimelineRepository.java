@@ -23,6 +23,7 @@ public interface TimelineRepository {
     void addStatusToTimeline(String login, String statusId);
 
     void removeStatusesFromTimeline(String login, Collection<String> statusIdsToDelete);
+    void removeStatusFromTimeline(String login, String statusId);
 
     void shareStatusToTimeline(String sharedByLogin, String timelineLogin, Share share);
 

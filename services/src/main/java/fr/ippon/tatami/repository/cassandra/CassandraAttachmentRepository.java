@@ -32,6 +32,7 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.set;
 import static fr.ippon.tatami.config.ColumnFamilyKeys.ATTACHMENT_CF;
 import static java.nio.file.Files.createDirectories;
+import static java.nio.file.Files.delete;
 import static java.nio.file.Files.write;
 import static java.nio.file.Paths.get;
 
@@ -66,6 +67,8 @@ public class CassandraAttachmentRepository implements AttachmentRepository {
         attachment.setAttachmentId(attachmentId.toString());
         if (Constants.LOCAL_ATTACHMENT_STORAGE) {
             saveAttachmentLocal(attachment);
+            content = null;
+            thumbnail = null;
         }
         Statement statement = QueryBuilder.insertInto(ATTACHMENT_CF)
                 .value("id", UUID.fromString(attachment.getAttachmentId()))
@@ -118,6 +121,26 @@ public class CassandraAttachmentRepository implements AttachmentRepository {
         Statement statement = QueryBuilder.delete().from(ATTACHMENT_CF)
                 .where(eq("id", UUID.fromString(attachment.getAttachmentId())));
         session.execute(statement);
+        if (Constants.LOCAL_ATTACHMENT_STORAGE) {
+            deleteAttacmentLocal(attachment);
+        }
+    }
+
+    private void deleteAttacmentLocal(Attachment attachment) {
+        String suffix = attachment.getFilename().substring(attachment.getFilename().lastIndexOf("."),attachment.getFilename().length());
+        String subDirectory = getSubDirectory(attachment.getAttachmentId());
+        String startPathString = getPathWithSlash(Constants.ATTACHMENT_FILE_PATH);
+        Path filename = Paths.get(startPathString + subDirectory, attachment.getAttachmentId() + suffix);
+        try {
+            attachment.setFilename(filename.toString());
+            delete(filename);
+            if (attachment.getThumbnail() != null) {
+                Path filenameThumb = Paths.get(startPathString + subDirectory, attachment.getAttachmentId() + Constants.ATTACHMENT_THUMBNAIL_NAME + suffix);
+                delete(filenameThumb);
+            }
+        } catch (IOException e) {
+            log.warn("Could not delete file", e);
+        }
     }
 
     @Override
@@ -140,7 +163,12 @@ public class CassandraAttachmentRepository implements AttachmentRepository {
                 .where(eq("id", UUID.fromString(attachmentId)));
 
         ResultSet results = session.execute(statement);
-        attachment.setContent(results.one().getBytes(CONTENT).array());
+        if (!results.isExhausted()) {
+            Row row = results.one();
+            if (row.getBytes(CONTENT) != null) {
+                attachment.setContent(row.getBytes(CONTENT).array());
+            }
+        }
 
         statement = QueryBuilder.select()
                 .column(THUMBNAIL)
@@ -148,7 +176,10 @@ public class CassandraAttachmentRepository implements AttachmentRepository {
                 .where(eq("id", UUID.fromString(attachmentId)));
 
         results = session.execute(statement);
-        attachment.setThumbnail(results.one().getBytes(THUMBNAIL).array());
+        Row row = results.one();
+        if (row.getBytes(THUMBNAIL) != null) {
+            attachment.setThumbnail(row.getBytes(THUMBNAIL).array());
+        }
         if (Constants.LOCAL_ATTACHMENT_STORAGE || (attachment.getThumbnail() != null && attachment.getThumbnail().length > 0)) {
             attachment.setHasThumbnail(true);
         } else {

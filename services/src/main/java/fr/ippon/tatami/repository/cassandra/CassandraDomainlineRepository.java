@@ -55,6 +55,12 @@ public class CassandraDomainlineRepository extends AbstractCassandraLineReposito
     }
 
     @Override
+    public void removeStatusFromDomainline(String domain, String statusId) {
+        removeStatus(domain,DOMAINLINE,statusId);
+    }
+
+
+    @Override
     public List<String> getDomainline(String domain, int size, String start, String finish) {
         return getLineFromTable(DOMAINLINE, domain, size, start, finish);
     }

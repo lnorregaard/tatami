@@ -15,6 +15,7 @@ import java.util.Collection;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
+import static com.datastax.driver.core.querybuilder.QueryBuilder.decr;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.incr;
 import static fr.ippon.tatami.config.ColumnFamilyKeys.DAYLINE_CF;
@@ -61,6 +62,16 @@ public class CassandraDaylineRepository implements DaylineRepository {
                 .stream()
                 .map(e -> new UserStatusStat(e.getString("username"),e.getLong("statusCount")))
                 .collect(Collectors.toCollection(TreeSet::new));
+    }
+
+    @Override
+    public void removeStatusToDayline(Status status, String day) {
+        String key = getKey(status.getDomain(), day);
+        Statement query = QueryBuilder.update("dayline")
+                .with(decr("statusCount", 1))
+                // Use incr for counters
+                .where(eq("domainDay", key)).and(eq("username",status.getUsername()));
+        session.execute(query);
     }
 
     /**

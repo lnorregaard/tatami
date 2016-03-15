@@ -123,6 +123,8 @@ public class ApplicationConfiguration {
         Constants.STORAGE_PREMIUMSUSCRIPTION= Integer.parseInt(env.getProperty(premiumSuscription,"10"));
         Constants.STORAGE_IPPONSUSCRIPTION= Integer.parseInt(env.getProperty(ipponSuscription,"10"));
 
+        Constants.MAX_TIMELINE_LOADS = Integer.parseInt(env.getProperty("max.timeline.loads","3"));
+
         log.info("Tatami v. {} started!", Constants.VERSION);
         log.debug("Google Analytics key : {}", Constants.GOOGLE_ANALYTICS_KEY);
 

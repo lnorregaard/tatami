@@ -95,6 +95,9 @@ public class AccountController {
                 updatedUser.setLogin(currentUser.getLogin());
                 updatedUser.setDomain(currentUser.getDomain());
                 userService.updateUser(updatedUser);
+                if (updatedUser.getUsername() != null) {
+                    currentUser.setUsername(updatedUser.getUsername());
+                }
             } else {
                 userService.updateUser(currentUser);
             }

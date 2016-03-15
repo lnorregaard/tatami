@@ -77,6 +77,11 @@ public class CassandraTimelineRepository extends AbstractCassandraLineRepository
     }
 
     @Override
+    public void removeStatusFromTimeline(String login, String statusId) {
+        removeStatus(login,TIMELINE_CF,statusId);
+    }
+
+    @Override
     public void shareStatusToTimeline(String sharedByLogin, String timelineLogin, Share share) {
         shareStatus(timelineLogin, share, TIMELINE_CF, TIMELINE_SHARES_CF);
     }

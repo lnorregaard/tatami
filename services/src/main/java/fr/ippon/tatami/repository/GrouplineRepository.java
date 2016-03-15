@@ -27,4 +27,6 @@ public interface GrouplineRepository {
      * - Value is always null
      */
     List<String> getGroupline(String groupId, int size, String start, String finish);
+
+    void removeStatusFromGroupline(UUID groupId, String statusId);
 }

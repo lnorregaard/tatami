@@ -21,4 +21,6 @@ public interface DaylineRepository {
      * Get the statistics for one day, in the form &lt;username, number of status updates&gt;.
      */
     Collection<UserStatusStat> getDayline(String domain, String day);
+
+    void removeStatusToDayline(Status status, String day);
 }

@@ -26,4 +26,6 @@ public interface MentionlineRepository {
      * - Value is always null
      */
     List<String> getMentionline(String login, int size, String start, String finish);
+
+    void removeStatusFromMentionline(String mentionedLogin, String statusId);
 }

@@ -307,6 +307,36 @@ public class StatusUpdateService {
         addToCompanyWall(status, group);
     }
 
+    public void removePublicStatus(Group group, Status status) {
+        String userLogin = status.getLogin();
+        String domain = status.getDomain();
+        Collection<String> followersForUser = followerRepository.findFollowersForUser(userLogin);
+
+        // add status to the dayline, userline
+        String day = StatsService.DAYLINE_KEY_FORMAT.format(status.getStatusDate());
+        daylineRepository.removeStatusToDayline(status, day);
+        userlineRepository.removeStatusFromUserline(status.getLogin(), status.getStatusId().toString());
+
+        // add the status to the group line and group followers
+        manageRemoveStatusFromGroups(status, group, followersForUser);
+
+        // tag managgement
+        manageRemoveStatusTags(status, group);
+
+        // add status to the mentioned users' timeline
+        manageRemoveMentions(status, group, userLogin, domain, followersForUser);
+
+        // Increment status count for the current user
+        counterRepository.decrementStatusCounter(userLogin);
+
+        // Add to the searchStatus engine
+        searchService.removeStatus(status);
+
+        // add status to the company wall
+        removeFromCompanyWall(status, group);
+    }
+
+
     private void manageGroups(Status status, Group group, Collection<String> followersForUser) {
         if (group != null) {
             grouplineRepository.addStatusToGroupline(group.getGroupId(), status.getStatusId().toString());
@@ -329,10 +359,22 @@ public class StatusUpdateService {
         }
     }
 
+    private void manageRemoveStatusFromGroups(Status status, Group group, Collection<String> followersForUser) {
+        if (group != null) {
+            grouplineRepository.removeStatusFromGroupline(group.getGroupId(), status.getStatusId().toString());
+        }
+    }
+
 
     private void addToCompanyWall(Status status, Group group) {
         if (isPublicGroup(group)) {
             domainlineRepository.addStatusToDomainline(status.getDomain(), status.getStatusId().toString());
+        }
+    }
+
+    private void removeFromCompanyWall(Status status, Group group) {
+        if (isPublicGroup(group)) {
+            domainlineRepository.removeStatusFromDomainline(status.getDomain(), status.getStatusId().toString());
         }
     }
 
@@ -362,6 +404,24 @@ public class StatusUpdateService {
         }
     }
 
+    private void manageRemoveStatusTags(Status status, Group group) {
+        Matcher m = PATTERN_HASHTAG.matcher(status.getContent());
+        while (m.find()) {
+            String tag = m.group(2);
+            if (tag != null && !tag.isEmpty() && !tag.contains("#")) {
+                log.debug("Found tag : {}", tag);
+                taglineRepository.removeStatusToTagline(tag, status);
+                tagCounterRepository.decrementTagCounter(status.getDomain(), tag);
+                //Excludes the Tatami Bot from the global trend
+
+                // Add the status to all users following this tag
+                removeStatusFromTagFollowers(status, group, tag);
+            }
+        }
+    }
+
+
+
     private void manageMentions(Status status, Group group, String currentLogin, String domain, Collection<String> followersForUser) {
         Matcher m = PATTERN_LOGIN.matcher(status.getContent());
         while (m.find()) {
@@ -387,6 +447,32 @@ public class StatusUpdateService {
         }
     }
 
+    private void manageRemoveMentions(Status status, Group group, String currentLogin, String domain, Collection<String> followersForUser) {
+        Matcher m = PATTERN_LOGIN.matcher(status.getContent());
+        while (m.find()) {
+            String mentionedUsername = extractUsernameWithoutAt(m.group());
+            if (mentionedUsername != null &&
+                    !mentionedUsername.equals(currentLogin) &&
+                    !followersForUser.contains(mentionedUsername)) {
+
+                log.debug("Mentionning : {}", mentionedUsername);
+                String mentionedLogin =
+                        usernameService.getLoginFromUsernameAndDomain(mentionedUsername, domain);
+
+                // If this is a private group, and if the mentioned user is not in the group, he will not see the status
+                if (!isPublicGroup(group)) {
+                    Collection<UUID> groupIds = userGroupRepository.findGroups(mentionedLogin);
+                    if (groupIds.contains(group.getGroupId())) { // The user is part of the private group
+                        mentionRemoveUser(mentionedLogin, status);
+                    }
+                } else { // This is a public status
+                    mentionRemoveUser(mentionedLogin, status);
+                }
+            }
+        }
+    }
+
+
     private void addStatusToTagFollowers(Status status, Group group, String tag) {
         Collection<String> followersForTag =
                 tagFollowerRepository.findFollowers(status.getDomain(), tag);
@@ -405,12 +491,36 @@ public class StatusUpdateService {
         }
     }
 
+    private void removeStatusFromTagFollowers(Status status, Group group, String tag) {
+        Collection<String> followersForTag =
+                tagFollowerRepository.findFollowers(status.getDomain(), tag);
+
+        if (isPublicGroup(group)) { // This is a public status
+            for (String followerLogin : followersForTag) {
+                removeStatusFromTimeline(followerLogin, status);
+            }
+        } else {  // This is a private status
+            for (String followerLogin : followersForTag) {
+                Collection<UUID> groupIds = userGroupRepository.findGroups(followerLogin);
+                if (groupIds.contains(group.getGroupId())) { // The user is part of the private group
+                    removeStatusFromTimeline(followerLogin, status);
+                }
+            }
+        }
+    }
+
+
     /**
      * A status that mentions a user is put in the user's mentionline and in his timeline.
      * The mentioned user can also be notified by email or iOS push.
      */
     private void mentionUser(String mentionedLogin, Status status) {
         addStatusToTimelineAndNotify(mentionedLogin, status);
+        mentionService.mentionUser(mentionedLogin, status);
+    }
+
+    private void mentionRemoveUser(String mentionedLogin, Status status) {
+        removeStatusFromTimeline(mentionedLogin, status);
         mentionService.mentionUser(mentionedLogin, status);
     }
 
@@ -429,4 +539,9 @@ public class StatusUpdateService {
         timelineRepository.addStatusToTimeline(login, status.getStatusId().toString());
         atmosphereService.notifyUser(login, status);
     }
+
+    private void removeStatusFromTimeline(String login, Status status) {
+        timelineRepository.removeStatusFromTimeline(login, status.getStatusId().toString());
+    }
+
 }

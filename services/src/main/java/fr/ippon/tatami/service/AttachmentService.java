@@ -71,10 +71,6 @@ public class AttachmentService {
         }
         attachment.setThumbnail(computeThumbnail(attachment));
 
-        if (Constants.LOCAL_ATTACHMENT_STORAGE) {
-            attachment.setContent(null);
-            attachment.setThumbnail(null);
-        }
         attachmentRepository.createAttachment(attachment);
         userAttachmentRepository.addAttachmentId(authenticationService.getCurrentUser().getLogin(),
                 attachment.getAttachmentId());

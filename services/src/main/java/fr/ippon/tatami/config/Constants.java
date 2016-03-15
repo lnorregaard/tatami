@@ -60,4 +60,6 @@ public class Constants {
     public static int STORAGE_PREMIUMSUSCRIPTION = 1;
     public static int STORAGE_IPPONSUSCRIPTION = -1;
 
+    public static int MAX_TIMELINE_LOADS = 3;
+
 }

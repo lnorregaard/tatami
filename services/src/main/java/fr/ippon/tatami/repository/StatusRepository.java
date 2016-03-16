@@ -68,4 +68,5 @@ public interface StatusRepository {
 
     AbstractStatus findStatusByIdDeletedUser(String statusId);
 
+    void removeStatus(List<String> statuses);
 }

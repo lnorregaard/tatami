@@ -19,6 +19,7 @@ public class StatusService {
 
     public void removeStatusForDeletedUser(String statusId) {
         timelineService.removeStatusForDeletedUser(statusId);
+
     }
 
     @Async
@@ -27,6 +28,7 @@ public class StatusService {
             Constants.DELETE_USER_FORK_JOIN_POOL.submit(() ->
                     statuses.parallelStream().forEach((statusId) -> removeStatusForDeletedUser(statusId))
             ).get();
+            timelineService.removeStatusForDeletedUserList(statuses);
         } catch (InterruptedException e) {
             e.printStackTrace();
         } catch (ExecutionException e) {

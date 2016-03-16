@@ -99,6 +99,7 @@ public class CassandraStatusRepository implements StatusRepository {
     private PreparedStatement deleteByIdStmt;
 
 
+
     @Inject
     Session session;
 
@@ -113,6 +114,7 @@ public class CassandraStatusRepository implements StatusRepository {
                         "WHERE statusId = :statusId");
         deleteByIdStmt = session.prepare("DELETE FROM status " +
                 "WHERE statusId = :statusId");
+
     }
 
 
@@ -401,6 +403,16 @@ public class CassandraStatusRepository implements StatusRepository {
         Row row = rs.one();
         AbstractStatus status = null;
         String type = row.getString(TYPE);
+        if (type.equals(StatusType.STATUS.name())) {
+            Status stat = new Status();
+            stat.setStatusId(UUID.fromString(statusId));
+            stat.setType(StatusType.STATUS);
+            stat.setStatusPrivate(row.getBool(STATUS_PRIVATE));
+            stat.setGroupId(row.getString(GROUP_ID));
+            status = stat;
+        } else {
+            status = extractStatus(statusId,row,type);
+        }
         status = extractStatus(statusId, row, type);
         if (status == null) { // Status was not found, or was removed
             return null;
@@ -608,6 +620,15 @@ public class CassandraStatusRepository implements StatusRepository {
         batch.add(deleteByIdStmt.bind().setUUID("statusId", status.getStatusId()));
         session.execute(batch);
     }
+
+    @Override
+    public void removeStatus(List<String> statuses) {
+        log.debug("Removing Status : {}", statuses);
+        BatchStatement batch = new BatchStatement();
+        statuses.forEach(id -> batch.add(deleteByIdStmt.bind().setUUID("statusId", UUID.fromString(id))));
+        session.execute(batch);
+    }
+
 
     private boolean computeDetailsAvailable(Status status) {
         boolean detailsAvailable = false;

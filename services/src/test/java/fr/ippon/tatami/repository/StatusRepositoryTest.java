@@ -48,7 +48,8 @@ public class StatusRepositoryTest extends AbstractCassandraTatamiTest {
         Status created = statusRepository.createStatus(login, false, null, new ArrayList<>(),
                 content, "", "", "", "48.54654, 3.87987987", false);
         log.info(created.getStatusId().toString());
-        AbstractStatus found = statusRepository.findStatusById(created.getStatusId().toString(),false);
+        AbstractStatus found = statusRepository.findStatusById(created.getStatusId().toString(),true);
+
         assertThat(found, notNullValue());
         assertEquals(found.getState(),"PENDING");
 

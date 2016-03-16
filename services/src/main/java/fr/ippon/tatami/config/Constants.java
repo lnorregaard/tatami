@@ -1,5 +1,7 @@
 package fr.ippon.tatami.config;
 
+import java.util.concurrent.ForkJoinPool;
+
 /**
  * Application constants.
  */
@@ -61,5 +63,7 @@ public class Constants {
     public static int STORAGE_IPPONSUSCRIPTION = -1;
 
     public static int MAX_TIMELINE_LOADS = 3;
+
+    public static ForkJoinPool DELETE_USER_FORK_JOIN_POOL = new ForkJoinPool(2);
 
 }

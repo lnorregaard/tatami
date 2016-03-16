@@ -3,6 +3,7 @@ package fr.ippon.tatami.service.elasticsearch;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import fr.ippon.tatami.config.Constants;
 import fr.ippon.tatami.domain.Group;
 import fr.ippon.tatami.domain.Ping;
 import fr.ippon.tatami.domain.User;
@@ -54,6 +55,7 @@ import javax.inject.Inject;
 import java.io.IOException;
 import java.net.URL;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.*;
@@ -354,7 +356,21 @@ public class ElasticsearchSearchService implements SearchService {
         update(user,userMapper);
     }
 
-
+    @Override
+    @Async
+    public void removeUserFavourites(Collection<String> favourites, String login) {
+        try {
+            Constants.DELETE_USER_FORK_JOIN_POOL.submit(() ->
+                favourites
+                    .parallelStream()
+                    .forEach(favouriteId -> removeUserFavourite(favouriteId,login))
+                ).get();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        }
+    }
 
 
     @Override
@@ -978,14 +994,16 @@ public class ElasticsearchSearchService implements SearchService {
 
     @Override
     public Collection<String> getUserFavouritesForUser(String username, String domain) {
-        List<Username> usernames = usernameRepository.findUsernamesByDomainAndUsername(domain,username);
-        if (usernames != null && !usernames.isEmpty()) {
-            String login = usernames.get(0).getLogin();
-            User user = userRepository.findUserByLogin(login);
-            if (user.getPri() != null && user.getPri()) {
-                return new ArrayList<>();
+        if (username != null && domain != null) {
+            List<Username> usernames = usernameRepository.findUsernamesByDomainAndUsername(domain, username);
+            if (usernames != null && !usernames.isEmpty()) {
+                String login = usernames.get(0).getLogin();
+                User user = userRepository.findUserByLogin(login);
+                if (user.getPri() != null && user.getPri()) {
+                    return new ArrayList<>();
+                }
+                return getUserFavourites(login);
             }
-            return getUserFavourites(login);
         }
         return new ArrayList<>();
     }

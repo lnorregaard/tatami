@@ -6,6 +6,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.concurrent.ExecutionException;
+import java.util.function.Consumer;
 
 import javax.imageio.ImageIO;
 import javax.inject.Inject;
@@ -15,6 +17,7 @@ import net.coobird.thumbnailator.Thumbnails;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import fr.ippon.tatami.domain.Attachment;
@@ -153,20 +156,28 @@ public class AttachmentService {
     }
 
     public void deleteAttachment(Attachment attachment) {
-        log.debug("Removing attachment : {}", attachment);
-        User currentUser = authenticationService.getCurrentUser();
+        deleteAttachmentCheckUser(attachment, true);
+    }
 
-        for (String attachmentIdTest : userAttachmentRepository.findAttachmentIds(currentUser.getLogin())) {
-            if (attachmentIdTest.equals(attachment.getAttachmentId())) {
-                userAttachmentRepository.removeAttachmentId(currentUser.getLogin(), attachment.getAttachmentId());
-                attachmentRepository.deleteAttachment(attachment);
-                // Refresh user data, to reduce the risk of errors
-                currentUser = authenticationService.getCurrentUser();
-                long newAttachmentsSize = currentUser.getAttachmentsSize() - attachment.getSize();
-                currentUser.setAttachmentsSize(newAttachmentsSize);
-                userRepository.updateUser(currentUser);
-                break;
+    public void deleteAttachmentCheckUser(Attachment attachment, boolean userCheck) {
+        if (userCheck) {
+            log.debug("Removing attachment : {}", attachment);
+            User currentUser = authenticationService.getCurrentUser();
+
+            for (String attachmentIdTest : userAttachmentRepository.findAttachmentIds(currentUser.getLogin())) {
+                if (attachmentIdTest.equals(attachment.getAttachmentId())) {
+                    userAttachmentRepository.removeAttachmentId(currentUser.getLogin(), attachment.getAttachmentId());
+                    attachmentRepository.deleteAttachment(attachment);
+                    // Refresh user data, to reduce the risk of errors
+                    currentUser = authenticationService.getCurrentUser();
+                    long newAttachmentsSize = currentUser.getAttachmentsSize() - attachment.getSize();
+                    currentUser.setAttachmentsSize(newAttachmentsSize);
+                    userRepository.updateUser(currentUser);
+                    break;
+                }
             }
+        } else {
+            attachmentRepository.deleteAttachment(attachment);
         }
     }
 
@@ -212,5 +223,30 @@ public class AttachmentService {
     		}
     	}
     	return result;
+    }
+
+    @Async
+    public void removeAttachments(Collection<String> attachmentIds, String login) {
+        try {
+            Constants.DELETE_USER_FORK_JOIN_POOL.submit(() ->
+                attachmentIds
+                        .parallelStream()
+                        .forEach(deleteAttachmentWithoutCheckUser(login))
+            ).get();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private Consumer<String> deleteAttachmentWithoutCheckUser(String login) {
+        return id -> {
+            Attachment attachment = getAttachmentById(id);
+            if (attachment != null) {
+                deleteAttachmentCheckUser(attachment,false);
+            }
+            userAttachmentRepository.removeAttachmentId(login,id);
+        };
     }
 }

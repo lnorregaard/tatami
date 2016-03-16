@@ -9,6 +9,8 @@ import fr.ippon.tatami.security.AuthenticationService;
 import fr.ippon.tatami.service.dto.UserDTO;
 import fr.ippon.tatami.service.util.DomainUtil;
 import fr.ippon.tatami.service.util.RandomUtil;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.access.annotation.Secured;
 
 import org.apache.commons.lang.StringUtils;
@@ -86,7 +88,7 @@ public class UserService {
     private MailDigestRepository mailDigestRepository;
 
     @Inject
-    private StatusUpdateService statusUpdateService;
+    private StatusRepository statusRepository;
 
     @Inject
     private AttachmentService attachmentService;
@@ -95,6 +97,10 @@ public class UserService {
     private UserAttachmentRepository userAttachmentRepository;
 
     private List<String> adminUsers = new ArrayList<>();
+
+    @Inject
+    private StatusService statusService;
+
 
     @Inject
     Environment env;
@@ -312,20 +318,28 @@ public class UserService {
         }
 
         //Delete statuses
-        statusUpdateService.removeStatusForUser(user);
+        List<String> statuses = statusRepository.findStatusByUser(user);
+        statusService.removeStatusesForDeletedUser(statuses);
         log.debug("Delete user step 7 : username " + user.getUsername() + " deleted all statuses");
 
         // Remove user from index
-        removeAttachments(user);
-        log.debug("Delete user step 9 : user " + user.getLogin() + " is removed from Elasticsearch.");
+        Collection<String> attachmentIds = userAttachmentRepository.findAttachmentIds(user.getLogin());
+        attachmentService.removeAttachments(attachmentIds,user.getLogin());
+        log.debug("Delete user step 8 : user " + user.getLogin() + " is removed from Elasticsearch.");
+
+
+        Collection<String> favourites = searchService.getUserFavouritesForUser(user.getUsername(),user.getDomain());
+        String login = user.getLogin();
+        searchService.removeUserFavourites(favourites,login);
+        log.debug("Delete user step 9 : user " + user.getLogin() + " favourites is removed.");
 
         // Delete user
         userRepository.deleteUser(user);
-        log.debug("Delete user step 8 : user " + user.getLogin() + " is deleted.");
+        log.debug("Delete user step 10 : user " + user.getLogin() + " is deleted.");
 
         // Remove user from index
         searchService.removeUser(user);
-        log.debug("Delete user step 9 : user " + user.getLogin() + " is removed from Elasticsearch.");
+        log.debug("Delete user step 11 : user " + user.getLogin() + " is removed from Elasticsearch.");
 
 
         // Tweets are not deleted, but are not available to users anymore (unless the same user is created again)
@@ -333,16 +347,7 @@ public class UserService {
         log.info("User " + user.getLogin() + "has been successfully deleted !");
     }
 
-    private void removeAttachments(User user) {
-        Collection<String> attachmentIds =  userAttachmentRepository.findAttachmentIds(user.getLogin());
-        attachmentIds.forEach(id -> {
-            Attachment attachment = attachmentService.getAttachmentById(id);
-            if (attachment != null) {
-                attachmentService.deleteAttachment(attachment);
-            }
-            userAttachmentRepository.removeAttachmentId(user.getLogin(),id);
-        });
-    }
+
 
     /**
      * Set activated Field to false.

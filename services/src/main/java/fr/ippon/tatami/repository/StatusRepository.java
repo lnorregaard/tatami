@@ -37,10 +37,10 @@ public interface StatusRepository {
 
     FavoriteShare createFavoriteShare(String login,
                                       String followerLogin,
-                                      UUID originalStatusId);
+                                      UUID originalStatusId, String username);
 
     FriendRequest createFriendRequest(String login,
-                                      String followerLogin);
+                                      String followerLogin, String username);
 
     void acceptFriendRequest(String statusId);
 
@@ -65,4 +65,7 @@ public interface StatusRepository {
     void updateState(String statusId, String state);
 
     List<String> findStatusByUser(User user);
+
+    AbstractStatus findStatusByIdDeletedUser(String statusId);
+
 }

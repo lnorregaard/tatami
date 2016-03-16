@@ -96,7 +96,7 @@ public class FriendshipService {
                     friendRequestRepository.removeFriendRequest(currentUserLogin,followedUserLogin);
                     return true;
                 } else {
-                    FriendRequest friendRequest = statusRepository.createFriendRequest(followedUserLogin,currentUserLogin);
+                    FriendRequest friendRequest = statusRepository.createFriendRequest(followedUserLogin,currentUserLogin,followedUser.getUsername());
                     timelineRepository.addStatusToTimeline(followedUserLogin,friendRequest.getStatusId().toString());
                     timelineRepository.addStatusToTimeline(currentUserLogin,friendRequest.getStatusId().toString());
                     if (userService.isAdmin(followedUser.getLogin())) {

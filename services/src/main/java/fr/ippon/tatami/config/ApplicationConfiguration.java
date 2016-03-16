@@ -16,6 +16,7 @@ import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import java.io.IOException;
 import java.time.LocalDate;
+import java.util.concurrent.ForkJoinPool;
 
 @Configuration
 @PropertySources({
@@ -124,6 +125,15 @@ public class ApplicationConfiguration {
         Constants.STORAGE_IPPONSUSCRIPTION= Integer.parseInt(env.getProperty(ipponSuscription,"10"));
 
         Constants.MAX_TIMELINE_LOADS = Integer.parseInt(env.getProperty("max.timeline.loads","3"));
+
+
+        int threadsForDeleteUserPool = Integer.parseInt(env.getProperty("delete.user.thread.pool","2"));
+        int cores = Runtime.getRuntime().availableProcessors();
+        if (threadsForDeleteUserPool < 0 && threadsForDeleteUserPool > cores) {
+            Constants.DELETE_USER_FORK_JOIN_POOL = new ForkJoinPool(cores);
+        } else {
+            Constants.DELETE_USER_FORK_JOIN_POOL = new ForkJoinPool(threadsForDeleteUserPool);
+        }
 
         log.info("Tatami v. {} started!", Constants.VERSION);
         log.debug("Google Analytics key : {}", Constants.GOOGLE_ANALYTICS_KEY);

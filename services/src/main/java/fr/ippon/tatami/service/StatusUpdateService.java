@@ -15,10 +15,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.inject.Inject;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.UUID;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -102,6 +99,9 @@ public class StatusUpdateService {
 
     @Inject
     private UserService userService;
+
+    @Inject
+    private TimelineService timelineService;
 
 
     public Status postStatus(String content, boolean statusPrivate, Collection<String> attachmentIds, String geoLocalization) {
@@ -544,4 +544,8 @@ public class StatusUpdateService {
         timelineRepository.removeStatusFromTimeline(login, status.getStatusId().toString());
     }
 
+    public void removeStatusForUser(User user) {
+        List<String> statuses = statusRepository.findStatusByUser(user);
+        statuses.forEach((statusId) -> timelineService.removeStatus(statusId));
+    }
 }

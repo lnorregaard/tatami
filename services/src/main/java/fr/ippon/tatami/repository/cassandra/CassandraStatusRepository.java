@@ -474,6 +474,23 @@ public class CassandraStatusRepository implements StatusRepository {
         session.execute(statement);
     }
 
+    @Override
+    public List<String> findStatusByUser(User user) {
+        Select select = QueryBuilder.select()
+                .column("statusId")
+                .from("status");
+        Select.Where where = null;
+        where = select.where(eq("login", user.getLogin()));
+        Statement statement = where;
+        ResultSet results = session.execute(statement);
+        return results
+                .all()
+                .stream()
+                .map(e -> e.getUUID("statusId").toString())
+                .collect(Collectors.toList());
+
+    }
+
     private AbstractStatus findMentionShare(Row result) {
         MentionShare mentionShare = new MentionShare();
         mentionShare.setType(StatusType.MENTION_SHARE);

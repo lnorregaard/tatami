@@ -1,6 +1,7 @@
 package fr.ippon.tatami.service;
 
 import fr.ippon.tatami.config.Constants;
+import fr.ippon.tatami.domain.Attachment;
 import fr.ippon.tatami.domain.DigestType;
 import fr.ippon.tatami.domain.User;
 import fr.ippon.tatami.repository.*;
@@ -83,6 +84,15 @@ public class UserService {
 
     @Inject
     private MailDigestRepository mailDigestRepository;
+
+    @Inject
+    private StatusUpdateService statusUpdateService;
+
+    @Inject
+    private AttachmentService attachmentService;
+
+    @Inject
+    private UserAttachmentRepository userAttachmentRepository;
 
     private List<String> adminUsers = new ArrayList<>();
 
@@ -300,14 +310,38 @@ public class UserService {
             usernameService.deleteUsernameForUser(user);
             log.debug("Delete user step 6 : username " + user.getUsername() + " is deleted.");
         }
+
+        //Delete statuses
+        statusUpdateService.removeStatusForUser(user);
+        log.debug("Delete user step 7 : username " + user.getUsername() + " deleted all statuses");
+
+        // Remove user from index
+        removeAttachments(user);
+        log.debug("Delete user step 9 : user " + user.getLogin() + " is removed from Elasticsearch.");
+
         // Delete user
         userRepository.deleteUser(user);
-        log.debug("Delete user step 7 : user " + user.getLogin() + " is deleted.");
+        log.debug("Delete user step 8 : user " + user.getLogin() + " is deleted.");
+
+        // Remove user from index
+        searchService.removeUser(user);
+        log.debug("Delete user step 9 : user " + user.getLogin() + " is removed from Elasticsearch.");
 
 
         // Tweets are not deleted, but are not available to users anymore (unless the same user is created again)
 
         log.info("User " + user.getLogin() + "has been successfully deleted !");
+    }
+
+    private void removeAttachments(User user) {
+        Collection<String> attachmentIds =  userAttachmentRepository.findAttachmentIds(user.getLogin());
+        attachmentIds.forEach(id -> {
+            Attachment attachment = attachmentService.getAttachmentById(id);
+            if (attachment != null) {
+                attachmentService.deleteAttachment(attachment);
+            }
+            userAttachmentRepository.removeAttachmentId(user.getLogin(),id);
+        });
     }
 
     /**

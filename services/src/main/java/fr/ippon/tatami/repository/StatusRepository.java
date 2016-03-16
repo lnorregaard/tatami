@@ -1,6 +1,7 @@
 package fr.ippon.tatami.repository;
 
 import fr.ippon.tatami.domain.Group;
+import fr.ippon.tatami.domain.User;
 import fr.ippon.tatami.domain.status.*;
 
 import javax.validation.ConstraintViolationException;
@@ -62,4 +63,6 @@ public interface StatusRepository {
     AbstractStatus findStatusById(String statusId, boolean excludeStates);
 
     void updateState(String statusId, String state);
+
+    List<String> findStatusByUser(User user);
 }

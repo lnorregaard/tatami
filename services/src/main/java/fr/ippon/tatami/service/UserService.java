@@ -322,6 +322,10 @@ public class UserService {
         statusService.removeStatusesForDeletedUser(statuses);
         log.debug("Delete user step 7 : username " + user.getUsername() + " deleted all statuses");
 
+        List<String> foloowerStatuses = statusRepository.findFollowerStatusByUser(user);
+        statusService.removeStatusesForDeletedUser(foloowerStatuses);
+        log.debug("Delete user step 7 : username " + user.getUsername() + " deleted all statuses");
+
         // Remove user from index
         Collection<String> attachmentIds = userAttachmentRepository.findAttachmentIds(user.getLogin());
         attachmentService.removeAttachments(attachmentIds,user.getLogin());

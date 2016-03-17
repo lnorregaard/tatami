@@ -194,6 +194,19 @@ public class UserServiceTest extends AbstractCassandraTatamiTest {
     }
 
     @Test
+    public void testDeleteUser() {
+        String login = "userWhoWillBeDeleted@ippon.fr";
+        mockAuthenticationOnUserService(login);
+
+        User testUser = userService.getUserByLogin(login);
+        userService.deleteUser(testUser);
+
+        testUser = userService.getUserByLogin(login);
+        assertNull(testUser);
+    }
+
+
+    @Test
     public void testBuildUserDTOList() {
         String login = "jdubois@ippon.fr";
         mockAuthenticationOnUserService(login);

@@ -79,9 +79,6 @@ public class CassandraStatusRepository implements StatusRepository {
     //Cassandra Template
 
     @Inject
-    private UserService userService;
-
-    @Inject
     private DiscussionRepository discussionRepository;
 
     @Inject
@@ -102,6 +99,7 @@ public class CassandraStatusRepository implements StatusRepository {
     private PreparedStatement deleteByIdStmt;
 
 
+
     @Inject
     Session session;
 
@@ -116,6 +114,7 @@ public class CassandraStatusRepository implements StatusRepository {
                         "WHERE statusId = :statusId");
         deleteByIdStmt = session.prepare("DELETE FROM status " +
                 "WHERE statusId = :statusId");
+
     }
 
 
@@ -269,13 +268,12 @@ public class CassandraStatusRepository implements StatusRepository {
     }
 
     @Override
-    public FavoriteShare createFavoriteShare(String login, String followerLogin, UUID originalStatusId) {
+    public FavoriteShare createFavoriteShare(String login, String followerLogin, UUID originalStatusId, String username) {
         FavoriteShare favoriteShare = new FavoriteShare();
         favoriteShare.setLogin(login);
         favoriteShare.setType(StatusType.FAVORITE_SHARE);
 
-        User user = userService.getUserByLogin(login);
-        favoriteShare.setUsername(user.getUsername());
+        favoriteShare.setUsername(username);
         String domain = DomainUtil.getDomainFromLogin(login);
         favoriteShare.setDomain(domain);
         favoriteShare.setLogin(login);
@@ -291,12 +289,11 @@ public class CassandraStatusRepository implements StatusRepository {
     }
 
     @Override
-    public FriendRequest createFriendRequest(String login, String followerLogin) {
+    public FriendRequest createFriendRequest(String login, String followerLogin, String username) {
         FriendRequest friendRequest = new FriendRequest();
         friendRequest.setLogin(login);
         friendRequest.setType(StatusType.FRIEND_REQUEST);
-        User user = userService.getUserByLogin(login);
-        friendRequest.setUsername(user.getUsername());
+        friendRequest.setUsername(username);
         String domain = DomainUtil.getDomainFromLogin(login);
         friendRequest.setDomain(domain);
 
@@ -392,12 +389,10 @@ public class CassandraStatusRepository implements StatusRepository {
 
     }
 
-    public AbstractStatus findStatusById(String statusId, boolean excludeStates) {
+    @Override
+    public AbstractStatus findStatusByIdDeletedUser(String statusId) {
         if (statusId == null || statusId.equals("")) {
             return null;
-        }
-        if (log.isTraceEnabled()) {
-            log.trace("Finding status : " + statusId);
         }
         BoundStatement stmt = findOneByIdStmt.bind();
         stmt.setUUID("statusId", UUID.fromString(statusId));
@@ -407,10 +402,39 @@ public class CassandraStatusRepository implements StatusRepository {
         }
         Row row = rs.one();
         AbstractStatus status = null;
-//        if (excludeStates && row.getString("state") != null) {
-//            return status;
-//        }
         String type = row.getString(TYPE);
+        if (type.equals(StatusType.STATUS.name())) {
+            Status stat = new Status();
+            stat.setStatusId(UUID.fromString(statusId));
+            stat.setType(StatusType.STATUS);
+            stat.setStatusPrivate(row.getBool(STATUS_PRIVATE));
+            stat.setGroupId(row.getString(GROUP_ID));
+            status = stat;
+        } else {
+            status = extractStatus(statusId,row,type);
+        }
+        status = extractStatus(statusId, row, type);
+        if (status == null) { // Status was not found, or was removed
+            return null;
+        }
+        status.setStatusId(UUID.fromString(statusId));
+        status.setState(row.getString("state"));
+
+        String domain = row.getString(DOMAIN);
+        if (domain != null) {
+            status.setDomain(domain);
+        } else {
+            throw new IllegalStateException("Status cannot have a null domain: " + status);
+        }
+        status.setLogin(row.getString(LOGIN));
+        status.setUsername(row.getString(USERNAME));
+
+        status.setStatusDate(row.getDate(STATUS_DATE));
+        return status;
+    }
+
+    private AbstractStatus extractStatus(String statusId, Row row, String type) {
+        AbstractStatus status;
         if (type == null || type.equals(StatusType.STATUS.name())) {
             status = findStatus(row, statusId);
         } else if (type.equals(StatusType.SHARE.name())) {
@@ -429,18 +453,32 @@ public class CassandraStatusRepository implements StatusRepository {
         } else {
             throw new IllegalStateException("Status has an unknown type: " + type);
         }
+        return status;
+    }
+
+    public AbstractStatus findStatusById(String statusId, boolean excludeStates) {
+        if (statusId == null || statusId.equals("")) {
+            return null;
+        }
+        if (log.isTraceEnabled()) {
+            log.trace("Finding status : " + statusId);
+        }
+        BoundStatement stmt = findOneByIdStmt.bind();
+        stmt.setUUID("statusId", UUID.fromString(statusId));
+        ResultSet rs = session.execute(stmt);
+        if (rs.isExhausted()) {
+            return null;
+        }
+        Row row = rs.one();
+        AbstractStatus status = null;
+        String type = row.getString(TYPE);
+        status = extractStatus(statusId, row, type);
         if (status == null) { // Status was not found, or was removed
             return null;
         }
         status.setStatusId(UUID.fromString(statusId));
-        User user = userService.getUserByLogin(row.getString(LOGIN));
-        if (user != null) {
-            status.setLogin(user.getLogin());
-            status.setUsername(user.getUsername());
-        } else {
-            status.setLogin(row.getString(LOGIN));
-            status.setUsername(row.getString(USERNAME));
-        }
+        status.setLogin(row.getString(LOGIN));
+        status.setUsername(row.getString(USERNAME));
         status.setState(row.getString("state"));
 
         String domain = row.getString(DOMAIN);
@@ -473,6 +511,24 @@ public class CassandraStatusRepository implements StatusRepository {
         Statement statement = where;
         session.execute(statement);
     }
+
+    @Override
+    public List<String> findStatusByUser(User user) {
+        Select select = QueryBuilder.select()
+                .column("statusId")
+                .from("status");
+        Select.Where where = null;
+        where = select.where(eq("login", user.getLogin()));
+        Statement statement = where;
+        ResultSet results = session.execute(statement);
+        return results
+                .all()
+                .stream()
+                .map(e -> e.getUUID("statusId").toString())
+                .collect(Collectors.toList());
+
+    }
+
 
     private AbstractStatus findMentionShare(Row result) {
         MentionShare mentionShare = new MentionShare();
@@ -564,6 +620,15 @@ public class CassandraStatusRepository implements StatusRepository {
         batch.add(deleteByIdStmt.bind().setUUID("statusId", status.getStatusId()));
         session.execute(batch);
     }
+
+    @Override
+    public void removeStatus(List<String> statuses) {
+        log.debug("Removing Status : {}", statuses);
+        BatchStatement batch = new BatchStatement();
+        statuses.forEach(id -> batch.add(deleteByIdStmt.bind().setUUID("statusId", UUID.fromString(id))));
+        session.execute(batch);
+    }
+
 
     private boolean computeDetailsAvailable(Status status) {
         boolean detailsAvailable = false;

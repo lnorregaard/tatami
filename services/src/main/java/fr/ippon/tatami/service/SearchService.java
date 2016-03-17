@@ -111,4 +111,6 @@ public interface SearchService {
     Collection<String> getUserFavourites(String login);
 
     void updateUser(User user);
+
+    void removeUserFavourites(Collection<String> favourites, String login);
 }

@@ -12,13 +12,11 @@ import fr.ippon.tatami.service.util.DomainUtil;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import javax.inject.Inject;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.UUID;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -102,6 +100,9 @@ public class StatusUpdateService {
 
     @Inject
     private UserService userService;
+
+    @Inject
+    private TimelineService timelineService;
 
 
     public Status postStatus(String content, boolean statusPrivate, Collection<String> attachmentIds, String geoLocalization) {
@@ -271,9 +272,9 @@ public class StatusUpdateService {
                 postPublicStatus(group, status);
             }
         }
-        if (log.isInfoEnabled()) {
+        if (log.isDebugEnabled()) {
             long finishTime = Calendar.getInstance().getTimeInMillis();
-            log.info("Status created in " + (finishTime - startTime) + "ms.");
+            log.debug("Status created in " + (finishTime - startTime) + "ms.");
         }
         return status;
     }
@@ -310,7 +311,11 @@ public class StatusUpdateService {
     public void removePublicStatus(Group group, Status status) {
         String userLogin = status.getLogin();
         String domain = status.getDomain();
-        Collection<String> followersForUser = followerRepository.findFollowersForUser(userLogin);
+        if (userLogin != null) {
+            Collection<String> followersForUser = followerRepository.findFollowersForUser(userLogin);
+            manageRemoveStatusFromGroups(status, group, followersForUser);
+            manageRemoveMentions(status, group, userLogin, domain, followersForUser);
+        }
 
         // add status to the dayline, userline
         String day = StatsService.DAYLINE_KEY_FORMAT.format(status.getStatusDate());
@@ -318,13 +323,11 @@ public class StatusUpdateService {
         userlineRepository.removeStatusFromUserline(status.getLogin(), status.getStatusId().toString());
 
         // add the status to the group line and group followers
-        manageRemoveStatusFromGroups(status, group, followersForUser);
 
         // tag managgement
         manageRemoveStatusTags(status, group);
 
         // add status to the mentioned users' timeline
-        manageRemoveMentions(status, group, userLogin, domain, followersForUser);
 
         // Increment status count for the current user
         counterRepository.decrementStatusCounter(userLogin);

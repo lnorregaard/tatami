@@ -10,6 +10,7 @@ import fr.ippon.tatami.service.dto.StatusDTO;
 import fr.ippon.tatami.service.util.DomainUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Service;
 import fr.ippon.tatami.domain.status.*;
@@ -135,6 +136,12 @@ public class TimelineService {
             log.debug("Status could not be found");
             return null;
         }
+        User statusUser = userService.getUserByLogin(abstractStatus.getLogin());
+        if (statusUser != null) {
+            abstractStatus.setLogin(statusUser.getLogin());
+            abstractStatus.setUsername(statusUser.getUsername());
+        }
+
         Status status = null;
         if (abstractStatus.getType() == null || abstractStatus.getType().equals(StatusType.STATUS)) {
             status = (Status) abstractStatus;
@@ -215,6 +222,11 @@ public class TimelineService {
             if (abstractStatus != null) {
                 User statusUser = userService.getUserByLogin(abstractStatus.getLogin());
                 if (statusUser != null) {
+                    abstractStatus.setLogin(statusUser.getLogin());
+                    abstractStatus.setUsername(statusUser.getUsername());
+                }
+
+                if (statusUser != null) {
                     // Security check
                     // bypass the security check when no user is logged in
                     // => for non-authenticated rss access
@@ -244,6 +256,11 @@ public class TimelineService {
                             statusDTO.setTimelineId(share.getStatusId().toString());
                             statusDTO.setSharedByUsername(share.getUsername());
                             statusUser = userService.getUserByLogin(originalStatus.getLogin());
+                            if (statusUser != null) {
+                                originalStatus.setLogin(statusUser.getLogin());
+                                originalStatus.setUsername(statusUser.getUsername());
+                            }
+
                             addStatusToLine(statuses, statusDTO, originalStatus, statusUser, usergroups, favoriteLine);
                         } else {
                             log.debug("Original status has been deleted");
@@ -255,6 +272,10 @@ public class TimelineService {
                             statusDTO.setTimelineId(mentionShare.getStatusId().toString());
                             statusDTO.setSharedByUsername(mentionShare.getUsername());
                             statusUser = userService.getUserByLogin(mentionShare.getLogin());
+                            if (statusUser != null) {
+                                originalStatus.setLogin(statusUser.getLogin());
+                                originalStatus.setUsername(statusUser.getUsername());
+                            }
                             addStatusToLine(statuses, statusDTO, originalStatus, statusUser, usergroups, favoriteLine);
                         } else {
                             log.debug("Mentioned status has been deleted");
@@ -276,6 +297,10 @@ public class TimelineService {
                             statusDTO.setTimelineId(announcement.getStatusId().toString());
                             statusDTO.setSharedByUsername(announcement.getUsername());
                             statusUser = userService.getUserByLogin(originalStatus.getLogin());
+                            if (statusUser != null) {
+                                originalStatus.setLogin(statusUser.getLogin());
+                                originalStatus.setUsername(statusUser.getUsername());
+                            }
                             addStatusToLine(statuses, statusDTO, originalStatus, statusUser, usergroups, favoriteLine);
                         } else {
                             log.debug("Announced status has been deleted");
@@ -288,6 +313,10 @@ public class TimelineService {
                             User sharedUser = userService.getUserByLogin(favoriteShare.getLogin());
                             statusDTO.setSharedByUsername(sharedUser.getUsername());
                             statusUser = userService.getUserByLogin(originalStatus.getLogin());
+                            if (statusUser != null) {
+                                originalStatus.setLogin(statusUser.getLogin());
+                                originalStatus.setUsername(statusUser.getUsername());
+                            }
                             addStatusToLine(statuses, statusDTO, originalStatus, statusUser, usergroups, favoriteLine);
                         }
                     } else if (abstractStatus.getType().equals(StatusType.FRIEND_REQUEST)) {
@@ -656,6 +685,22 @@ public class TimelineService {
         return dtos;
     }
 
+    public void removeStatusForDeletedUser(String statusId) {
+        log.debug("Removing status : {}", statusId);
+        AbstractStatus abstractStatus = statusRepository.findStatusByIdDeletedUser(statusId);
+        if (abstractStatus != null && abstractStatus.getType().equals(StatusType.STATUS)) {
+            Status status = (Status) abstractStatus;
+            Group group = null;
+            if (status.getGroupId() != null) {
+                group = groupService.getGroupById(status.getDomain(), UUID.fromString(status.getGroupId()));
+            }
+            statusUpdateService.removePublicStatus(group, status);
+            statusStateGroupRepository.removeState(status.getGroupId(), status.getStatusId());
+            searchService.removeStatus(status);
+            statusCounterRepository.deleteCounters(status.getStatusId());
+        }
+    }
+
 
     public void removeStatus(String statusId) {
         log.debug("Removing status : {}", statusId);
@@ -671,7 +716,6 @@ public class TimelineService {
             if (status.getLogin().equals(currentUser.getLogin())) {
                 statusRepository.removeStatus(status);
                 statusStateGroupRepository.removeState(status.getGroupId(),status.getStatusId());
-//                counterRepository.decrementStatusCounter(currentUser.getLogin());
                 searchService.removeStatus(status);
                 statusCounterRepository.deleteCounters(status.getStatusId());
             }
@@ -733,7 +777,7 @@ public class TimelineService {
             String login = authenticationService.getCurrentUser().getLogin();
             statusCounterRepository.incrementLikeCounter(abstractStatus.getStatusId());
             favoritelineRepository.addStatusToFavoriteline(login, statusId);
-            FavoriteShare favoriteShare = statusRepository.createFavoriteShare(likedUser.getLogin(),abstractStatus.getLogin(),abstractStatus.getStatusId());
+            FavoriteShare favoriteShare = statusRepository.createFavoriteShare(likedUser.getLogin(),abstractStatus.getLogin(),abstractStatus.getStatusId(),likedUser.getUsername());
             timelineRepository.addStatusToTimeline(abstractStatus.getLogin(),favoriteShare.getStatusId().toString());
         } else {
             log.warn("Cannot favorite this type of status: " + abstractStatus);
@@ -833,6 +877,11 @@ public class TimelineService {
             if (abstractStatus != null) {
                 User statusUser = userService.getUserByLogin(abstractStatus.getLogin());
                 if (statusUser != null) {
+                    abstractStatus.setLogin(statusUser.getLogin());
+                    abstractStatus.setUsername(statusUser.getUsername());
+                }
+
+                if (statusUser != null) {
                     // Security check
                     // bypass the security check when no user is logged in
                     // => for non-authenticated rss access
@@ -917,6 +966,12 @@ public class TimelineService {
     public StatusDTO getPendingStatus(String statusId) {
         AbstractStatus abstractStatus = statusRepository.findStatusById(statusId,false);
         if (abstractStatus != null) {
+            User user = userService.getUserByLogin(abstractStatus.getLogin());
+            if (user != null) {
+                abstractStatus.setLogin(user.getLogin());
+                abstractStatus.setUsername(user.getUsername());
+            }
+
             StatusDTO statusDTO = new StatusDTO();
             statusDTO.setStatusId(abstractStatus.getStatusId().toString());
             statusDTO.setStatusDate(abstractStatus.getStatusDate());
@@ -947,5 +1002,9 @@ public class TimelineService {
 
     public String getAuditMessage(String statusId) {
         return auditRepository.getCommentForStatus(statusId);
+    }
+
+    public void removeStatusForDeletedUserList(List<String> statuses) {
+        statusRepository.removeStatus(statuses);
     }
 }

@@ -317,6 +317,7 @@ CREATE TABLE IF NOT EXISTS statuscounter (
     PRIMARY KEY(statusId)
 );
 
+CREATE INDEX IF NOT EXISTS status_login ON status (login);
 
 INSERT INTO user (login , avatar , firstname , lastname , username , domain ) VALUES('jdubois@ippon.fr', 'avatar', 'Julien','Dubois','jdubois','ippon.fr');
 INSERT INTO user (login , avatar , firstname , lastname , username , domain ) VALUES('uuser@ippon.fr', 'avatar', 'Update','User','uuser','ippon.fr');
@@ -339,6 +340,11 @@ INSERT INTO user (login , avatar , firstname , lastname , username) VALUES('user
 INSERT INTO username (username , domain,login, created) VALUES('userWhoWantToFollow','ippon.fr','userWhoWantToFollowWithDifferentUsername@ippon.fr',fa2bd770-9848-11e1-a6ca-e0f847068d52);
 INSERT INTO user (login , avatar , firstname , lastname , username) VALUES('userWhoWillBeFollowedWithDifferentUsername@ippon.fr','avatar','User','WhoWillBeFollowed','userWhoWillBeFollowed');
 INSERT INTO username (username , domain,login, created) VALUES('userWhoWillBeFollowed','ippon.fr','userWhoWillBeFollowedWithDifferentUsername@ippon.fr',fa2bd770-9848-11e1-a6ca-e0f847068d52);
+
+INSERT INTO user (login , avatar , firstname , lastname , username) VALUES('userWhoWillBeDeleted@ippon.fr','avatar','User','userWhoWillBeDeleted','userWhoWillBeDeleted');
+INSERT INTO username (username , domain,login, created) VALUES('userWhoWillBeDeleted','ippon.fr','userWhoWillBeDeleted@ippon.fr',fa2bd770-9848-11e1-a6ca-e0f847068d52);
+INSERT INTO status (statusId,login,username,domain,content,statusDate,type) VALUES (fa2bd770-9848-11e1-a6ca-e0f847068d53,'userWhoWillBeDeleted@ippon.fr','userWhoWillBeDeleted','ippon.fr','Tatami is an enterprise social network should be deleted',dateof(now()), 'STATUS');
+
 
 
 INSERT INTO status (statusId,login,username,domain,content,statusDate,type) VALUES (fa2bd770-9848-11e1-a6ca-e0f847068d52,'userWithStatus@ippon.fr','userWithStatus','ippon.fr','Tatami is an enterprise social network',dateof(now()), 'STATUS');

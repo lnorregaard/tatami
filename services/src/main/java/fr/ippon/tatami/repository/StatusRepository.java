@@ -1,6 +1,7 @@
 package fr.ippon.tatami.repository;
 
 import fr.ippon.tatami.domain.Group;
+import fr.ippon.tatami.domain.User;
 import fr.ippon.tatami.domain.status.*;
 
 import javax.validation.ConstraintViolationException;
@@ -36,10 +37,10 @@ public interface StatusRepository {
 
     FavoriteShare createFavoriteShare(String login,
                                       String followerLogin,
-                                      UUID originalStatusId);
+                                      UUID originalStatusId, String username);
 
     FriendRequest createFriendRequest(String login,
-                                      String followerLogin);
+                                      String followerLogin, String username);
 
     void acceptFriendRequest(String statusId);
 
@@ -62,4 +63,10 @@ public interface StatusRepository {
     AbstractStatus findStatusById(String statusId, boolean excludeStates);
 
     void updateState(String statusId, String state);
+
+    List<String> findStatusByUser(User user);
+
+    AbstractStatus findStatusByIdDeletedUser(String statusId);
+
+    void removeStatus(List<String> statuses);
 }

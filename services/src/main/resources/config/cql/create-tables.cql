@@ -321,3 +321,5 @@ ALTER TABLE friendrequests ADD statusId timeuuid;
 ALTER TABLE avatar ADD thumb blob;
 
 CREATE INDEX IF NOT EXISTS audit_status ON tatami.audit (blockedid);
+
+CREATE INDEX IF NOT EXISTS status_login ON status (login);

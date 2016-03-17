@@ -66,6 +66,8 @@ public interface StatusRepository {
 
     List<String> findStatusByUser(User user);
 
+    List<String> findFollowerStatusByUser(User user);
+
     AbstractStatus findStatusByIdDeletedUser(String statusId);
 
     void removeStatus(List<String> statuses);

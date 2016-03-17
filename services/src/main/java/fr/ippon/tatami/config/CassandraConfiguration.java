@@ -772,6 +772,7 @@ public class CassandraConfiguration {
         session.execute("ALTER TABLE avatar ADD thumb blob;");
         session.execute("CREATE INDEX IF NOT EXISTS audit_status ON tatami.audit (blockedid);");
         session.execute("CREATE INDEX IF NOT EXISTS status_login ON status (login);");
+        session.execute("CREATE INDEX IF NOT EXISTS status_followerlogin ON status (followerlogin);");
 
     }
 

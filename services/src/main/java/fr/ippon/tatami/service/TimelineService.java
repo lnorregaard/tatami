@@ -101,6 +101,9 @@ public class TimelineService {
     @Inject
     private UsernameService usernameService;
 
+    @Inject
+    private AttachmentService attachmentService;
+
     public StatusDTO getStatus(String statusId) {
         List<String> line = new ArrayList<String>();
 
@@ -711,6 +714,11 @@ public class TimelineService {
             Group group = null;
             if (status.getGroupId() != null) {
                 group = groupService.getGroupById(status.getDomain(), UUID.fromString(status.getGroupId()));
+            }
+            if (status.getHasAttachments() != null && status.getHasAttachments() && status.getAttachments() != null) {
+                status.getAttachments()
+                        .stream()
+                        .forEach(attachmentService::deleteAttachment);
             }
             statusUpdateService.removePublicStatus(group, status);
             if (status.getLogin().equals(currentUser.getLogin())) {

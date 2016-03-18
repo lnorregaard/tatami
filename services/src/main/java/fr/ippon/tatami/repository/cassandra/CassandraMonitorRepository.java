@@ -52,6 +52,8 @@ public class CassandraMonitorRepository implements MonitorRepository {
             if (ping.getCassandra() <= 0) {
                 ping.setCassandra(1);
             }
+        } else {
+            return null;
         }
         return ping;
     }

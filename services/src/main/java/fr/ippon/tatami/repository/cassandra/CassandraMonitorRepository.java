@@ -43,22 +43,16 @@ public class CassandraMonitorRepository implements MonitorRepository {
     @Override
     public Ping createCassandraPing(Ping ping) {
         long start = System.currentTimeMillis();
-        Statement statement = QueryBuilder.select()
-                .all()
-                .from("user")
-                .limit(1);
-        ResultSet results = session.execute(statement);
-        if (!results.isExhausted()) {
-            if (ping != null) {
-                ping.setCassandra(System.currentTimeMillis()-start);
-                return ping;
-            } else {
+        if (!session.getState().getConnectedHosts().isEmpty()) {
+            if (ping == null) {
                 Ping p = new Ping();
-                p.setCassandra(System.currentTimeMillis()-start);
-                return p;
+                ping = p;
             }
-        } else {
-            return ping;
+            ping.setCassandra(System.currentTimeMillis()-start);
+            if (ping.getCassandra() <= 0) {
+                ping.setCassandra(1);
+            }
         }
+        return ping;
     }
 }

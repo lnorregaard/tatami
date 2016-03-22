@@ -1,6 +1,7 @@
 package fr.ippon.tatami.repository;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * The Favoriteline Repository.
@@ -21,4 +22,6 @@ public interface FavoritelineRepository {
      * - The value is always null
      */
     List<String> getFavoriteline(String login);
+
+    boolean isStatusInFavoriteLine(String login, UUID statusId);
 }

@@ -797,10 +797,17 @@ public class TimelineService {
         AbstractStatus abstractStatus = statusRepository.findStatusById(statusId);
         if (abstractStatus.getType().equals(StatusType.STATUS)) {
             User currentUser = authenticationService.getCurrentUser();
-            statusCounterRepository.decrementLikeCounter(abstractStatus.getStatusId());
-            favoritelineRepository.removeStatusFromFavoriteline(currentUser.getLogin(), statusId);
+            long counter = statusCounterRepository.getLikeCounter(abstractStatus.getStatusId());
+            if (favoritelineRepository.isStatusInFavoriteLine(currentUser.getLogin(), abstractStatus.getStatusId())) {
+                statusCounterRepository.decrementLikeCounter(abstractStatus.getStatusId());
+                favoritelineRepository.removeStatusFromFavoriteline(currentUser.getLogin(), statusId);
+            } else {
+                if (log.isDebugEnabled()) {
+                    log.debug("Status favorite have already been removed: {} for user {}", abstractStatus.getStatusId(), currentUser.getLogin());
+                }
+            }
         } else {
-            log.warn("Cannot un-favorite this type of status: " + abstractStatus);
+            log.debug("Cannot un-favorite this type of status: " + abstractStatus);
         }
     }
 

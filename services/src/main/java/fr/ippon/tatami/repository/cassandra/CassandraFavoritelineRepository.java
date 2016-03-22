@@ -76,6 +76,18 @@ public class CassandraFavoritelineRepository implements FavoritelineRepository {
     }
 
     @Override
+    public boolean isStatusInFavoriteLine(String login, UUID statusId) {
+        Statement statement = QueryBuilder.select()
+                .column("status")
+                .from("favline")
+                .where(eq("key", login))
+                .and(eq("status",statusId))
+                .limit(1);
+        ResultSet results = session.execute(statement);
+        return !results.isExhausted();
+    }
+
+    @Override
     public void deleteFavoriteline(String login) {
         Statement statement = QueryBuilder.delete()
                 .from("favline")

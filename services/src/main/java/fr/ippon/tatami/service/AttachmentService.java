@@ -193,6 +193,8 @@ public class AttachmentService {
 
         Collection<Long> taux = new ArrayList<Long>();
         taux.add(quota);
+        taux.add(domainQuota-userQuota);
+        taux.add(domainQuota);
 
         log.debug("Domain quota attachments : {}", quota);
 

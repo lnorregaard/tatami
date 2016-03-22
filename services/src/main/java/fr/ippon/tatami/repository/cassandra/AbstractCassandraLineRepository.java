@@ -105,7 +105,8 @@ public abstract class AbstractCassandraLineRepository {
             where.and(lt("status", UUID.fromString(finish)));
         } else if(start != null) {
             where.and(gt("status",UUID.fromString(start)));
-        }else if (size > 0) {
+        }
+        if (size > 0) {
             where.limit(size);
         }
         where.orderBy(desc("status"));

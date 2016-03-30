@@ -961,7 +961,7 @@ public class TimelineService {
         AbstractStatus abstractStatus = statusRepository.findStatusById(statusId,false);
         boolean approved = false;
         if (abstractStatus.getState() == null) {
-
+            approved = true;
         }
         if (abstractStatus instanceof Status) {
             Status status = (Status) abstractStatus;

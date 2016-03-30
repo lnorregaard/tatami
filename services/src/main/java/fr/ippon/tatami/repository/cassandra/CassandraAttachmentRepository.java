@@ -134,10 +134,8 @@ public class CassandraAttachmentRepository implements AttachmentRepository {
         try {
             attachment.setFilename(filename.toString());
             delete(filename);
-            if (attachment.getThumbnail() != null) {
-                Path filenameThumb = Paths.get(startPathString + subDirectory, attachment.getAttachmentId() + Constants.ATTACHMENT_THUMBNAIL_NAME + suffix);
-                delete(filenameThumb);
-            }
+            Path filenameThumb = Paths.get(startPathString + subDirectory, attachment.getAttachmentId() + Constants.ATTACHMENT_THUMBNAIL_NAME + suffix);
+            delete(filenameThumb);
         } catch (IOException e) {
             log.warn("Could not delete file", e);
         }

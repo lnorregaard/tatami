@@ -44,10 +44,19 @@ public class MonitorService {
 
 
     public Ping ping() {
-        Ping ping = new Ping();
+        Ping ping = null;
         ping = monitorRepository.createCassandraPing(ping);
-        return searchService.createElasticSearchPing(ping);
-
+        if (ping == null) {
+            log.warn("Connection to Cassandra failed");
+            return ping;
+        }
+        try {
+            ping = searchService.createElasticSearchPing(ping);
+        } catch (Exception e) {
+            log.warn("Connection to Elasticsearch failed: " + e.getMessage());
+            return null;
+        }
+        return ping;
 
     }
 }

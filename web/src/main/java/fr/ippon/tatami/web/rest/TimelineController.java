@@ -73,11 +73,11 @@ public class TimelineController {
      */
     @RequestMapping(value = "/rest/statuses/{statusId}/audit",
             method = RequestMethod.GET,
-            produces = "plain/text")
+            produces = "application/json")
     @ResponseBody
     public String getAuditMessage(@PathVariable("statusId") String statusId) {
         log.debug("REST request to get audit message for Id : {}", statusId);
-        return timelineService.getAuditMessage(statusId);
+        return "{ \"response\":\""+timelineService.getAuditMessage(statusId)+"\"}";
     }
 
 

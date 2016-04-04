@@ -50,6 +50,7 @@ public class GroupService {
     @Inject
     private FriendRepository friendRepository;
 
+
     @CacheEvict(value = "group-user-cache", allEntries = true)
     public UUID createGroup(String name, String description, boolean publicGroup) {
         log.debug("Creating group : {}", name);

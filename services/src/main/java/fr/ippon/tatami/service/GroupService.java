@@ -1,5 +1,6 @@
 package fr.ippon.tatami.service;
 
+import fr.ippon.tatami.config.Constants;
 import fr.ippon.tatami.domain.Group;
 import fr.ippon.tatami.domain.User;
 import fr.ippon.tatami.repository.*;
@@ -227,26 +228,20 @@ public class GroupService {
         return buildGroup(currentUser, group);
     }
 
-    private Group getGroupFromUser(User currentUser, UUID groupId) {
-        Collection<Group> groups = getGroupsOfUser(currentUser);
-        for (Group testGroup : groups) {
-            if (testGroup.getGroupId().equals(groupId)) {
-                return testGroup;
-            }
+    public Group getGroupFromUser(User currentUser, UUID groupId) {
+        String domain = DomainUtil.getDomainFromLogin(currentUser.getLogin());
+
+        UUID foundGroupId = userGroupRepository.findGroupForUser(currentUser.getLogin(),groupId);
+        if (foundGroupId != null && foundGroupId.equals(groupId)) {
+            Group group =internalGetGroupById(domain, groupId);
+            return group;
         }
         return null;
     }
 
-    private boolean isGroupManagedByCurrentUser(Group group) {
-        Collection<Group> groups = getGroupsWhereCurrentUserIsAdmin();
-        boolean isGroupManagedByCurrentUser = false;
-        for (Group testGroup : groups) {
-            if (testGroup.getGroupId().equals(group.getGroupId())) {
-                isGroupManagedByCurrentUser = true;
-                break;
-            }
-        }
-        return isGroupManagedByCurrentUser;
+    public boolean isGroupManagedByCurrentUser(Group group) {
+        User currentUser = authenticationService.getCurrentUser();
+        return userGroupRepository.isGroupManagedByUser(currentUser.getLogin(),group.getGroupId());
     }
 
     public Group buildGroup(User user, Group group) {
@@ -305,4 +300,5 @@ public class GroupService {
         Group group = getGroupById(domain, groupId);
         return buildGroup(group);
     }
+
 }

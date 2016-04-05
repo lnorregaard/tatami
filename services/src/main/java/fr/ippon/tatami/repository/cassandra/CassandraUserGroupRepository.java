@@ -4,21 +4,19 @@ import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.Statement;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
-import com.datastax.driver.core.querybuilder.Select;
-import com.datastax.driver.core.utils.UUIDs;
 import fr.ippon.tatami.config.GroupRoles;
 import fr.ippon.tatami.repository.UserGroupRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
 
 import javax.inject.Inject;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static com.datastax.driver.core.querybuilder.QueryBuilder.*;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.desc;
 
 /**
  * Cassandra implementation of the User groups repository.
@@ -32,6 +30,7 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.desc;
  */
 @Repository
 public class CassandraUserGroupRepository implements UserGroupRepository {
+    private final Logger log = LoggerFactory.getLogger(CassandraUserGroupRepository.class);
 
     @Inject
     Session session;
@@ -70,11 +69,12 @@ public class CassandraUserGroupRepository implements UserGroupRepository {
                 .from("userGroup")
                 .where(eq("login", login));
         ResultSet results = session.execute(statement);
-        return results
+        List<UUID> resultList = results
                 .all()
                 .stream()
                 .map(e -> e.getUUID("groupId"))
                 .collect(Collectors.toList());
+        return resultList;
     }
 
     @Override
@@ -90,5 +90,36 @@ public class CassandraUserGroupRepository implements UserGroupRepository {
                 .filter(e -> e.getString("role").equals(GroupRoles.ADMIN))
                 .map(e -> e.getUUID("groupId"))
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public UUID findGroupForUser(String login, UUID groupId) {
+        Statement statement = QueryBuilder.select()
+                .column("groupId")
+                .from("userGroup")
+                .where(eq("login", login))
+                .and(eq("groupId",groupId));
+        ResultSet results = session.execute(statement);
+        if (!results.isExhausted()) {
+            return results.one().getUUID("groupId");
+        } else {
+            return null;
+        }
+    }
+
+    @Override
+    public boolean isGroupManagedByUser(String login, UUID groupId) {
+        Statement statement = QueryBuilder.select()
+                .all()
+                .from("userGroup")
+                .where(eq("login", login))
+                .and(eq("groupId",groupId));
+        ResultSet results = session.execute(statement);
+        return results
+                .all()
+                .stream()
+                .filter(e -> e.getString("role").equals(GroupRoles.ADMIN))
+                .findFirst()
+                .isPresent();
     }
 }

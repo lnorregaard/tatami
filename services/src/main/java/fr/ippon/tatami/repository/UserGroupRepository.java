@@ -20,4 +20,8 @@ public interface UserGroupRepository {
     List<UUID> findGroups(String login);
 
     Collection<UUID> findGroupsAsAdmin(String login);
+
+    UUID findGroupForUser(String login, UUID groupId);
+
+    boolean isGroupManagedByUser(String login, UUID groupId);
 }

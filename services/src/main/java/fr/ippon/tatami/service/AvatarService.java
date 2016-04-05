@@ -108,6 +108,10 @@ public class AvatarService {
             } catch (Exception e) {
                 log.warn("Could not load bytes from: " + avatar.getFilename());
             }
+            if (bytes == null) {
+                log.warn("Could not get any bytes and is null from url: " + avatar.getFilename());
+                return avatar;
+            }
             avatar.setSize(bytes.length);
             avatar.setContent(bytes);
             avatar.setCreationDate(new Date());

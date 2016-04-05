@@ -380,25 +380,11 @@ public class GroupController {
     }
 
     private boolean isGroupManagedByCurrentUser(Group group) {
-        Collection<Group> groups = groupService.getGroupsWhereCurrentUserIsAdmin();
-        boolean isGroupManagedByCurrentUser = false;
-        for (Group testGroup : groups) {
-            if (testGroup.getGroupId().equals(group.getGroupId())) {
-                isGroupManagedByCurrentUser = true;
-                break;
-            }
-        }
-        return isGroupManagedByCurrentUser;
+        return groupService.isGroupManagedByCurrentUser(group);
     }
 
     private Group getGroupFromUser(User currentUser, String groupId) {
         UUID uGroupId = UUID.fromString(groupId);
-        Collection<Group> groups = groupService.getGroupsForUser(currentUser);
-        for (Group testGroup : groups) {
-            if (testGroup.getGroupId().equals(uGroupId)) {
-                return testGroup;
-            }
-        }
-        return null;
+        return groupService.getGroupFromUser(currentUser,uGroupId);
     }
 }

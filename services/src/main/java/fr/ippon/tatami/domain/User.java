@@ -43,7 +43,7 @@ public class User implements Serializable {
     @Column(name = "avatar")
     private String avatar;
 
-    @Size(min = 0, max = 50)
+    @Size(min = 0, max = 100)
     @Column(name = "firstName")
     private String firstName;
 

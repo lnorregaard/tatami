@@ -75,9 +75,10 @@ public class TimelineController {
             method = RequestMethod.GET,
             produces = "application/json")
     @ResponseBody
-    public String getAuditMessage(@PathVariable("statusId") String statusId) {
+    public Audit getAuditMessage(@PathVariable("statusId") String statusId) {
         log.debug("REST request to get audit message for Id : {}", statusId);
-        return "{ \"response\":\""+timelineService.getAuditMessage(statusId)+"\"}";
+        Audit audit = new Audit(timelineService.getAuditMessage(statusId));
+        return audit;
     }
 
 

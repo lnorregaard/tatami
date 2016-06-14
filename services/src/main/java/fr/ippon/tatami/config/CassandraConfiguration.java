@@ -773,6 +773,7 @@ public class CassandraConfiguration {
         session.execute("CREATE INDEX IF NOT EXISTS audit_status ON tatami.audit (blockedid);");
         session.execute("CREATE INDEX IF NOT EXISTS status_login ON status (login);");
         session.execute("CREATE INDEX IF NOT EXISTS status_followerlogin ON status (followerlogin);");
+        session.execute("ALTER TABLE group ADD postModerated boolean;");
 
     }
 

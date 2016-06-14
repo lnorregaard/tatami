@@ -42,7 +42,7 @@ public class ModeratorTimelineServiceTest extends AbstractCassandraTatamiTest {
     @Before
     public void setup() {
         Constants.MODERATOR_STATUS = true;
-        groupId = groupRepository.createGroup("ippon.fr","test","test",true);
+        groupId = groupRepository.createGroup("ippon.fr","test","test",true, postModerated);
         group = groupRepository.getGroupById("ippon.fr",groupId);
     }
     @Test

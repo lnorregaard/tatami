@@ -266,9 +266,9 @@ public class StatusUpdateService {
         }
         if (status.getStatusPrivate()) { // Private status
             // add status to the mentioned users' timeline
-            manageMentions(status, null, currentLogin, domain, new ArrayList<String>());
+            manageMentions(status, null, currentLogin, domain, new ArrayList<>());
         } else { // Public status
-            if (!Constants.MODERATOR_STATUS || userService.isAdmin(currentLogin)) {
+            if (!Constants.MODERATOR_STATUS || userService.isAdmin(currentLogin) || (group != null && group.isPostModerated())) {
                 postPublicStatus(group, status);
             }
         }

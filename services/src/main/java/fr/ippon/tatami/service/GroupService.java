@@ -1,6 +1,5 @@
 package fr.ippon.tatami.service;
 
-import fr.ippon.tatami.config.Constants;
 import fr.ippon.tatami.domain.Group;
 import fr.ippon.tatami.domain.User;
 import fr.ippon.tatami.repository.*;
@@ -53,11 +52,11 @@ public class GroupService {
 
 
     @CacheEvict(value = "group-user-cache", allEntries = true)
-    public UUID createGroup(String name, String description, boolean publicGroup) {
+    public UUID createGroup(String name, String description, boolean publicGroup, boolean postModerated) {
         log.debug("Creating group : {}", name);
         User currentUser = authenticationService.getCurrentUser();
         String domain = DomainUtil.getDomainFromLogin(currentUser.getLogin());
-        UUID groupId = groupRepository.createGroup(domain, name, description, publicGroup);
+        UUID groupId = groupRepository.createGroup(domain, name, description, publicGroup,postModerated);
         groupMembersRepository.addAdmin(groupId, currentUser.getLogin());
         groupCounterRepository.incrementGroupCounter(domain, groupId);
         userGroupRepository.addGroupAsAdmin(currentUser.getLogin(), groupId);
@@ -72,7 +71,8 @@ public class GroupService {
         groupRepository.editGroupDetails(group.getGroupId(),
                 group.getName(),
                 group.getDescription(),
-                group.isArchivedGroup());
+                group.isArchivedGroup(),
+                group.isPostModerated());
         searchService.removeGroup(group);
         searchService.addGroup(group);
     }

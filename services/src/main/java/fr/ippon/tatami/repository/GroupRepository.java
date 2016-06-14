@@ -11,11 +11,11 @@ import java.util.UUID;
  */
 public interface GroupRepository {
 
-    UUID createGroup(String domain, String name, String description, boolean publicGroup);
+    UUID createGroup(String domain, String name, String description, boolean publicGroup, boolean postModerated);
 
     Group getGroupById(String domain, UUID groupId);
 
     Group getGroupByGroupId(UUID groupId);
 
-    void editGroupDetails(UUID groupId, String name, String description, boolean archivedGroup);
+    void editGroupDetails(UUID groupId, String name, String description, boolean archivedGroup, boolean postModerated);
 }

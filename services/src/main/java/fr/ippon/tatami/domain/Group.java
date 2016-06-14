@@ -30,6 +30,8 @@ public class Group implements Comparable<Group>, Serializable, Cloneable {
 
     private boolean administrator;
 
+    private boolean postModerated;
+
     public UUID getGroupId() {
         return groupId;
     }
@@ -100,6 +102,14 @@ public class Group implements Comparable<Group>, Serializable, Cloneable {
 
     public void setAdministrator(boolean administrator) {
         this.administrator = administrator;
+    }
+
+    public boolean isPostModerated() {
+        return postModerated;
+    }
+
+    public void setPostModerated(boolean postModerated) {
+        this.postModerated = postModerated;
     }
 
     @Override

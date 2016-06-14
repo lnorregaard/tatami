@@ -134,6 +134,7 @@ public class GroupController {
                 group.setName(groupEdit.getName());
                 group.setDescription(groupEdit.getDescription());
                 group.setArchivedGroup(groupEdit.isArchivedGroup());
+                group.setPostModerated(groupEdit.isPostModerated());
                 groupService.editGroup(group);
                 return group;
             }
@@ -214,7 +215,7 @@ public class GroupController {
     @Timed
     public Group createGroup(HttpServletResponse response, @RequestBody Group group) {
         if (group.getName() != null && !group.getName().equals("")) {
-            UUID groupId = groupService.createGroup(group.getName(), group.getDescription(), group.isPublicGroup());
+            UUID groupId = groupService.createGroup(group.getName(), group.getDescription(), group.isPublicGroup(),group.isPostModerated());
             group.setGroupId(groupId);
         } else {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);

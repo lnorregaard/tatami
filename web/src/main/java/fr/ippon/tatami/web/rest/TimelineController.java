@@ -215,13 +215,14 @@ public class TimelineController {
                                                         @RequestParam(required = false) String groupId,
                                                         @RequestParam(required = false) String start,
                                                         @RequestParam(required = false) String finish,
-                                                        @RequestParam(required = false) Integer count) {
+                                                        @RequestParam(required = false) Integer count,
+                                                        @RequestParam(required = false) String order) {
 
         if (count == null || count == 0) {
             count = 20; //Default value
         }
         try {
-            return timelineService.getStatusForStates(states, groupId, start,finish, count);
+            return timelineService.getStatusForStates(states, groupId, start,finish, count,order);
         } catch (Exception e) {
             log.warn("No status found: ",e);
             return new ArrayList<>();

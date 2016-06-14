@@ -61,7 +61,7 @@ public class ModeratorTimelineServiceTest extends AbstractCassandraTatamiTest {
         addStatusPending();
         timelineService.blockStatus("jdubois@ippon.fr",status.getStatusId().toString(),"blocked status","jdubois@ippon.fr");
         AbstractStatus statusNew = statusRepository.findStatusById(status.getStatusId().toString(),false);
-        List<UUID> list = statusStateGroupRepository.findStatuses("BLOCKED",group.getGroupId().toString(),null,null,10);
+        List<UUID> list = statusStateGroupRepository.findStatuses("BLOCKED",group.getGroupId().toString(),null,null,10, order);
         assertThat(list, notNullValue());
         assertThat(list.size(), is(1));
         assertThat(list.iterator().next(),is(status.getStatusId()));
@@ -73,7 +73,7 @@ public class ModeratorTimelineServiceTest extends AbstractCassandraTatamiTest {
         addStatusPending();
         timelineService.approveStatus(status.getStatusId().toString());
         AbstractStatus statusNew = statusRepository.findStatusById(status.getStatusId().toString(),true);
-        List<UUID> list = statusStateGroupRepository.findStatuses("APPROVED",group.getGroupId().toString(),null,null,10);
+        List<UUID> list = statusStateGroupRepository.findStatuses("APPROVED",group.getGroupId().toString(),null,null,10, order);
         assertThat(list, notNullValue());
         assertThat(list.size(), is(1));
         assertThat(list.iterator().next(),is(status.getStatusId()));

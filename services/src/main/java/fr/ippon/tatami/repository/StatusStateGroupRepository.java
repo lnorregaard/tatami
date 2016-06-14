@@ -1,10 +1,6 @@
 package fr.ippon.tatami.repository;
 
-import fr.ippon.tatami.domain.Group;
-import fr.ippon.tatami.domain.status.*;
-
 import javax.validation.ConstraintViolationException;
-import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
@@ -21,7 +17,7 @@ public interface StatusStateGroupRepository {
 
     void updateState(String groupId, UUID statusId, String newState);
 
-    List<UUID> findStatuses(String state, String groupId, UUID from, UUID to, int count);
+    List<UUID> findStatuses(String state, String groupId, UUID from, UUID to, int count, String order);
 
     Long findStatusesCount(String types, String groupId);
 

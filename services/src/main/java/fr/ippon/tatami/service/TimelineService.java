@@ -876,7 +876,7 @@ public class TimelineService {
         return statusStateGroupRepository.findStatusesCount(types,groupId);
     }
 
-    public Collection<StatusDTO> getStatusForStates(String types, String groupId, String start, String finish, Integer count) {
+    public Collection<StatusDTO> getStatusForStates(String types, String groupId, String start, String finish, Integer count, String order) {
         UUID startUUID = null;
         UUID finishUUID = null;
         if (start != null) {
@@ -885,7 +885,7 @@ public class TimelineService {
         if (finish != null) {
             finishUUID = UUID.fromString(finish);
         }
-        List<UUID> lines = statusStateGroupRepository.findStatuses(types,groupId,startUUID,finishUUID,count);
+        List<UUID> lines = statusStateGroupRepository.findStatuses(types,groupId,startUUID,finishUUID,count,order);
         Collection<StatusDTO> statuses = new ArrayList<>(lines.size());
         for (UUID statusId : lines) {
             AbstractStatus abstractStatus = statusRepository.findStatusById(statusId.toString(),false);

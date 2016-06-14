@@ -87,7 +87,7 @@ public class CassandraStatusStateGroupRepository implements StatusStateGroupRepo
     }
 
     @Override
-    public List<UUID> findStatuses(String types, String groupId, UUID from, UUID finish, int count) {
+    public List<UUID> findStatuses(String types, String groupId, UUID from, UUID finish, int count, String order) {
         List<String> states = new ArrayList<>();
         if (types != null && types.contains(",")) {
             states = Arrays.asList(types.split(","));
@@ -109,12 +109,16 @@ public class CassandraStatusStateGroupRepository implements StatusStateGroupRepo
         if(finish != null) {
             where = addWhere(select,where,lt(STATUS_ID,finish));
         } else if(from != null) {
-            where = addWhere(select,where,gt(STATUS_ID,finish));
+            where = addWhere(select,where,gt(STATUS_ID,from));
         }
         if (count > 0) {
             where.limit(count);
         }
-        where.orderBy(asc(STATUS_ID));
+        if (order != null && order.equals("desc")) {
+            where.orderBy(desc(STATUS_ID));
+        } else {
+            where.orderBy(asc(STATUS_ID));
+        }
         ResultSet results = session.execute(where);
         return results
                 .all()

@@ -151,6 +151,7 @@ CREATE TABLE IF NOT EXISTS group (
     description varchar,
     publicGroup boolean,
     archivedGroup boolean,
+    postModerated boolean,
     PRIMARY KEY(id)
 );
 
@@ -320,8 +321,6 @@ CREATE TABLE IF NOT EXISTS statuscounter (
 CREATE INDEX IF NOT EXISTS status_login ON status (login);
 
 CREATE INDEX IF NOT EXISTS status_followerlogin ON status (followerlogin);
-
-ALTER TABLE group ADD postModerated boolean;
 
 INSERT INTO user (login , avatar , firstname , lastname , username , domain ) VALUES('jdubois@ippon.fr', 'avatar', 'Julien','Dubois','jdubois','ippon.fr');
 INSERT INTO user (login , avatar , firstname , lastname , username , domain ) VALUES('uuser@ippon.fr', 'avatar', 'Update','User','uuser','ippon.fr');

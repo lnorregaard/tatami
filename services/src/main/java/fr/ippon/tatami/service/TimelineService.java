@@ -721,7 +721,7 @@ public class TimelineService {
                         .forEach(attachmentService::deleteAttachment);
             }
             statusUpdateService.removePublicStatus(group, status);
-            if (status.getLogin().equals(currentUser.getLogin())) {
+            if (status.getLogin().equals(currentUser.getLogin()) || userService.isAdmin(currentUser.getLogin())) {
                 statusRepository.removeStatus(status);
                 statusStateGroupRepository.removeState(status.getGroupId(),status.getStatusId());
                 searchService.removeStatus(status);

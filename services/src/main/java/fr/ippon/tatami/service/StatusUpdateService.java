@@ -12,7 +12,6 @@ import fr.ippon.tatami.service.util.DomainUtil;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import javax.inject.Inject;
@@ -547,4 +546,24 @@ public class StatusUpdateService {
         timelineRepository.removeStatusFromTimeline(login, status.getStatusId().toString());
     }
 
+    public void sendToUser(Status status, User user) {
+        timelineRepository.addStatusToTimeline(user.getLogin(), status.getStatusId().toString());
+    }
+
+    public Status postStatusAndSendToUser(String escapedContent, boolean privateBoolean, Collection<String> attachmentIds, String geoLocalization, String replyToUsername) {
+        User currentUser = authenticationService.getCurrentUser();
+        if (!userService.isAdmin(currentUser.getLogin())) {
+            log.info("Could not send status to user: {}, no permission for user: {}",replyToUsername,currentUser.getLogin());
+            return null;
+        }
+        User user = userService.getUserByUsername(replyToUsername);
+        if (user == null || user.getLogin().equals(currentUser.getLogin())) {
+            log.info("Could not send status to user: {}, No target user or is the same user: {}",replyToUsername,currentUser.getLogin());
+            return null;
+        }
+        Status createdStatus = postStatus(escapedContent, privateBoolean, attachmentIds, geoLocalization);
+        sendToUser(createdStatus,user);
+
+        return createdStatus;
+    }
 }

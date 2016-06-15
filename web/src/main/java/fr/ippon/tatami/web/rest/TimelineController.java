@@ -229,6 +229,33 @@ public class TimelineController {
         }
     }
 
+
+    /**
+     * POST /statuses/ -> create a new Status
+     */
+    @RequestMapping(value = "/rest/statuses/moderator",
+            method = RequestMethod.POST,
+            produces = "application/json")
+    @Timed
+    public Status postModeratorStatus(@RequestBody StatusDTO status, HttpServletResponse response) throws ArchivedGroupException, ReplyStatusException {
+        try {
+            authenticationService.validateStatus();
+        } catch (UsernameNotFoundException e) {
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            return null;
+        }
+        log.debug("REST request to add status : {}", status.getContent());
+        String escapedContent = StringEscapeUtils.escapeHtml(status.getContent());
+        Collection<String> attachmentIds = status.getAttachmentIds();
+
+        Status createdStatus = statusUpdateService.postStatusAndSendToUser(escapedContent, false, attachmentIds, status.getGeoLocalization(),status.getReplyToUsername());
+        if (createdStatus == null) {
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+        }
+        return createdStatus;
+    }
+
+
     @RequestMapping(value = "/rest/statuses/moderator/{statusId}",
             method = RequestMethod.PATCH)
     @ResponseBody

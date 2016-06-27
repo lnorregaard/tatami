@@ -665,14 +665,9 @@ public class TimelineService {
             String domain = DomainUtil.getDomainFromLogin(currentUser.getLogin());
             login = usernameService.getLoginFromUsernameAndDomain(username, domain);
         }
-        List<String> statuses = userlineRepository.getUserline(login, nbStatus, start, finish);
-        Collection<StatusDTO> dtos = buildStatusList(statuses);
-        if (statuses.size() != dtos.size()) {
-            Collection<String> statusIdsToDelete = findStatusesToCleanUp(statuses, dtos);
-            userlineRepository.removeStatusesFromUserline(login, statusIdsToDelete);
-            return getUserline(login, nbStatus+statusIdsToDelete.size(), start, finish,1);
-        }
-        return dtos;
+        return getUserTimeline(login,nbStatus,start,finish,StatusType.STATUS.toString()).stream()
+                .filter(status -> !status.isStatusPrivate())
+                .collect(Collectors.toList());
     }
 
     private Collection<StatusDTO> getUserline(String login, int nbStatus, String start, String finish, int rounds) {

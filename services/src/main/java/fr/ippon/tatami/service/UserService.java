@@ -253,7 +253,12 @@ public class UserService {
         user.setPreferencesMentionEmail(true);
         user.setWeeklyDigestSubscription(true);
         if (Constants.USER_AND_FRIENDS) {
-            usernameService.createUsername(user);
+            try {
+                usernameService.createUsername(user);
+            } catch (UsernameExistException e) {
+                log.warn(e.getMessage());
+                return;
+            }
         } else {
             user.setUsername(username);
         }

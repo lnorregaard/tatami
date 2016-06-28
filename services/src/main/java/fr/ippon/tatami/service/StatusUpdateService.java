@@ -281,7 +281,11 @@ public class StatusUpdateService {
     public void postPublicStatus(Group group, Status status) {
         String userLogin = status.getLogin();
         String domain = status.getDomain();
-        Collection<String> followersForUser = followerRepository.findFollowersForUser(userLogin);
+        Collection<String> followersForUser = new ArrayList<>();
+        if (!userService.isAdmin(userLogin)) {
+            followersForUser = followerRepository.findFollowersForUser(userLogin);
+        }
+
 
         // add status to the dayline, userline
         String day = StatsService.DAYLINE_KEY_FORMAT.format(status.getStatusDate());

@@ -213,7 +213,11 @@ public class TimelineService {
         List<String> favoriteLine;
         if (authenticationService.hasAuthenticatedUser() && authenticationService.getCurrentUser() != null) {
             currentUser = authenticationService.getCurrentUser();
-            usergroups = groupService.getGroupsForUser(currentUser);
+            if (!userService.isAdmin(currentUser.getLogin())) {
+                usergroups = groupService.getGroupsForUser(currentUser);
+            } else {
+                usergroups = Collections.emptyList();
+            }
             favoriteLine = favoritelineRepository.getFavoriteline(currentUser.getLogin());
         } else {
             usergroups = Collections.emptyList();

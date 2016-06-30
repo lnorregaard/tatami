@@ -213,7 +213,11 @@ public class TimelineService {
         List<String> favoriteLine;
         if (authenticationService.hasAuthenticatedUser() && authenticationService.getCurrentUser() != null) {
             currentUser = authenticationService.getCurrentUser();
-            usergroups = groupService.getGroupsForUser(currentUser);
+            if (!userService.isAdmin(currentUser.getLogin())) {
+                usergroups = groupService.getGroupsForUser(currentUser);
+            } else {
+                usergroups = Collections.emptyList();
+            }
             favoriteLine = favoritelineRepository.getFavoriteline(currentUser.getLogin());
         } else {
             usergroups = Collections.emptyList();
@@ -665,14 +669,9 @@ public class TimelineService {
             String domain = DomainUtil.getDomainFromLogin(currentUser.getLogin());
             login = usernameService.getLoginFromUsernameAndDomain(username, domain);
         }
-        List<String> statuses = userlineRepository.getUserline(login, nbStatus, start, finish);
-        Collection<StatusDTO> dtos = buildStatusList(statuses);
-        if (statuses.size() != dtos.size()) {
-            Collection<String> statusIdsToDelete = findStatusesToCleanUp(statuses, dtos);
-            userlineRepository.removeStatusesFromUserline(login, statusIdsToDelete);
-            return getUserline(login, nbStatus+statusIdsToDelete.size(), start, finish,1);
-        }
-        return dtos;
+        return getUserTimeline(login,nbStatus,start,finish,StatusType.STATUS.toString()).stream()
+                .filter(status -> !status.isStatusPrivate())
+                .collect(Collectors.toList());
     }
 
     private Collection<StatusDTO> getUserline(String login, int nbStatus, String start, String finish, int rounds) {
@@ -721,7 +720,7 @@ public class TimelineService {
                         .forEach(attachmentService::deleteAttachment);
             }
             statusUpdateService.removePublicStatus(group, status);
-            if (status.getLogin().equals(currentUser.getLogin())) {
+            if (status.getLogin().equals(currentUser.getLogin()) || userService.isAdmin(currentUser.getLogin())) {
                 statusRepository.removeStatus(status);
                 statusStateGroupRepository.removeState(status.getGroupId(),status.getStatusId());
                 searchService.removeStatus(status);
@@ -876,7 +875,7 @@ public class TimelineService {
         return statusStateGroupRepository.findStatusesCount(types,groupId);
     }
 
-    public Collection<StatusDTO> getStatusForStates(String types, String groupId, String start, String finish, Integer count) {
+    public Collection<StatusDTO> getStatusForStates(String types, String groupId, String start, String finish, Integer count, String order) {
         UUID startUUID = null;
         UUID finishUUID = null;
         if (start != null) {
@@ -885,7 +884,7 @@ public class TimelineService {
         if (finish != null) {
             finishUUID = UUID.fromString(finish);
         }
-        List<UUID> lines = statusStateGroupRepository.findStatuses(types,groupId,startUUID,finishUUID,count);
+        List<UUID> lines = statusStateGroupRepository.findStatuses(types,groupId,startUUID,finishUUID,count,order);
         Collection<StatusDTO> statuses = new ArrayList<>(lines.size());
         for (UUID statusId : lines) {
             AbstractStatus abstractStatus = statusRepository.findStatusById(statusId.toString(),false);

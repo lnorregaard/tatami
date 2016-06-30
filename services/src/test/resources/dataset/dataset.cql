@@ -151,6 +151,7 @@ CREATE TABLE IF NOT EXISTS group (
     description varchar,
     publicGroup boolean,
     archivedGroup boolean,
+    postModerated boolean,
     PRIMARY KEY(id)
 );
 

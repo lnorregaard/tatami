@@ -12,7 +12,6 @@ import fr.ippon.tatami.service.util.DomainUtil;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import javax.inject.Inject;
@@ -266,9 +265,9 @@ public class StatusUpdateService {
         }
         if (status.getStatusPrivate()) { // Private status
             // add status to the mentioned users' timeline
-            manageMentions(status, null, currentLogin, domain, new ArrayList<String>());
+            manageMentions(status, null, currentLogin, domain, new ArrayList<>());
         } else { // Public status
-            if (!Constants.MODERATOR_STATUS || userService.isAdmin(currentLogin)) {
+            if (!Constants.MODERATOR_STATUS || userService.isAdmin(currentLogin) || (group != null && group.isPostModerated())) {
                 postPublicStatus(group, status);
             }
         }
@@ -282,7 +281,11 @@ public class StatusUpdateService {
     public void postPublicStatus(Group group, Status status) {
         String userLogin = status.getLogin();
         String domain = status.getDomain();
-        Collection<String> followersForUser = followerRepository.findFollowersForUser(userLogin);
+        Collection<String> followersForUser = new ArrayList<>();
+        if (!userService.isAdmin(userLogin)) {
+            followersForUser = followerRepository.findFollowersForUser(userLogin);
+        }
+
 
         // add status to the dayline, userline
         String day = StatsService.DAYLINE_KEY_FORMAT.format(status.getStatusDate());
@@ -547,4 +550,24 @@ public class StatusUpdateService {
         timelineRepository.removeStatusFromTimeline(login, status.getStatusId().toString());
     }
 
+    public void sendToUser(Status status, User user) {
+        timelineRepository.addStatusToTimeline(user.getLogin(), status.getStatusId().toString());
+    }
+
+    public Status postStatusAndSendToUser(String escapedContent, boolean privateBoolean, Collection<String> attachmentIds, String geoLocalization, String replyToUsername) {
+        User currentUser = authenticationService.getCurrentUser();
+        if (!userService.isAdmin(currentUser.getLogin())) {
+            log.info("Could not send status to user: {}, no permission for user: {}",replyToUsername,currentUser.getLogin());
+            return null;
+        }
+        User user = userService.getUserByUsername(replyToUsername);
+        if (user == null || user.getLogin().equals(currentUser.getLogin())) {
+            log.info("Could not send status to user: {}, No target user or is the same user: {}",replyToUsername,currentUser.getLogin());
+            return null;
+        }
+        Status createdStatus = postStatus(escapedContent, privateBoolean, attachmentIds, geoLocalization);
+        sendToUser(createdStatus,user);
+
+        return createdStatus;
+    }
 }

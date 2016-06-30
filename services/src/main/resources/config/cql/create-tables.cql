@@ -325,3 +325,6 @@ CREATE INDEX IF NOT EXISTS audit_status ON tatami.audit (blockedid);
 CREATE INDEX IF NOT EXISTS status_login ON status (login);
 
 CREATE INDEX IF NOT EXISTS status_followerlogin ON status (followerlogin);
+
+-- JIRA ISSUE: SPRINT-4838
+ALTER TABLE group ADD postModerated boolean;

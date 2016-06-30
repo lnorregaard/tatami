@@ -31,7 +31,7 @@ public class GroupServiceTest extends AbstractCassandraTatamiTest {
         String groupName = "Group name";
         String groupDescription = "Group description";
         boolean publicGroup = true;
-        groupService.createGroup(groupName, groupDescription, publicGroup);
+        groupService.createGroup(groupName, groupDescription, publicGroup, false);
         Collection<Group> groups = groupService.getGroupsForUser(user);
         assertEquals(1, groups.size());
 
@@ -54,7 +54,7 @@ public class GroupServiceTest extends AbstractCassandraTatamiTest {
         String groupName = "Group name";
         String groupDescription = "Group description";
         boolean publicGroup = true;
-        groupService.createGroup(groupName, groupDescription, publicGroup);
+        groupService.createGroup(groupName, groupDescription, publicGroup, false);
         Collection<Group> groups = groupService.getGroupsForUser(user);
         assertEquals(1, groups.size());
 
@@ -75,7 +75,7 @@ public class GroupServiceTest extends AbstractCassandraTatamiTest {
         String groupName = "Group name";
         String groupDescription = "Group description";
         boolean publicGroup = true;
-        groupService.createGroup(groupName, groupDescription, publicGroup);
+        groupService.createGroup(groupName, groupDescription, publicGroup, false);
         Collection<Group> groups = groupService.getGroupsForUser(user);
         assertEquals(1, groups.size());
         Group group = groups.iterator().next();

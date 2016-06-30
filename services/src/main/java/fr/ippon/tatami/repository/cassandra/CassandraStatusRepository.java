@@ -147,7 +147,7 @@ public class CassandraStatusRepository implements StatusRepository {
 
         status.setContent(content);
 
-        if (!admin && Constants.MODERATOR_STATUS && (status.getStatusPrivate() == null || !status.getStatusPrivate()) ) {
+        if (!admin && Constants.MODERATOR_STATUS && ((status.getStatusPrivate() == null || !status.getStatusPrivate()) && (group == null || !group.isPostModerated())) ) {
             status.setState("PENDING");
         }
 
@@ -181,13 +181,19 @@ public class CassandraStatusRepository implements StatusRepository {
         BatchStatement batch = new BatchStatement();
         batch.add(mapper.saveQuery(status));
         session.execute(batch);
-        if (!admin && Constants.MODERATOR_STATUS && (status.getStatusPrivate() == null || !status.getStatusPrivate()) ) {
-            statusStateGroupRepository.createStatusStateGroup(status.getStatusId(),"PENDING",status.getGroupId());
-        } else if (admin && Constants.MODERATOR_STATUS && (status.getStatusPrivate() == null || !status.getStatusPrivate())) {
-            statusStateGroupRepository.createStatusStateGroup(status.getStatusId(),"APPROVED",status.getGroupId());
+        if (Constants.MODERATOR_STATUS) {
+            String state = getStatusState(admin,status,group);
+            statusStateGroupRepository.createStatusStateGroup(status.getStatusId(),state,status.getGroupId());
         }
-
         return status;
+    }
+
+    private String getStatusState(boolean admin, Status status, Group group) {
+        String state = "PENDING";
+        if (admin || (status.getStatusPrivate() != null && status.getStatusPrivate()) || (group != null && group.isPostModerated())) {
+            state = "APPROVED";
+        }
+        return state;
     }
 
     @Override

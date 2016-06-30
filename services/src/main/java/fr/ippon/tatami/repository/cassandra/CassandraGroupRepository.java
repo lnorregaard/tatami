@@ -37,10 +37,11 @@ public class CassandraGroupRepository implements GroupRepository {
     private static final String DESCRIPTION = "description";
     private static final String PUBLIC_GROUP = "publicGroup";
     private static final String ARCHIVED_GROUP = "archivedGroup";
+    private static final String POST_MODERATED = "postModerated";
 
 
     @Override
-    public UUID createGroup(String domain, String name, String description, boolean publicGroup) {
+    public UUID createGroup(String domain, String name, String description, boolean publicGroup, boolean postModerated) {
         UUID groupId = UUIDs.timeBased();
         Statement statement = QueryBuilder.insertInto(ColumnFamilyKeys.GROUP_CF)
                 .value("id", groupId)
@@ -48,17 +49,19 @@ public class CassandraGroupRepository implements GroupRepository {
                 .value(NAME,name)
                 .value(DESCRIPTION, description)
                 .value(PUBLIC_GROUP,publicGroup)
-                .value(ARCHIVED_GROUP,false);
+                .value(ARCHIVED_GROUP,false)
+                .value(POST_MODERATED,postModerated);
         session.execute(statement);
         return groupId;
     }
 
     @Override
-    public void editGroupDetails(UUID groupId, String name, String description, boolean archivedGroup) {
+    public void editGroupDetails(UUID groupId, String name, String description, boolean archivedGroup, boolean postModerated) {
         Statement statement = QueryBuilder.update(ColumnFamilyKeys.GROUP_CF)
                 .with(set(NAME,name))
                 .and(set(DESCRIPTION,description))
                 .and(set(ARCHIVED_GROUP,archivedGroup))
+                .and(set(POST_MODERATED,postModerated))
                 .where(eq("id",groupId));
         session.execute(statement);
     }
@@ -94,6 +97,7 @@ public class CassandraGroupRepository implements GroupRepository {
             group.setDescription(row.getString(DESCRIPTION));
             group.setPublicGroup(row.getBool(PUBLIC_GROUP));
             group.setArchivedGroup(row.getBool(ARCHIVED_GROUP));
+            group.setPostModerated(row.getBool(POST_MODERATED));
             return group;
         } else {
             return null;

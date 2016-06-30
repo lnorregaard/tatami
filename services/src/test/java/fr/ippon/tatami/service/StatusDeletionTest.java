@@ -129,7 +129,7 @@ public class StatusDeletionTest extends AbstractCassandraTatamiTest {
         String groupName = "Group with messages to delete";
         String groupDescription = "Group description";
         boolean publicGroup = true;
-        groupService.createGroup(groupName, groupDescription, publicGroup);
+        groupService.createGroup(groupName, groupDescription, publicGroup, false);
         Collection<Group> groups = groupService.getGroupsForUser(user);
         assertEquals(userGroupSize + 1, groups.size());
 

@@ -83,6 +83,9 @@ public class StatusUpdateService {
     private CounterRepository counterRepository;
 
     @Inject
+    private StatusReplyCounterRepository statusReplyCounterRepository;
+
+    @Inject
     private SearchService searchService;
 
     @Inject
@@ -301,6 +304,9 @@ public class StatusUpdateService {
         // add status to the mentioned users' timeline
         manageMentions(status, group, userLogin, domain, followersForUser);
 
+        // manage reply status
+        manageReply(status);
+
         // Increment status count for the current user
         counterRepository.incrementStatusCounter(userLogin);
 
@@ -309,6 +315,13 @@ public class StatusUpdateService {
 
         // add status to the company wall
         addToCompanyWall(status, group);
+    }
+
+    private void manageReply(Status status) {
+        if (status.getReplyTo() != null && !status.getReplyTo().isEmpty()) {
+            statusReplyCounterRepository.incrementReplyCounter(UUID.fromString(status.getReplyTo()));
+
+        }
     }
 
     public void removePublicStatus(Group group, Status status) {
@@ -330,6 +343,10 @@ public class StatusUpdateService {
         // tag managgement
         manageRemoveStatusTags(status, group);
 
+        // manage remove reply status
+        manageRemoveReply(status);
+
+
         // add status to the mentioned users' timeline
 
         // Increment status count for the current user
@@ -340,6 +357,12 @@ public class StatusUpdateService {
 
         // add status to the company wall
         removeFromCompanyWall(status, group);
+    }
+
+    private void manageRemoveReply(Status status) {
+        if (status.getReplyTo() != null && !status.getReplyTo().isEmpty()) {
+            statusReplyCounterRepository.decrementReplyCounter(UUID.fromString(status.getReplyTo()));
+        }
     }
 
 

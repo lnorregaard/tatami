@@ -86,6 +86,10 @@ public class StatusUpdateService {
     private StatusReplyCounterRepository statusReplyCounterRepository;
 
     @Inject
+    private StatusReplyUserRepository statusReplyUserRepository;
+
+
+    @Inject
     private SearchService searchService;
 
     @Inject
@@ -319,8 +323,9 @@ public class StatusUpdateService {
 
     private void manageReply(Status status) {
         if (status.getReplyTo() != null && !status.getReplyTo().isEmpty()) {
-            statusReplyCounterRepository.incrementReplyCounter(UUID.fromString(status.getReplyTo()));
-
+            UUID statusId = UUID.fromString(status.getReplyTo());
+            statusReplyCounterRepository.incrementReplyCounter(statusId);
+            statusReplyUserRepository.updateReplyUser(statusId,status.getReplyToUsername());
         }
     }
 
@@ -346,7 +351,6 @@ public class StatusUpdateService {
         // manage remove reply status
         manageRemoveReply(status);
 
-
         // add status to the mentioned users' timeline
 
         // Increment status count for the current user
@@ -361,7 +365,8 @@ public class StatusUpdateService {
 
     private void manageRemoveReply(Status status) {
         if (status.getReplyTo() != null && !status.getReplyTo().isEmpty()) {
-            statusReplyCounterRepository.decrementReplyCounter(UUID.fromString(status.getReplyTo()));
+            UUID statusId = UUID.fromString(status.getReplyTo());
+            statusReplyUserRepository.deleteReplyUser(statusId);
         }
     }
 

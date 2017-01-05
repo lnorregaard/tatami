@@ -12,6 +12,7 @@ import fr.ippon.tatami.service.GroupService;
 import fr.ippon.tatami.service.StatusUpdateService;
 import fr.ippon.tatami.service.TimelineService;
 import fr.ippon.tatami.service.dto.StatusDTO;
+import fr.ippon.tatami.service.dto.StatusReplyInfo;
 import fr.ippon.tatami.service.exception.ArchivedGroupException;
 import fr.ippon.tatami.service.exception.ReplyStatusException;
 import fr.ippon.tatami.web.rest.dto.ActionModerator;
@@ -29,6 +30,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -298,6 +300,48 @@ public class TimelineController {
             return null;
         }
     }
+
+    /**
+     * GET  /statuses/{statusId}/replies?start=id&finish=id&count=10&desc=true -> get the replies for status"
+     */
+    @RequestMapping(value = "/rest/statuses/{statusId}/replies",
+            method = RequestMethod.GET,
+            produces = "application/json")
+    @ResponseBody
+    public Collection<StatusDTO> listStatusForModerator(@PathVariable("statusId") String statusId,
+                                                        @RequestParam(required = false) String start,
+                                                        @RequestParam(required = false) String finish,
+                                                        @RequestParam(required = false) Integer count,
+                                                        @RequestParam(required = false) boolean desc) {
+
+        if (count == null || count == 0) {
+            count = 20; //Default value
+        }
+        try {
+            return timelineService.getRepliesForStatus(statusId,start,finish, count,desc);
+        } catch (Exception e) {
+            log.warn("No status found: ",e);
+            return new ArrayList<>();
+        }
+    }
+
+    /**
+     * GET  /statuses/replies?id=id1&id=id2 -> get the reply info for statuses"
+     */
+    @RequestMapping(value = "/rest/statuses/replies",
+            method = RequestMethod.GET,
+            produces = "application/json")
+    @ResponseBody
+    public Collection<StatusReplyInfo> listStatusReplies(@RequestParam(name = "id", required = false) List<String> statusIds) {
+        try {
+            return timelineService.getReplyInfos(statusIds);
+        } catch (Exception e) {
+            log.warn("No status found: ",e);
+            return new ArrayList<>();
+        }
+    }
+
+
 
     @RequestMapping(value = "/rest/statuses/{statusId}",
             method = RequestMethod.GET,

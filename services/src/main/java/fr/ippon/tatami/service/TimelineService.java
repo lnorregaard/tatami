@@ -2,11 +2,14 @@ package fr.ippon.tatami.service;
 
 import fr.ippon.tatami.config.Constants;
 import fr.ippon.tatami.domain.Group;
+import fr.ippon.tatami.domain.StatusReplyCount;
+import fr.ippon.tatami.domain.StatusReplyUser;
 import fr.ippon.tatami.domain.User;
 import fr.ippon.tatami.repository.*;
 import fr.ippon.tatami.security.AuthenticationService;
 import fr.ippon.tatami.security.DomainViolationException;
 import fr.ippon.tatami.service.dto.StatusDTO;
+import fr.ippon.tatami.service.dto.StatusReplyInfo;
 import fr.ippon.tatami.service.util.DomainUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,6 +51,9 @@ public class TimelineService {
 
     @Inject
     private StatusCounterRepository statusCounterRepository;
+
+    @Inject
+    private StatusRepliesRepository statusRepliesRepository;
 
     @Inject
     private TimelineRepository timelineRepository;
@@ -103,6 +109,12 @@ public class TimelineService {
 
     @Inject
     private AttachmentService attachmentService;
+
+    @Inject
+    private StatusReplyCounterRepository statusReplyCounterRepository;
+
+    @Inject
+    private StatusReplyUserRepository statusReplyUserRepository;
 
     public StatusDTO getStatus(String statusId) {
         List<String> line = new ArrayList<String>();
@@ -1020,5 +1032,36 @@ public class TimelineService {
 
     public void removeStatusForDeletedUserList(List<String> statuses) {
         statusRepository.removeStatus(statuses);
+    }
+
+    public Collection<StatusDTO> getRepliesForStatus(String statusId, String start, String finish, int count, boolean desc) {
+        List<String> statuses = statusRepliesRepository.getReplies(UUID.fromString(statusId),count,start,finish,desc);
+        Collection<StatusDTO> dtos = buildStatusList(statuses);
+        return dtos;
+    }
+
+    public Collection<StatusReplyInfo> getReplyInfos(List<String> statusIds) {
+        if (statusIds != null) {
+            List<UUID> uuids = statusIds.stream()
+                    .map(UUID::fromString)
+                    .collect(Collectors.toList());
+            List<StatusReplyCount> countForList = statusReplyCounterRepository.getCountForList(uuids);
+            List<StatusReplyUser> userForList = statusReplyUserRepository.getUsersForList(uuids);
+            List<StatusReplyInfo> returnList = countForList.stream()
+                    .map(e -> new StatusReplyInfo(e.getStatusId().toString(), e.getCount(), ""))
+                    .collect(Collectors.toList());
+            returnList.forEach(replyInfo -> updateUsername(userForList, replyInfo));
+            return returnList;
+        } else {
+            return new ArrayList<>();
+        }
+    }
+
+    private void updateUsername(List<StatusReplyUser> userForList, StatusReplyInfo replyInfo) {
+        for (StatusReplyUser statusReplyUser : userForList) {
+            if (replyInfo.getStatusId().equals(statusReplyUser.getStatusId().toString())) {
+                replyInfo.setReplyUsername(statusReplyUser.getUsername());
+            }
+        }
     }
 }

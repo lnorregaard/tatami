@@ -621,7 +621,7 @@ public class TimelineService {
                 if (statuses.size() != dtos.size()) {
                     Collection<String> statusIdsToDelete = findStatusesToCleanUp(statuses, dtos);
                     timelineRepository.removeStatusesFromTimeline(login, statusIdsToDelete);
-                    return getUserTimelineRound(login, nbStatus, start, finish, statusType,round++);
+                    return getUserTimelineRound(login, nbStatus, start, finish, statusType,round+1);
                 }
             }
         }

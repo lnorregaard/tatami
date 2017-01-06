@@ -1060,7 +1060,9 @@ public class TimelineService {
     private void updateUsername(List<StatusReplyUser> userForList, StatusReplyInfo replyInfo) {
         for (StatusReplyUser statusReplyUser : userForList) {
             if (replyInfo.getStatusId().equals(statusReplyUser.getStatusId().toString())) {
-                replyInfo.setReplyUsername(statusReplyUser.getUsername());
+                User statusUser = userService.getUserByUsername(statusReplyUser.getUsername());
+                replyInfo.setReplyAvatar(statusUser.getAvatar());
+                replyInfo.setReplyUsername(statusUser.getUsername());
             }
         }
     }

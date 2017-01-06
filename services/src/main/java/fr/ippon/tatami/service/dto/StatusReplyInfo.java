@@ -21,6 +21,7 @@ public class StatusReplyInfo implements Serializable {
     private String statusId;
     private long replyCount;
     private String replyUsername;
+    private String replyAvatar;
 
     public StatusReplyInfo() {
     }
@@ -29,6 +30,7 @@ public class StatusReplyInfo implements Serializable {
         this.statusId = statusId;
         this.replyCount = replyCount;
         this.replyUsername = replyUsername;
+        this.replyAvatar = "";
     }
 
     public String getStatusId() {
@@ -53,5 +55,13 @@ public class StatusReplyInfo implements Serializable {
 
     public void setReplyUsername(String replyUsername) {
         this.replyUsername = replyUsername;
+    }
+
+    public String getReplyAvatar() {
+        return replyAvatar;
+    }
+
+    public void setReplyAvatar(String replyAvatar) {
+        this.replyAvatar = replyAvatar;
     }
 }

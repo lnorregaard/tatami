@@ -775,6 +775,22 @@ public class CassandraConfiguration {
         session.execute("CREATE INDEX IF NOT EXISTS status_followerlogin ON status (followerlogin);");
         session.execute("ALTER TABLE group ADD postModerated boolean;");
 
+        session.execute("CREATE TABLE IF NOT EXISTS statusreplycounter (\n" +
+                "    statusId timeuuid,\n" +
+                "    total counter,\n" +
+                "    PRIMARY KEY(statusId)\n" +
+                ");");
+        session.execute("CREATE TABLE IF NOT EXISTS statusreplyuser (\n" +
+                "    statusId timeuuid,\n" +
+                "    username varchar,\n" +
+                "    PRIMARY KEY(statusId)\n" +
+                ");");
+        session.execute("CREATE TABLE IF NOT EXISTS statusreplies (\n" +
+                "    statusId timeuuid,\n" +
+                "    replyId timeuuid,\n" +
+                "    PRIMARY KEY(statusId,replyId)\n" +
+                ")\n" +
+                "WITH CLUSTERING ORDER BY (replyId ASC);");
     }
 
     @Bean

@@ -322,6 +322,28 @@ CREATE INDEX IF NOT EXISTS status_login ON status (login);
 
 CREATE INDEX IF NOT EXISTS status_followerlogin ON status (followerlogin);
 
+CREATE TABLE IF NOT EXISTS statusreplycounter (
+    statusId timeuuid,
+    total counter,
+    PRIMARY KEY(statusId)
+);
+
+CREATE TABLE IF NOT EXISTS statusreplyuser (
+    statusId timeuuid,
+    username varchar,
+    PRIMARY KEY(statusId)
+);
+
+
+CREATE TABLE IF NOT EXISTS statusreplies (
+    statusId timeuuid,
+    replyId timeuuid,
+    PRIMARY KEY(statusId,replyId)
+)
+WITH CLUSTERING ORDER BY (replyId ASC);
+
+
+
 INSERT INTO user (login , avatar , firstname , lastname , username , domain ) VALUES('jdubois@ippon.fr', 'avatar', 'Julien','Dubois','jdubois','ippon.fr');
 INSERT INTO user (login , avatar , firstname , lastname , username , domain ) VALUES('uuser@ippon.fr', 'avatar', 'Update','User','uuser','ippon.fr');
 INSERT INTO user (login , avatar , firstname , lastname , username , domain ) VALUES('timelineUser@ippon.fr','avatar','User','TimelineUser','timelineUser','ippon.fr');
@@ -407,3 +429,5 @@ INSERT INTO userline (key,status) VALUES ('userWithStatus@ippon.fr',f97d6470-984
 INSERT INTO shares (status,login) VALUES (f97d6470-9847-11e1-a6ca-e0f847068d52,'john_doe');
 
 INSERT INTO tagFollowers (key,login) VALUES ('test-ippon.fr' ,'jdubois@ippon.fr');
+
+

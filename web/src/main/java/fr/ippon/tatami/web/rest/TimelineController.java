@@ -332,7 +332,7 @@ public class TimelineController {
     /**
      * GET  /statuses/replies?id=id1&id=id2 -> get the reply info for statuses"
      */
-    @RequestMapping(value = {"/rest/statuses/replies","/statuses/replies"},
+    @RequestMapping(value = {"/rest/statuses/replies"},
             method = RequestMethod.GET,
             produces = "application/json")
     @ResponseBody
@@ -358,7 +358,7 @@ public class TimelineController {
         }
     }
 
-    @RequestMapping(value = {"/rest/statuses/replies/{statusId}","/statuses/replies/{statusId}"},
+    @RequestMapping(value = {"/rest/statuses/replies/{statusId}"},
             method = RequestMethod.GET,
             produces = "application/json")
     @ResponseBody

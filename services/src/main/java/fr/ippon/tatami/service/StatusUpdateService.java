@@ -329,7 +329,7 @@ public class StatusUpdateService {
     private void manageReply(Status status) {
         UUID statusId = UUID.fromString(status.getReplyTo());
         statusReplyCounterRepository.incrementReplyCounter(statusId);
-        statusReplyUserRepository.updateReplyUser(statusId,status.getReplyToUsername());
+        statusReplyUserRepository.updateReplyUser(statusId,status.getUsername());
         statusRepliesRepository.insertReply(statusId,status.getStatusId());
     }
 

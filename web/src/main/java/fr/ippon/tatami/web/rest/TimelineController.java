@@ -339,10 +339,11 @@ public class TimelineController {
     public ResponseEntity<Object> listStatusReplies(
             @RequestHeader(required = false, name = "X-Use-ESI") boolean esi,
             @RequestParam(name = "id", required = false) List<String> statusIds) {
-        if (esi && statusIds != null && statusIds.size() <= 10) {
+        if (esi && statusIds != null && statusIds.stream().distinct().count() <= 10) {
             String startEsi = new StringBuilder().append("<esi:include src=\"").append(env.getProperty("tatami.url")).append("/rest/statuses/replies/").toString();
             StringBuilder builder = new StringBuilder("{");
             builder.append(statusIds.stream()
+                    .distinct()
                     .map(id -> new StringBuilder().append(startEsi).append(id).append(END_ESI).toString())
                     .collect(Collectors.joining(",")));
             builder.append("}");

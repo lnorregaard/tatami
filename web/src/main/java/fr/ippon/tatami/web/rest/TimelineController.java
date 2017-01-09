@@ -308,11 +308,11 @@ public class TimelineController {
     /**
      * GET  /statuses/{statusId}/replies?start=id&finish=id&count=10&desc=true -> get the replies for status"
      */
-    @RequestMapping(value = "/rest/statuses/{statusId}/replies",
+    @RequestMapping(value = {"/rest/statuses/{statusId}/replies","/statuses/{statusId}/replies"},
             method = RequestMethod.GET,
             produces = "application/json")
     @ResponseBody
-    public Collection<StatusDTO> listStatusForModerator(@PathVariable("statusId") String statusId,
+    public Collection<StatusDTO> listReplyStatuses(@PathVariable("statusId") String statusId,
                                                         @RequestParam(required = false) String start,
                                                         @RequestParam(required = false) String finish,
                                                         @RequestParam(required = false) Integer count,
@@ -332,7 +332,7 @@ public class TimelineController {
     /**
      * GET  /statuses/replies?id=id1&id=id2 -> get the reply info for statuses"
      */
-    @RequestMapping(value = "/rest/statuses/replies",
+    @RequestMapping(value = {"/rest/statuses/replies","/statuses/replies"},
             method = RequestMethod.GET,
             produces = "application/json")
     @ResponseBody
@@ -358,7 +358,7 @@ public class TimelineController {
         }
     }
 
-    @RequestMapping(value = "/rest/statuses/replies/{statusId}",
+    @RequestMapping(value = {"/rest/statuses/replies/{statusId}","/statuses/replies/{statusId}"},
             method = RequestMethod.GET,
             produces = "application/json")
     @ResponseBody

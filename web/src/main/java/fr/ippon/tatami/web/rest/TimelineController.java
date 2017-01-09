@@ -20,6 +20,9 @@ import fr.ippon.tatami.web.rest.dto.ActionStatus;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.env.Environment;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -28,10 +31,7 @@ import javax.inject.Inject;
 import javax.servlet.http.HttpServletResponse;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -44,6 +44,7 @@ public class TimelineController {
 
     public static final String APPROVED = "APPROVED";
     public static final String BLOCKED = "BLOCKED";
+    public static final String END_ESI = "\"/>";
     private final Logger log = LoggerFactory.getLogger(TimelineController.class);
 
     @Inject
@@ -57,6 +58,9 @@ public class TimelineController {
 
     @Inject
     private AuthenticationService authenticationService;
+
+    @Inject
+    private Environment env;
 
     /**
      * GET  /statuses/details/:id -> returns the details for a status, specified by the id parameter
@@ -332,15 +336,42 @@ public class TimelineController {
             method = RequestMethod.GET,
             produces = "application/json")
     @ResponseBody
-    public Collection<StatusReplyInfo> listStatusReplies(@RequestParam(name = "id", required = false) List<String> statusIds) {
-        try {
-            return timelineService.getReplyInfos(statusIds);
-        } catch (Exception e) {
-            log.warn("No status found: ",e);
-            return new ArrayList<>();
+    public ResponseEntity<Object> listStatusReplies(
+            @RequestHeader(required = false, name = "X-Use-ESI") boolean esi,
+            @RequestParam(name = "id", required = false) List<String> statusIds) {
+        if (esi && statusIds != null && statusIds.size() <= 10) {
+            String startEsi = new StringBuilder().append("<esi:include src=\"").append(env.getProperty("tatami.url")).append("/rest/statuses/replies/").toString();
+            StringBuilder builder = new StringBuilder("{");
+            builder.append(statusIds.stream()
+                    .map(id -> new StringBuilder().append(startEsi).append(id).append(END_ESI).toString())
+                    .collect(Collectors.joining(",")));
+            builder.append("}");
+            return ResponseEntity.status(HttpStatus.OK).body(builder.toString());
+        } else {
+            try {
+                return ResponseEntity.status(HttpStatus.OK).body(timelineService.getReplyInfos(statusIds));
+            } catch (Exception e) {
+                log.warn("No status found: ", e);
+                return ResponseEntity.status(HttpStatus.OK).body(new ArrayList<StatusReplyInfo>());
+            }
         }
     }
 
+    @RequestMapping(value = "/rest/statuses/replies/{statusId}",
+            method = RequestMethod.GET,
+            produces = "application/json")
+    @ResponseBody
+    public ResponseEntity<Object> listStatusReply(@PathVariable String statusId) {
+        try {
+            StatusReplyInfo replyInfo = timelineService.getReplyInfos(Arrays.asList(statusId)).stream()
+                    .findFirst().orElse(new StatusReplyInfo("",0,""));
+            return ResponseEntity.ok(replyInfo);
+        } catch (Exception e) {
+            log.warn("No status found: ", e);
+            return ResponseEntity.status(HttpStatus.OK).body("{}");
+//            return new ArrayList<>();
+        }
+    }
 
 
     @RequestMapping(value = "/rest/statuses/{statusId}",

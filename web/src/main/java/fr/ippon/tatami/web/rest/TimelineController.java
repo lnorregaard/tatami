@@ -368,7 +368,7 @@ public class TimelineController {
             return ResponseEntity.ok(replyInfo);
         } catch (Exception e) {
             log.warn("No status found: ", e);
-            return ResponseEntity.status(HttpStatus.OK).body("{}");
+            return ResponseEntity.status(HttpStatus.OK).body(new StatusReplyInfo("",0,""));
 //            return new ArrayList<>();
         }
     }

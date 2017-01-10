@@ -21,6 +21,7 @@ import org.apache.commons.lang.StringEscapeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -32,6 +33,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -45,6 +47,8 @@ public class TimelineController {
     public static final String APPROVED = "APPROVED";
     public static final String BLOCKED = "BLOCKED";
     public static final String END_ESI = "\"/>";
+    public static final String TTL_ESI = "1200";
+    public static final String ESI_ENABLE = "ESI-enable";
     private final Logger log = LoggerFactory.getLogger(TimelineController.class);
 
     @Inject
@@ -337,20 +341,23 @@ public class TimelineController {
             produces = "application/json")
     @ResponseBody
     public ResponseEntity<Object> listStatusReplies(
-            @RequestHeader(required = false, name = "X-Use-ESI") boolean esi,
+            @RequestHeader(required = false, name = ESI_ENABLE) boolean esi,
             @RequestParam(name = "id", required = false) List<String> statusIds) {
         if (esi && statusIds != null && statusIds.stream().distinct().count() <= 10) {
             String startEsi = new StringBuilder().append("<esi:include src=\"").append(env.getProperty("tatami.url")).append("/rest/statuses/replies/").toString();
-            StringBuilder builder = new StringBuilder("{");
+            StringBuilder builder = new StringBuilder("[");
             builder.append(statusIds.stream()
                     .distinct()
                     .map(id -> new StringBuilder().append(startEsi).append(id).append(END_ESI).toString())
                     .collect(Collectors.joining(",")));
-            builder.append("}");
-            return ResponseEntity.status(HttpStatus.OK).body(builder.toString());
+            builder.append("]");
+            return ResponseEntity.status(HttpStatus.OK)
+                    .header("ESI-ttl", TTL_ESI)
+                    .body(builder.toString());
         } else {
             try {
-                return ResponseEntity.status(HttpStatus.OK).body(timelineService.getReplyInfos(statusIds));
+                return ResponseEntity.status(HttpStatus.OK)
+                        .body(timelineService.getReplyInfos(statusIds));
             } catch (Exception e) {
                 log.warn("No status found: ", e);
                 return ResponseEntity.status(HttpStatus.OK).body(new ArrayList<StatusReplyInfo>());
@@ -366,11 +373,12 @@ public class TimelineController {
         try {
             StatusReplyInfo replyInfo = timelineService.getReplyInfos(Arrays.asList(statusId)).stream()
                     .findFirst().orElse(new StatusReplyInfo("",0,""));
-            return ResponseEntity.ok(replyInfo);
+            return ResponseEntity.ok()
+                    .header(ESI_ENABLE,null)
+                    .body(replyInfo);
         } catch (Exception e) {
             log.warn("No status found: ", e);
             return ResponseEntity.status(HttpStatus.OK).body(new StatusReplyInfo("",0,""));
-//            return new ArrayList<>();
         }
     }
 

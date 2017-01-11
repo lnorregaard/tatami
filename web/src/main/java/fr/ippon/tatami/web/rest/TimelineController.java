@@ -47,7 +47,7 @@ public class TimelineController {
     public static final String APPROVED = "APPROVED";
     public static final String BLOCKED = "BLOCKED";
     public static final String END_ESI = "\"/>";
-    public static final String TTL_ESI = "1200";
+    public static final String TTL_ESI = "20m";
     public static final String ESI_ENABLE = "ESI-enable";
     private final Logger log = LoggerFactory.getLogger(TimelineController.class);
 
@@ -344,7 +344,10 @@ public class TimelineController {
             @RequestHeader(required = false, name = ESI_ENABLE) boolean esi,
             @RequestParam(name = "id", required = false) List<String> statusIds) {
         if (esi && statusIds != null && statusIds.stream().distinct().count() <= 10) {
-            String startEsi = new StringBuilder().append("<esi:include src=\"").append(env.getProperty("tatami.url")).append("/rest/statuses/replies/").toString();
+            String startEsi = new StringBuilder().append("<esi:include src=\"")
+                    .append(env.getProperty("tatami.url"))
+                    .append(env.getProperty("tatami.path",""))
+                    .append("/rest/statuses/replies/").toString();
             StringBuilder builder = new StringBuilder("[");
             builder.append(statusIds.stream()
                     .distinct()

@@ -132,6 +132,7 @@ public class UserService {
     }
 
     public User getUserByUsername(String username) {
+        log.debug("getUserByUsername: " + username);
         User currentUser = authenticationService.getCurrentUser();
         String domain = DomainUtil.getDomainFromLogin(currentUser.getLogin());
         String login = "";
@@ -140,6 +141,7 @@ public class UserService {
         } else {
             login = DomainUtil.getLoginFromUsernameAndDomain(username, domain);
         }
+        log.debug("getUserByUsername: " + username + ", login: " + login);
         return getUserByLogin(login);
     }
 

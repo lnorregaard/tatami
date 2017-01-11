@@ -357,10 +357,12 @@ public class TimelineController {
             return ResponseEntity.status(HttpStatus.OK)
                     .header("ESI-ttl", TTL_ESI)
                     .header(ESI_ENABLE, "true")
+                    .cacheControl(CacheControl.maxAge(0,TimeUnit.SECONDS).cachePrivate())
                     .body(builder.toString());
         } else {
             try {
                 return ResponseEntity.status(HttpStatus.OK)
+                        .cacheControl(CacheControl.maxAge(0,TimeUnit.SECONDS).cachePrivate())
                         .body(timelineService.getReplyInfos(statusIds));
             } catch (Exception e) {
                 log.warn("No status found: ", e);
@@ -379,6 +381,7 @@ public class TimelineController {
                     .findFirst()
                     .orElse(new StatusReplyInfo("",0,""));
             return ResponseEntity.ok()
+                    .cacheControl(CacheControl.maxAge(1,TimeUnit.SECONDS).cachePublic())
                     .body(replyInfo);
         } catch (Exception e) {
             log.warn("No status found: ", e);

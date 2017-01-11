@@ -104,6 +104,7 @@ public class CassandraUserRepository implements UserRepository {
     @Cacheable("user-cache")
     public User findUserByLogin(String login) {
         User user = null;
+        log.debug("login: " + login);
         BoundStatement stmt = findOneByLoginStmt.bind();
         stmt.setString("login", login);
         Optional<User> optionalUser = findOneFromIndex(stmt);

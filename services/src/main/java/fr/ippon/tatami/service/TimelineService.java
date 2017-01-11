@@ -728,7 +728,6 @@ public class TimelineService {
             }
             if (status.getHasAttachments() != null && status.getHasAttachments() && status.getAttachments() != null) {
                 status.getAttachments()
-                        .stream()
                         .forEach(attachmentService::deleteAttachment);
             }
             statusUpdateService.removePublicStatus(group, status);

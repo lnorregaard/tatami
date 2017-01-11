@@ -134,7 +134,10 @@ public class UserService {
     public User getUserByUsername(String username) {
         log.debug("getUserByUsername: " + username);
         User currentUser = authenticationService.getCurrentUser();
-        String domain = DomainUtil.getDomainFromLogin(currentUser.getLogin());
+        String domain = env.getProperty("tatami.default.domain","");
+        if (currentUser != null) {
+            domain = DomainUtil.getDomainFromLogin(currentUser.getLogin());
+        }
         String login = "";
         if (Constants.USER_AND_FRIENDS) {
             login = usernameService.getLoginFromUsernameAndDomain(username, domain);

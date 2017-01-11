@@ -377,7 +377,7 @@ public class TimelineController {
     @ResponseBody
     public ResponseEntity<Object> listStatusReply(@PathVariable String statusId) {
         try {
-            StatusReplyInfo replyInfo = timelineService.getReplyInfos(Arrays.asList(statusId)).stream()
+            StatusReplyInfo replyInfo = timelineService.getReplyInfos(Collections.singletonList(statusId)).stream()
                     .findFirst()
                     .orElse(new StatusReplyInfo("",0,""));
             return ResponseEntity.ok()

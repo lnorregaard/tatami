@@ -356,6 +356,7 @@ public class TimelineController {
             builder.append("]");
             return ResponseEntity.status(HttpStatus.OK)
                     .header("ESI-ttl", TTL_ESI)
+                    .header(ESI_ENABLE, "true")
                     .body(builder.toString());
         } else {
             try {

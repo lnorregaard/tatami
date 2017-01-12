@@ -24,6 +24,7 @@
     <http pattern="/tatami/rest/status/**" security="none"/>
     <http pattern="/tatami/rest/statuses/replies/**" security="none"/>
     <http pattern="/tatami/rest/statuses/replies**" security="none"/>
+    <http pattern="/tatami/rest/statuses/**/replies" security="none"/>
     <http pattern="/tatami/user/favourites/count" security="none"/>
     <http pattern="/tatami/groups/**" security="none"/>
     <http pattern="/tatami/ping" security="none"/>
@@ -47,6 +48,7 @@
         <intercept-url pattern="/tatami/404-error" access="permitAll()"/>
         <intercept-url pattern="/tatami/500-error" access="permitAll()"/>
         <intercept-url pattern="/tatami/rest/statuses/replies" method="GET" access="permitAll()"/>
+        <intercept-url pattern="/tatami/rest/statuses/**/replies" method="GET" access="permitAll()"/>
         <intercept-url pattern="/tatami/rest/users" method="POST" access="permitAll()"/>
         <intercept-url pattern="/tatami/rest/groups/**" method="GET" access="permitAll()"/>
         <intercept-url pattern="/tatami/rest/user/favourites/count" method="GET" access="permitAll()"/>

@@ -13,10 +13,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import javax.inject.Inject;
-import java.util.Collection;
-import java.util.Map;
-import java.util.TreeSet;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * Service bean for managing groups.
@@ -129,6 +126,19 @@ public class GroupService {
         Collection<UUID> groupIds = userGroupRepository.findGroups(user.getLogin());
         return buildGroupIdsList(groupIds);
     }
+
+    public Group getGroupForUser(User user, UUID groupId) {
+        Collection<UUID> groupIds = userGroupRepository.findGroups(user.getLogin());
+        Optional<UUID> match = groupIds.stream()
+                .filter(uuid -> uuid.equals(groupId))
+                .findFirst();
+        if (match.isPresent()) {
+            return buildGroupIds(groupId);
+        } else {
+            return null;
+        }
+    }
+
 
     @Cacheable(value = "group-user-cache", key = "#user.login")
     public Collection<Group> getGroupsOfUser(User user) {

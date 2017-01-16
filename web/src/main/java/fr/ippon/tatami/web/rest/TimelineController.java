@@ -474,15 +474,15 @@ public class TimelineController {
             return statusUpdateService.postStatus(escapedContent, status.isStatusPrivate(), attachmentIds, status.getGeoLocalization());
         } else {
             User currentUser = authenticationService.getCurrentUser();
-            Collection<Group> groups = groupService.getGroupsForUser(currentUser);
-            Group group = null;
             UUID statusGroupId = UUID.fromString(status.getGroupId());
-            for (Group testGroup : groups) {
-                if (testGroup.getGroupId().equals(statusGroupId)) {
-                    group = testGroup;
-                    break;
-                }
-            }
+//            Collection<Group> groups = groupService.getGroupsForUser(currentUser);
+//            for (Group testGroup : groups) {
+//                if (testGroup.getGroupId().equals(statusGroupId)) {
+//                    group = testGroup;
+//                    break;
+//                }
+//            }
+            Group group = groupService.getGroupForUser(currentUser,statusGroupId);
             if (Constants.NON_GROUP_MEMBER_POST_TIMELINE) {
                 group = groupService.getGroupById(currentUser.getDomain(), statusGroupId);
             }

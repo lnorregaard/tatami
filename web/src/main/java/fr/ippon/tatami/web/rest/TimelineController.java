@@ -12,6 +12,7 @@ import fr.ippon.tatami.service.GroupService;
 import fr.ippon.tatami.service.StatusUpdateService;
 import fr.ippon.tatami.service.TimelineService;
 import fr.ippon.tatami.service.dto.StatusDTO;
+import fr.ippon.tatami.service.dto.StatusReplyInfo;
 import fr.ippon.tatami.service.exception.ArchivedGroupException;
 import fr.ippon.tatami.service.exception.ReplyStatusException;
 import fr.ippon.tatami.web.rest.dto.ActionModerator;
@@ -19,6 +20,10 @@ import fr.ippon.tatami.web.rest.dto.ActionStatus;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.env.Environment;
+import org.springframework.http.CacheControl;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -27,9 +32,8 @@ import javax.inject.Inject;
 import javax.servlet.http.HttpServletResponse;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.UUID;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -42,6 +46,9 @@ public class TimelineController {
 
     public static final String APPROVED = "APPROVED";
     public static final String BLOCKED = "BLOCKED";
+    public static final String END_ESI = "\"/>";
+    public static final String TTL_ESI = "20m";
+    public static final String ESI_ENABLE = "ESI-enable";
     private final Logger log = LoggerFactory.getLogger(TimelineController.class);
 
     @Inject
@@ -55,6 +62,9 @@ public class TimelineController {
 
     @Inject
     private AuthenticationService authenticationService;
+
+    @Inject
+    private Environment env;
 
     /**
      * GET  /statuses/details/:id -> returns the details for a status, specified by the id parameter
@@ -298,6 +308,87 @@ public class TimelineController {
             return null;
         }
     }
+
+    /**
+     * GET  /statuses/{statusId}/replies?start=id&finish=id&count=10&desc=true -> get the replies for status"
+     */
+    @RequestMapping(value = {"/rest/statuses/{statusId}/replies","/statuses/{statusId}/replies"},
+            method = RequestMethod.GET,
+            produces = "application/json")
+    @ResponseBody
+    public Collection<StatusDTO> listReplyStatuses(@PathVariable("statusId") String statusId,
+                                                        @RequestParam(required = false) String start,
+                                                        @RequestParam(required = false) String finish,
+                                                        @RequestParam(required = false) Integer count,
+                                                        @RequestParam(required = false) boolean desc) {
+
+        if (count == null || count == 0) {
+            count = 20; //Default value
+        }
+        try {
+            return timelineService.getRepliesForStatus(statusId,start,finish, count,desc);
+        } catch (Exception e) {
+            log.warn("No status found: ",e);
+            return new ArrayList<>();
+        }
+    }
+
+    /**
+     * GET  /statuses/replies?id=id1&id=id2 -> get the reply info for statuses"
+     */
+    @RequestMapping(value = {"/rest/statuses/replies"},
+            method = RequestMethod.GET,
+            produces = "application/json")
+    @ResponseBody
+    public ResponseEntity<Object> listStatusReplies(
+            @RequestHeader(required = false, name = ESI_ENABLE) boolean esi,
+            @RequestParam(name = "id", required = false) List<String> statusIds) {
+        if (esi && statusIds != null && statusIds.stream().distinct().count() <= 10) {
+            String startEsi = new StringBuilder().append("<esi:include src=\"")
+                    .append(env.getProperty("tatami.url"))
+                    .append(env.getProperty("tatami.path",""))
+                    .append("/rest/statuses/replies/").toString();
+            StringBuilder builder = new StringBuilder("[");
+            builder.append(statusIds.stream()
+                    .distinct()
+                    .map(id -> new StringBuilder().append(startEsi).append(id).append(END_ESI).toString())
+                    .collect(Collectors.joining(",")));
+            builder.append("]");
+            return ResponseEntity.status(HttpStatus.OK)
+                    .header("ESI-ttl", TTL_ESI)
+                    .header(ESI_ENABLE, "true")
+                    .cacheControl(CacheControl.maxAge(0,TimeUnit.SECONDS).cachePrivate())
+                    .body(builder.toString());
+        } else {
+            try {
+                return ResponseEntity.status(HttpStatus.OK)
+                        .cacheControl(CacheControl.maxAge(0,TimeUnit.SECONDS).cachePrivate())
+                        .body(timelineService.getReplyInfos(statusIds));
+            } catch (Exception e) {
+                log.warn("No status found: ", e);
+                return ResponseEntity.status(HttpStatus.OK).body(new ArrayList<StatusReplyInfo>());
+            }
+        }
+    }
+
+    @RequestMapping(value = {"/rest/statuses/replies/{statusId}"},
+            method = RequestMethod.GET,
+            produces = "application/json")
+    @ResponseBody
+    public ResponseEntity<Object> listStatusReply(@PathVariable String statusId) {
+        try {
+            StatusReplyInfo replyInfo = timelineService.getReplyInfos(Collections.singletonList(statusId)).stream()
+                    .findFirst()
+                    .orElse(new StatusReplyInfo("",0,""));
+            return ResponseEntity.ok()
+                    .cacheControl(CacheControl.maxAge(1,TimeUnit.SECONDS).cachePublic())
+                    .body(replyInfo);
+        } catch (Exception e) {
+            log.warn("No status found: ", e);
+            return ResponseEntity.status(HttpStatus.OK).body(new StatusReplyInfo("",0,""));
+        }
+    }
+
 
     @RequestMapping(value = "/rest/statuses/{statusId}",
             method = RequestMethod.GET,

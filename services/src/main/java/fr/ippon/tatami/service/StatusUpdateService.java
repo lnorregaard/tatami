@@ -83,6 +83,15 @@ public class StatusUpdateService {
     private CounterRepository counterRepository;
 
     @Inject
+    private StatusReplyCounterRepository statusReplyCounterRepository;
+
+    @Inject
+    private StatusReplyUserRepository statusReplyUserRepository;
+
+    @Inject
+    private StatusRepliesRepository statusRepliesRepository;
+
+    @Inject
     private SearchService searchService;
 
     @Inject
@@ -292,14 +301,20 @@ public class StatusUpdateService {
         daylineRepository.addStatusToDayline(status, day);
         userlineRepository.addStatusToUserline(status.getLogin(), status.getStatusId().toString());
 
-        // add the status to the group line and group followers
-        manageGroups(status, group, followersForUser);
+        if (status.getReplyTo() != null && !status.getReplyTo().isEmpty()) {
+            // manage reply status
+            manageReply(status);
+        } else {
+            // add the status to the group line and group followers
+            manageGroups(status, group, followersForUser);
+        }
 
         // tag managgement
         manageStatusTags(status, group);
 
         // add status to the mentioned users' timeline
         manageMentions(status, group, userLogin, domain, followersForUser);
+
 
         // Increment status count for the current user
         counterRepository.incrementStatusCounter(userLogin);
@@ -311,12 +326,24 @@ public class StatusUpdateService {
         addToCompanyWall(status, group);
     }
 
+    private void manageReply(Status status) {
+        UUID statusId = UUID.fromString(status.getReplyTo());
+        statusReplyCounterRepository.incrementReplyCounter(statusId);
+        statusReplyUserRepository.updateReplyUser(statusId,status.getUsername());
+        statusRepliesRepository.insertReply(statusId,status.getStatusId());
+    }
+
     public void removePublicStatus(Group group, Status status) {
         String userLogin = status.getLogin();
         String domain = status.getDomain();
         if (userLogin != null) {
             Collection<String> followersForUser = followerRepository.findFollowersForUser(userLogin);
-            manageRemoveStatusFromGroups(status, group, followersForUser);
+            if (status.getReplyTo() != null && !status.getReplyTo().isEmpty()) {
+                // manage remove reply status
+                manageRemoveReply(status);
+            } else {
+                manageRemoveStatusFromGroups(status, group, followersForUser);
+            }
             manageRemoveMentions(status, group, userLogin, domain, followersForUser);
         }
 
@@ -330,6 +357,7 @@ public class StatusUpdateService {
         // tag managgement
         manageRemoveStatusTags(status, group);
 
+
         // add status to the mentioned users' timeline
 
         // Increment status count for the current user
@@ -342,27 +370,19 @@ public class StatusUpdateService {
         removeFromCompanyWall(status, group);
     }
 
+    private void manageRemoveReply(Status status) {
+        UUID statusId = UUID.fromString(status.getReplyTo());
+        statusReplyCounterRepository.decrementReplyCounter(statusId);
+        statusReplyUserRepository.deleteReplyUser(statusId);
+        statusRepliesRepository.deleteReply(statusId,status.getStatusId());
+    }
+
 
     private void manageGroups(Status status, Group group, Collection<String> followersForUser) {
         if (group != null) {
             grouplineRepository.addStatusToGroupline(group.getGroupId(), status.getStatusId().toString());
-//            Collection<String> groupMemberLogins = groupMembersRepository.findMembers(group.getGroupId()).keySet();
-//            // For all people following the group
-//            for (String groupMemberLogin : groupMemberLogins) {
-//                addStatusToTimelineAndNotify(groupMemberLogin, status);
-//            }
-//            if (isPublicGroup(group)) { // for people not following the group but following the user
-//                for (String followerLogin : followersForUser) {
-//                    if (!groupMemberLogins.contains(followerLogin)) {
-//                        addStatusToTimelineAndNotify(followerLogin, status);
-//                    }
-//                }
-//            }
-        } else { // only people following the user
-//            for (String followerLogin : followersForUser) {
-//                addStatusToTimelineAndNotify(followerLogin, status);
-//            }
         }
+
     }
 
     private void manageRemoveStatusFromGroups(Status status, Group group, Collection<String> followersForUser) {

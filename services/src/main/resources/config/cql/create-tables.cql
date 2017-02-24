@@ -328,3 +328,26 @@ CREATE INDEX IF NOT EXISTS status_followerlogin ON status (followerlogin);
 
 -- JIRA ISSUE: SPRINT-4838
 ALTER TABLE group ADD postModerated boolean;
+
+-- 4/1/2017 JIRA ISSUE: SPRINT-5417
+
+CREATE TABLE IF NOT EXISTS statusreplycounter (
+    statusId timeuuid,
+    total counter,
+    PRIMARY KEY(statusId)
+);
+
+CREATE TABLE IF NOT EXISTS statusreplyuser (
+    statusId timeuuid,
+    username varchar,
+    PRIMARY KEY(statusId)
+);
+
+
+CREATE TABLE IF NOT EXISTS statusreplies (
+    statusId timeuuid,
+    replyId timeuuid,
+    PRIMARY KEY(statusId,replyId)
+)
+WITH CLUSTERING ORDER BY (replyId ASC);
+

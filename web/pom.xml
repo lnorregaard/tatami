@@ -94,23 +94,23 @@
     <build>
         <finalName>tatami-${project.version}</finalName>
         <plugins>
-            <plugin>
-                <groupId>com.kelveden</groupId>
-                <artifactId>maven-karma-plugin</artifactId>
-                <version>1.6</version>
-                <executions>
-                    <execution>
-                        <phase>test</phase>
-                        <goals>
-                            <goal>start</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <karmaExecutable>${project.basedir}/node_modules/.bin/karma</karmaExecutable>
-                    <configFile>${project.basedir}/karma.ci.conf.js</configFile>
-                </configuration>
-            </plugin>
+            <!--<plugin>-->
+                <!--<groupId>com.kelveden</groupId>-->
+                <!--<artifactId>maven-karma-plugin</artifactId>-->
+                <!--<version>1.6</version>-->
+                <!--<executions>-->
+                    <!--<execution>-->
+                        <!--<phase>test</phase>-->
+                        <!--<goals>-->
+                            <!--<goal>start</goal>-->
+                        <!--</goals>-->
+                    <!--</execution>-->
+                <!--</executions>-->
+                <!--<configuration>-->
+                    <!--<karmaExecutable>${project.basedir}/node_modules/.bin/karma</karmaExecutable>-->
+                    <!--<configFile>${project.basedir}/karma.ci.conf.js</configFile>-->
+                <!--</configuration>-->
+            <!--</plugin>-->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-war-plugin</artifactId>
